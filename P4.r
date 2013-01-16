@@ -2,38 +2,6 @@
 setwd("X:/Data/Desktop/Arabidopsis Arrays")
 ann_m <- t(read.table("annotation_marker.txt"))
 
-group_chr <- function(ann_m, chr){
-	which(ann_m[,2] == chr)
-}
-group <- function(filename, lodThreshold = 4){
-	gene_eff <- read.table(paste("Data/gene_eff~lm/",filename,sep=""))
-	probe_exp <- read.table(paste("Data/gene_data/",gsub("_G","",filename),sep=""))
-	sum_num <- NULL
-	idmatrix <- vector("list",5)
-	res <- NULL
-	for(chr in 1:5){
-		s <- 0
-		ind <- NULL
-		for(p in 1:nrow(gene_eff)){
-			if(any(gene_eff[p,group_chr(ann_m, chr)] >= lodThreshold)){
-				s <- s+1
-				ind <- c(ind, p)
-			}
-		}
-		sum_num <- c(sum_num, s)
-		if(is.null(ind)){
-			idmatrix[[chr]] <- NA
-		}else{
-			idmatrix[[chr]] <- ind
-		}
-	}
-	res$ratio <- sum_num/nrow(gene_eff)
-	res$ind <- idmatrix
-	res$means <- as.numeric(rowMeans(probe_exp[,17:ncol(probe_exp)]))
-	res$nprobes <- nrow(gene_eff)
-	return(res)
-}
-
 for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
 	res <- group(filename, lodThreshold = 4)
 	allprobes <- 1:res$nprobes
