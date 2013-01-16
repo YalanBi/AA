@@ -13,7 +13,7 @@ getGeneStats <- function(filename, lodThreshold = 4, chrs = 1:5){
   gene_eff <- read.table(paste("Data/gene_eff~lm/", filename, sep=""))
   probe_exp <- read.table(paste("Data/gene_data/", gsub("_G", "", filename), sep=""))
   sum_num <- NULL
-  idmatrix <- vector("list",5)
+  idmatrix <- vector("list",`chrs)
   res <- NULL
   nprobes <- nrow(gene_eff)
   for(chr in chrs){
