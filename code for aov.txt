@@ -1,0 +1,36 @@
+  map.fast <- function(marker, phenotypes, conditions, verbose = FALSE){
+
+  st  <- proc.time()
+
+  res <- NULL
+
+  if(is.null(conditions)){
+
+    models  <- aov(as.matrix(phenotypes) ~ marker)
+
+    modelinfo <- summary(models)
+
+    res$qtl <- unlist(lapply(modelinfo,"[",1,5),use.names=T)
+
+    res$eff <- unlist(models$coefficients[2,])
+
+  }else{
+
+    models  <- aov(as.matrix(phenotypes) ~ conditions + marker + conditions:marker)
+
+    modelinfo <- summary(models)
+
+    res$env <- unlist(lapply(modelinfo,"[",1,5),use.names=T)
+
+    res$qtl <- unlist(lapply(modelinfo,"[",2,5),use.names=T)
+
+    res$int <- unlist(lapply(modelinfo,"[",3,5),use.names=T)
+
+    res$eff <- unlist(models$coefficients[2,])
+
+  }
+
+  if(verbose) cat("Done in:",(proc.time()-st)[3],"seconds\n")
+
+  res
+}

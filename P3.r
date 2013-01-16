@@ -133,15 +133,29 @@ for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
 
 #4---summerize the probes into groups
 for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
+  gene_eff <- read.table(paste("Data/gene_eff~lm/",filename,sep=""))
+  for(g in 1:ncol(gene_eff)){
+    g_cut <- as.numeric(gene_eff[,g] >= 4)
+    if(sum(g_cut) >= 4){
+      group <- which(g_cut == 1)
+      cat(gsub("G.txt",paste("m", g, ":", sep=""),filename), group, "\n", sep=" ", file="group_ind~cut-off=4.txt", append=TRUE)
+    }
+  }
+  cat("\n", file="group_ind~cut-off=4.txt", append=TRUE)
+  #return()
+}
+
+
+for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
 	gene_eff <- read.table(paste("Data/gene_eff~lm/",filename,sep=""))
 	for(g in 1:ncol(gene_eff)){
 		g_cut <- as.numeric(gene_eff[,g] >= 4)
-		if(sum(g_cut) >= 4){
+		if(sum(g_cut) > 0){
 			group <- which(g_cut == 1)
-			cat(gsub("G.txt",paste("g", g, ":", sep=""),filename), group, "\n", sep=" ", file="group_ind.txt", append=TRUE)
+			cat(gsub("G.txt",paste("m", g, ":", sep=""),filename), group, "\n", sep=" ", file="group_ind~cut-off=4_2.txt", append=TRUE)
 		}
 	}
-	cat("\n", file="group_ind~cut-off=4.txt", append=TRUE)
+	cat("\n", file="group_ind~cut-off=4_2.txt", append=TRUE)
 	#return()
 }
 

@@ -1,8 +1,5 @@
 #P4-summery for chromosome
 setwd("X:/Data/Desktop/Arabidopsis Arrays")
-geno <- read.table("Data/genotypes_n.txt", row.names=1)
-ann <- read.table("annotation_sample.txt", colClasses="character")
-menvironment <- ann[9:172,3]
 ann_m <- t(read.table("annotation_marker.txt"))
 
 group_chr <- function(ann_m, chr){
@@ -10,8 +7,9 @@ group_chr <- function(ann_m, chr){
 }
 group <- function(filename, lodThreshold = 4){
 	gene_eff <- read.table(paste("Data/gene_eff~lm/",filename,sep=""))
+	probe_exp <- read.table(paste("Data/gene_data/",gsub("_G","",filename),sep=""))
 	sum_num <- NULL
-	indmatrix <- NULL
+	idmatrix <- vector("list",5)
 	res <- NULL
 	for(chr in 1:5){
 		s <- 0
@@ -22,45 +20,64 @@ group <- function(filename, lodThreshold = 4){
 				ind <- c(ind, p)
 			}
 		}
-		 sum_num <- c(sum_num, s)
-		 indmatrix[[chr]] <- ind
+		sum_num <- c(sum_num, s)
+		if(is.null(ind)){
+			idmatrix[[chr]] <- NA
+		}else{
+			idmatrix[[chr]] <- ind
+		}
 	}
 	res$ratio <- sum_num/nrow(gene_eff)
-	res$ind <- indmatrix
-	cat("res$ratio","\n",file="resuls.txt",append=T)
-	cat(res$ratio,"\n",file="resuls.txt",append=T)
-	cat("res$ind","\n",file="resuls.txt",append=T)
-	cat(res$ind,"\n",file="resuls.txt",append=T) ###?????###
+	res$ind <- idmatrix
+	res$means <- as.numeric(rowMeans(probe_exp[,17:ncol(probe_exp)]))
+	res$nprobes <- nrow(gene_eff)
 	return(res)
 }
 
 for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
-	group(filename, lodThreshold = 4)
+	res <- group(filename, lodThreshold = 4)
+	allprobes <- 1:res$nprobes
+	qtlprobes <- unique(unlist(res$ind))
+	expprobes <- which(res$means > 2)
+	goodprobes <- unique(c(qtlprobes,expprobes))
+	badprobes <- which(!allprobes %in% goodprobes)
+	cat(filename, badprobes,"\n")
 }
-$ratio
-[1] 0.20512821 0.07692308 0.12820513 0.12820513 0.30769231
 
-$ind
-$ind[[1]]
-[1]  1  4  7 10 16 17 24 31
-
-$ind[[2]]
-[1] 12 30 33
-
-$ind[[3]]
-[1]  6  9 26 28 37
-
-$ind[[4]]
-[1]  9 14 15 28 35
-
-$ind[[5]]
- [1]  1  2 12 14 15 19 24 26 27 29 37 39
-
+st  <- proc.time()
+ratiomatrix <- NULL
+for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
+  cat("loading",filename,"\n")
+  #cat(gsub("_G.txt","",filename), "\n", sep="", file="Data/ratio_ID.txt", append=T)
+  ratiomatrix <- rbind(ratiomatrix,group(filename, lodThreshold = 4)$ratio)
+  #for(chr in 1:5){
+    #cat(c(group(filename, lodThreshold = 4)$ratio[chr],as.character(group(filename, lodThreshold = 4)$ind[[chr]])), "\n", file="Data/ratio_ID.txt", append=T)
+  #}
+  #cat("\n\n", sep="", file="Data/ratio_ID.txt", append=T)
+  return()
+}
+rownames(ratiomatrix) <- gsub("_G.txt","",dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))])
+colnames(ratiomatrix) <- paste("chr",1:5,sep="")
+write.table(ratiomatrix, file="Data/ratio.txt")
+cat("Done in:",(proc.time()-st)[3],"seconds\n")
 
 
 
+st  <- proc.time()
+cat(c("\t", "chr","maxratio","probes_ind"), "\n", file="Data/ratio_max.txt", append=T)
+for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
+  cat("loading",filename,"\n")
+  if(group(filename, lodThreshold = 4)$ratio[which.max(group(filename, lodThreshold = 4)$ratio)] != 0){
+  cat(c(gsub("_G.txt","",filename), which.max(group(filename, lodThreshold = 4)$ratio), group(filename, lodThreshold = 4)$ratio[which.max(group(filename, lodThreshold = 4)$ratio)],as.character(group(filename, lodThreshold = 4)$ind[[which.max(group(filename, lodThreshold = 4)$ratio)]])), "\n", file="Data/ratio_max.txt", append=T)
+  }
+  return()
+}
+cat("Done in:",(proc.time()-st)[3],"seconds\n")
 
 
+
+
+group(filename = "Data/gene_data/AT1G01115.txt", lodThreshold = 4)
 
 
 
