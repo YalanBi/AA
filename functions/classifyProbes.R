@@ -6,11 +6,16 @@
 #
 
 classifyProbes <- function(filename, expmean = 5){
-  res <- getGeneStats(filename, lodThreshold = 4, chrs = 1:5)
+  res <- getGeneStats(filename, lodThreshold = 4, chrs = 1:5) ############getGeneStats###########
+  classInf <- NULL
   allprobes <- 1:res$nprobes
   qtlprobes <- unique(unlist(res$ind))
   expprobes <- which(res$means >= expmean)
-  goodprobes <- unique(c(qtlprobes,expprobes))
+  goodprobes <- unique(c(qtlprobes, expprobes))
   badprobes <- which(!allprobes %in% goodprobes)
-  cat(filename, badprobes,"\n")
+  classInf$badP <- badprobes
+  classInf$goodP <- goodprobes
+  classInf$qtlP <- qtlprobes
+  classInf$expP <- expprobes
+  return(classInf)
 }
