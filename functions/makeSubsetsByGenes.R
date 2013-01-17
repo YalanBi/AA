@@ -4,22 +4,18 @@
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
+# OLD DON"t USE ANYMORE !!!
 
-#Idea---try to find the upper and lower separation points for intergenic
-#key point1---arr[x,"gene"]:gene vs intergenic vs missing?
-#							If arr[x,"gene"] == intergenic, intron vs intergenic?
-#							If arr[x,"gene"] != intergenic, any intergenic between 2 genes?
-#key point2---any intergenic left at the end?
 makeSubsets <- function(filename, ){
   read.table(filename)########?????????#######
-  previous_gene <- "" #characters
-  previous_x <- 0 #numbers
-  intergenic_seq <- NULL #a vector
-  empty_seq <- NULL #a vector
+  previous_gene <- ""
+  previous_x <- 0
+  intergenic_seq <- NULL
+  empty_seq <- NULL
   for(x in 1:nrow(arr)){
     #s <- proc.time()
-    if(arr[x,"gene"] != "intergenic" && arr[x,"gene"] != ""){ #gene vs intergenic vs missing? ""---the missing one: without arr[x,"gene"] != "", if there are some intergenic between 2"", these intergenic can be regarded as introns, so will be missed in "inter_danny.txt".
-      if(as.character(previous_gene) != as.character(arr[x,"gene"])){ #intron vs intergenic?
+    if(arr[x,"gene"] != "intergenic" && arr[x,"gene"] != ""){
+      if(as.character(previous_gene) != as.character(arr[x,"gene"])){
         cat(previous_x,as.character(previous_gene),"=",x, as.character(arr[x,"gene"]),"\n")
         if((x-1) == previous_x){ #any intergenic between 2 genes?
           #Too bad 2 genes without an intergenic region
@@ -37,7 +33,6 @@ makeSubsets <- function(filename, ){
       previous_gene <- arr[x,"gene"]
       previous_x <- x
     }
-    
     #cat(x,"took:",(proc.time()-s)[3],"\n")
   }
   x <- nrow(arr) #any intergenic left at the end?
