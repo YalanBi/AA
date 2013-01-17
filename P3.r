@@ -76,9 +76,9 @@ for(filename in dir("Data/gene_data")[grepl(".txt",dir("Data/gene_data"))]){
 
 #2---do lm for genetic effect
 setwd("X:/Data/Desktop/Arabidopsis Arrays")
-ann <- read.table("annotation_sample.txt", colClasses="character")
+
 geno <- read.table("genotypes_n.txt", row.names=1)
-menvironment <- ann[9:172,3]
+menvironment <- read.table("annotation_sample.txt", colClasses="character")[9:172,3]
 
 #~~1) anova
 for(filename in dir("Data/gene_data")[grepl(".txt",dir("Data/gene_data"))]){
