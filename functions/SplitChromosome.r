@@ -16,7 +16,7 @@ splitChromosome <- function(filename, chr=1){
   intergenic_seq <- NULL
   empty_seq <- NULL
   header <- c("ID", strsplit(readLines(fp, n=1),"\t")[[1]])
-  igfilename <- paste("test/intergenic",chr,".txt",sep="")
+  igfilename <- paste("Data/intergenic",chr,".txt",sep="")
   cat(paste(header,collapse="\t"),"\n", file=igfilename, sep="")
   mline <- readLines(fp, n=1)
   while(length(mline) != 0L){
@@ -26,8 +26,8 @@ splitChromosome <- function(filename, chr=1){
     if(elements["gene"] != "intergenic" && elements["gene"] != ""){ # A gene !
       if(as.character(previous_gene) != as.character(elements["gene"])){ # A new gene
         cat(previous_x, as.character(previous_gene), "=", cnt, as.character(elements["gene"]),"in",(et-st)[3],"secs\n")
-        outfile <- paste("test/",as.character(elements["gene"]),".txt",sep="")
-        cat(paste(header,collapse="\t"), file=outfile)
+        outfile <- paste("Data/chr",chr,"/", as.character(elements["gene"]),".txt",sep="")
+        cat(paste(header,collapse="\t"),"\n", file=outfile)
       } #Write the probe to the gene file
       cat(mline,"\n", file=outfile, sep="", append=TRUE)
       previous_gene <- elements["gene"]
@@ -40,5 +40,11 @@ splitChromosome <- function(filename, chr=1){
     mline <- readLines(fp, n=1)
     #cat(cnt, "element took: ", (et-st)[3]," seconds\n")
   }
+  close(fp)
   cat(filename,"contains",cnt,"probes\n")
+}
+
+for(filename in dir("Yalan map/")[grepl("off",dir("Yalan map/"))]){
+  chr <- which(filename == dir("Yalan map/")[grepl("off",dir("Yalan map/"))])
+  splitChromosome(paste("Yalan map/", filename, sep=""), chr)
 }
