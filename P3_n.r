@@ -107,69 +107,14 @@ for(filename in dir("Data/gene_data")[grepl(".txt",dir("Data/gene_data"))]){
   #return()
 }
 
-
-
-
-
-
-makePlot <- function(filename, x, ...){
-	plot(x ,...)
-}
 points(1,5,pch=19,col=rgb(.25,.75,.75))
 points(2,5,pch=19,col=rgb(1,.5,1))
 points(3,5,pch=19,col=rgb(0.5,.75,.25))
 points(4,5,pch=19,col=rgb(1,.5,.25))
 
-colByEnv <- function(){
-  
-}
-    par(fig=c(0,1,0.55,1), mar=c(0,2.5,2,0), oma=c(0,0,0,0.5))
-    plot(c(1,ncol(pheno)),c(min(pheno) * .9,max(pheno)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=0.75, cex.lab=0.9, cex.main=1, las=1, mgp=c(1.5,0.5,0), t="n", main=gsub("_G.txt","",filename))
-    for(p in 1:ncol(pheno)){
-      if(p %in% ind_tu){
-        points(rep(p,164)+((runif(164)-0.5)/2), pheno[,p], t='p', col=menvironment,pch=20,cex=0.7)
-      } else {
-        rect((p-0.5), 0,(p+0.5),max(pheno)* 2.1,col=grey(0.85),border = "transparent")
-		points(rep(p,164)+((runif(164)-0.5)/2.5), pheno[,p], t='p', col='blue',pch=20,cex=0.7)
-      }
-    }
-	s <- 1
-	for(x in 1:ncol(pheno)){
-	if(Pheno[x,"tu"] != Pheno[s,"tu"]){
-		lines(c(s-0.5,x-0.5),c(mean(pheno[,s:x-1]),mean(pheno[,s:x-1])))
-		s <- x
-		}
-	}
-	lines(c(s-0.5,x+0.5),c(mean(pheno[,s:x]),mean(pheno[,s:x])))
-	box();
-    
-    #image(t(resmatrix_g))
-    par(fig=c(0,1,0.2,0.7), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-    plot(c(1,ncol(pheno)),c(1,ncol(resmatrix_g)), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
-    for(p in 1:nrow(resmatrix_g)){
-		if(p %in% ind_tu){}
-		else {
-        rect((p-0.5),-2,(p+0.5),ncol(resmatrix_g)+5,col=grey(0.85),border = "transparent")
-      }
-      for(m in 1:ncol(resmatrix_g)){
-        if(resmatrix_g[p,m] >= 4){
-          points(p,m, pch=20,cex=1, col=rgb(0.4,0,0.6,0.5:(max(resmatrix_g)+1)/(max(resmatrix_g)+1))[(round(resmatrix_g[p,m])+1)])
-        }
-      }
-	  
-    }
-    box();
-	
-    par(fig=c(0,1,0,0.2), mar=c(2.5,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-    plot(c(1,ncol(pheno)),c(0.5,4.5), xlab="Probes", ylab="Env", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
-    for(a in 1:ncol(pheno)){
-      gmean <- mean(res[,a])
-      gsd   <- sd(res[,a])
-      rect((a-0.5),0.6,(a+0.5),1.4,col=mycolor[round(res[7,a]*3+5.5)],border = "transparent")
-      rect((a-0.5),1.6,(a+0.5),2.4,col=mycolor[round(res[8,a]*3+5.5)],border = "transparent")
-      rect((a-0.5),2.6,(a+0.5),3.4,col=mycolor[round(res[9,a]*3+5.5)],border = "transparent")
-      rect((a-0.5),3.6,(a+0.5),4.4,col=mycolor[round(res[10,a]*3+5.5)],border = "transparent")
-    }
+
+
+
 
 
 
