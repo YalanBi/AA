@@ -6,49 +6,14 @@
 #
 
 
-geno <- read.table("Data/genotypes_n.txt", row.names=1)
-ann <- read.table("annotation_sample.txt", colClasses="character")
-menvironment <- ann[9:172,3]
-
-
-makePlot <- function(filename, x, ...){
-	plot(x ,...)
-}
-
-
-    #image(t(resmatrix_g))
-    par(fig=c(0,1,0.2,0.7), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-    plot(c(1,ncol(pheno)),c(1,ncol(resmatrix_g)), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
-    for(p in 1:nrow(resmatrix_g)){
-		if(p %in% ind_tu){}
-		else {
-        rect((p-0.5),-2,(p+0.5),ncol(resmatrix_g)+5,col=grey(0.85),border = "transparent")
-      }
-      for(m in 1:ncol(resmatrix_g)){
-        if(resmatrix_g[p,m] >= 4){
-          points(p,m, pch=20,cex=1, col=rgb(0.4,0,0.6,0.5:(max(resmatrix_g)+1)/(max(resmatrix_g)+1))[(round(resmatrix_g[p,m])+1)])
-        }
-      }
-	  
-    }
-    box();
-
-points(1,5,pch=19,col=rgb(.25,.75,.75))
-points(2,5,pch=19,col=rgb(1,.5,1))
-points(3,5,pch=19,col=rgb(0.5,.75,.25))
-points(4,5,pch=19,col=rgb(1,.5,.25))
-
-
-
-
 setwd("C:/Arabidopsis Arrays")
-rawexp <- read.table("Data/chr1/AT1G01010.txt", header=TRUE, row.names=1)
-newexp <- rawexp[,17:164]
 env <- read.table("Data/ann_env.txt")
-ind_tu <- grep("tu", rawexp[,"tu"])
+ann_m <- read.table("refined map/map.txt")
 
 
-makePlot_Exp <- function(filename, rawexp, newexp, env, ind_tu, ...){
+
+makePlot_Exp <- function(rawexp, newexp, env, ind_tu){
+  plot(c(1, nrow(newexp)), c(min(newexp) * .9, max(newexp)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=0.75, cex.lab=0.9, cex.main=1, las=1, mgp=c(1.5,0.5,0), t="n", main=filename)
   s <- 1
   for(p in 1:nrow(newexp)){
     if(!p %in% ind_tu){
@@ -63,44 +28,29 @@ makePlot_Exp <- function(filename, rawexp, newexp, env, ind_tu, ...){
   lines(c(s-0.5, p+0.5), c(mean(as.matrix(newexp[s:p,])), mean(as.matrix(newexp[s:p,]))))
   box();
 }
-par(fig=c(0,1,0.5,1), mar=c(0,2.5,2,0), oma=c(0,0,0,0.5))
-plot(c(1, nrow(newexp)), c(min(newexp) * .9, max(newexp)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=0.75, cex.lab=0.9, cex.main=1, las=1, mgp=c(1.5,0.5,0), t="n", main=filename)
-makePlot_Exp(filename, rawexp, newexp, env, ind_tu)
 
 
 
-ann_m <- read.table("refined map/map.txt")
+
 getProbesOnChr <- function(ann_m, chr = 1){
   which(ann_m[,1] == chr)
 }
 
-makePlot_eQTL <- function(filename, newexp, qtl, ind_tu, lodThreshold = 4, chrs = 1:5){
-  qtl <- read.table(paste("Data/chr1/", gsub(".txt", "_QTL.txt", filename), sep=""))
+makePlot_eQTL <- function(newexp, qtl, ind_tu, lodThreshold = 4, chrs = 1:5){
   nprobes <- nrow(qtl)
-  for(chr in chrs){
-    for(p in 1:nprobes){
-      if(!p %in% ind_tu){
-        rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
-      }
+  plot(c(1, nprobes),c(1,5), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
+  for(p in 1:nprobes){
+    if(!p %in% ind_tu){
+      rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
     }
-  }
-  for(chr in chrs){
-    for(p in 1:nprobes){
+    for(chr in chrs){
       if(any(qtl[p, getProbesOnChr(ann_m, chr)] >= lodThreshold)){
         points(p,chr, pch=20,cex=1)
       }
     }
-  }  
+  }
   box();
 }
-par(fig=c(0,1,0.2,0.5), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-plot(c(1, nprobes),c(1,5), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
-makePlot_eQTL(filename, newexp, qtl, ind_tu, lodThreshold = 4, chrs = 1:5)
-
-
-
-
-
 
 
 
@@ -124,7 +74,8 @@ mycolor <- function(){
   return(collist)
 }
 
-makePlot_Env <- function(filename, newexp, env, p, ...){
+makePlot_Env <- function(newexp, env, p){
+  plot(c(1,nrow(newexp)),c(0.5,4.5), xlab="Probes", ylab="Env", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
   for(p in 1:nrow(newexp)){
     pForCol <- round(envTtest(newexp,env,p))+1
     rect((p-0.5),0.6,(p+0.5),1.4,col=mycolor()[pForCol[1]],border = "transparent")
@@ -133,6 +84,36 @@ makePlot_Env <- function(filename, newexp, env, p, ...){
     rect((p-0.5),3.6,(p+0.5),4.4,col=mycolor()[pForCol[4]],border = "transparent")
   }
 }
-par(fig=c(0,1,0,0.2), mar=c(2.5,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-plot(c(1,nrow(newexp)),c(0.5,4.5), xlab="Probes", ylab="Env", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
-makePlot_Env(filename, newexp, env, p)
+
+
+makePlot <- function(doc = "chr1"){
+  for(filename in dir(paste("Data/", doc, sep=""))[grepl("_QTL",dir(paste("Data/", doc, sep="")))]){
+    fn_exp <- gsub("_QTL.txt",".txt", filename)
+    fn_qtl <- filename
+    fn_png <- gsub("_QTL.txt",".png", filename)
+    rawexp <- read.table(paste("Data/", doc, "/", fn_exp, sep=""), header=TRUE, row.names=1)
+    newexp <- rawexp[,17:164]
+    ind_tu <- grep("tu", rawexp[,"tu"])
+    qtl <- read.table(paste("Data/", doc, "/", fn_qtl, sep=""))
+    if(!file.exists(paste("Data/", doc, "/", fn_png, sep=""))){
+      st <- proc.time()
+      cat("Loading", fn_qtl, "\n")
+      png(file = paste("Data/", doc,"/", fn_png, sep=""), bg="white", width=1024, height=1024)
+      par(fig=c(0,1,0.5,1), mar=c(0,2.5,2,0), oma=c(0,0,0,0.5))
+      makePlot_Exp(rawexp, newexp, env, ind_tu)
+      par(fig=c(0,1,0.2,0.5), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
+      makePlot_eQTL(newexp, qtl, ind_tu, lodThreshold = 4, chrs = 1:5)
+      par(fig=c(0,1,0,0.2), mar=c(2.5,2.5,0,0), oma=c(0,0,0,0.5), new=T)
+      makePlot_Env(newexp, env, p)
+      dev.off()
+      et <- proc.time()
+      cat("Done with QTL mapping after:",(et-st)[3],"secs\n")
+      }
+    else{
+      cat("Skipping", fn_qtl," because it exists\n")
+    }
+  }
+}
+
+
+makePlot(doc = "chr1")
