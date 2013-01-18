@@ -6,21 +6,21 @@
 #
 
 getProbesOnChr <- function(ann_m, chr = 1){
-  which(ann_m[,2] == chr)
+  which(ann_m[,1] == chr)
 }
 
 getGeneStats <- function(filename, lodThreshold = 4, chrs = 1:5){
-  gene_eff <- read.table(paste("Data/gene_eff~lm/", filename, sep=""))
-  probe_exp <- read.table(paste("Data/gene_data/", gsub("_G", "", filename), sep=""))
+  probe_exp <- read.table(paste("Data/chr1/", filename, sep=""))
+  gene_qtl <- read.table(paste("Data/chr1/", gsub(".txt", "_QTL.txt", filename), sep=""))
   sum_num <- NULL
-  idmatrix <- vector("list",`chrs)
+  idmatrix <- vector("list", chrs)
   res <- NULL
-  nprobes <- nrow(gene_eff)
+  nprobes <- nrow(gene_qtl)
   for(chr in chrs){
     s <- 0
     ind <- NULL
     for(p in 1:nprobes){
-      if(any(gene_eff[p, getProbesOnChr(ann_m, chr)] >= lodThreshold)){
+      if(any(gene_qtl[p, getProbesOnChr(ann_m, chr)] >= lodThreshold)){
         s <- s+1
         ind <- c(ind, p)
       }
@@ -38,3 +38,41 @@ getGeneStats <- function(filename, lodThreshold = 4, chrs = 1:5){
   res$nprobes <- nprobes
   return(res)
 }
+
+
+
+setwd("C:/Arabidopsis Arrays")
+ann_m <- read.table("refined map/map.txt")
+doc <- chr1
+rawexp <- read.table(paste("Data/", doc, "/", fn_exp, sep=""), header=TRUE, row.names=1)
+newexp <- rawexp[,17:164]
+qtl <- read.table(paste("Data/", doc, "/", fn_qtl, sep=""))
+
+getGeneStats <- function(newexp, qtl, lodThreshold = 4, chrs = 5){
+  sum_num <- NULL
+  idmatrix <- vector("list", chrs)
+  res <- NULL
+  nprobes <- nrow(qtl)
+  for(chr in 1:chrs){
+    s <- 0
+    ind <- NULL
+    for(p in 1:nprobes){
+      if(any(qtl[p, getProbesOnChr(ann_m, chr)] >= lodThreshold)){
+        s <- s+1
+        ind <- c(ind, p)
+      }
+    }
+    sum_num <- c(sum_num, s)
+    if(is.null(ind)){
+      idmatrix[[chr]] <- NA
+    }else{
+      idmatrix[[chr]] <- ind
+    }
+  }
+  res$ratio <- sum_num / nprobes
+  res$ind <- idmatrix
+  res$means <- as.numeric(rowMeans(newexp[,17:ncol(newexp)]))
+  res$nprobes <- nprobes
+  return(res)
+}
+getGeneStats(newexp, qtl, lodThreshold = 4, chrs = 5)
