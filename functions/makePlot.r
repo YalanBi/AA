@@ -12,8 +12,8 @@ ann_m <- read.table("refined map/map.txt")
 
 
 
-makePlot_Exp <- function(rawexp, newexp, env, ind_tu){
-  plot(c(1, nrow(newexp)), c(min(newexp) * .9, max(newexp)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=0.75, cex.lab=0.9, cex.main=1, las=1, mgp=c(1.5,0.5,0), t="n", main=filename)
+makePlot_Exp <- function(fn_exp, rawexp, newexp, env, ind_tu){
+  plot(c(1, nrow(newexp)), c(min(newexp) * .9, max(newexp)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=0.75, cex.lab=0.9, cex.main=1, las=1, mgp=c(1.5,0.5,0), t="n", main=fn_exp)
   s <- 1
   for(p in 1:nrow(newexp)){
     if(!p %in% ind_tu){
@@ -100,7 +100,7 @@ makePlot <- function(doc = "chr1"){
       cat("Loading", fn_qtl, "\n")
       png(file = paste("Data/", doc,"/", fn_png, sep=""), bg="white", width=1024, height=1024)
       par(fig=c(0,1,0.5,1), mar=c(0,2.5,2,0), oma=c(0,0,0,0.5))
-      makePlot_Exp(rawexp, newexp, env, ind_tu)
+      makePlot_Exp(fn_exp, rawexp, newexp, env, ind_tu)
       par(fig=c(0,1,0.2,0.5), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
       makePlot_eQTL(newexp, qtl, ind_tu, lodThreshold = 4, chrs = 1:5)
       par(fig=c(0,1,0,0.2), mar=c(2.5,2.5,0,0), oma=c(0,0,0,0.5), new=T)
