@@ -12,10 +12,10 @@ ann_m <- read.table("refined map/map.txt")
 
 
 
-makePlot_Exp <- function(fn_exp, rawexp, newexp, env, ind_tu){
-  plot(c(1, nrow(newexp)), c(min(newexp) * .9, max(newexp)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=0.75, cex.lab=0.9, cex.main=1, las=1, mgp=c(1.5,0.5,0), t="n", main=fn_exp)
+makePlot_Exp <- function(fn_exp, rawexp, newexp, nprobes, env, ind_tu){
+  plot(c(0.5, nprobes+0.5), c(min(newexp) * .9, max(newexp)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=0.75, cex.lab=1.2, cex.main=1.5, las=1, mgp=c(1.5,0.5,0), t="n", main=fn_exp)
   s <- 1
-  for(p in 1:nrow(newexp)){
+  for(p in 1:nprobes){
     if(!p %in% ind_tu){
       rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
     }
@@ -36,9 +36,8 @@ getProbesOnChr <- function(ann_m, chr = 1){
   which(ann_m[,1] == chr)
 }
 
-makePlot_eQTL <- function(newexp, qtl, ind_tu, lodThreshold = 4, chrs = 1:5){
-  nprobes <- nrow(qtl)
-  plot(c(1, nprobes),c(1,5), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
+makePlot_eQTL <- function(newexp, qtl, nprobes, ind_tu, lodThreshold = 4, chrs = 1:5){
+  plot(c(0.5, nprobes+0.5),c(1,5), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
   for(p in 1:nprobes){
     if(!p %in% ind_tu){
       rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
@@ -74,15 +73,16 @@ mycolor <- function(){
   return(collist)
 }
 
-makePlot_Env <- function(newexp, env, p){
-  plot(c(1,nrow(newexp)),c(0.5,4.5), xlab="Probes", ylab="Env", cex.axis=0.75, cex.lab=0.9, las=1, mgp=c(1.5,0.5,0), t="n")
-  for(p in 1:nrow(newexp)){
+makePlot_Env <- function(newexp, env, nprobes){
+  plot(c(0.5, nprobes+0.5),c(0.5,4.5), xlab="Probes", ylab="Env", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
+  for(p in 1:nprobes){
     pForCol <- round(envTtest(newexp,env,p))+1
     rect((p-0.5),0.6,(p+0.5),1.4,col=mycolor()[pForCol[1]],border = "transparent")
     rect((p-0.5),1.6,(p+0.5),2.4,col=mycolor()[pForCol[2]],border = "transparent")
     rect((p-0.5),2.6,(p+0.5),3.4,col=mycolor()[pForCol[3]],border = "transparent")
     rect((p-0.5),3.6,(p+0.5),4.4,col=mycolor()[pForCol[4]],border = "transparent")
   }
+  box();
 }
 
 
@@ -91,20 +91,21 @@ makePlot <- function(doc = "chr1"){
     fn_exp <- gsub("_QTL.txt",".txt", filename)
     fn_qtl <- filename
     fn_png <- gsub("_QTL.txt",".png", filename)
-    rawexp <- read.table(paste("Data/", doc, "/", fn_exp, sep=""), header=TRUE, row.names=1)
-    newexp <- rawexp[,17:164]
-    ind_tu <- grep("tu", rawexp[,"tu"])
-    qtl <- read.table(paste("Data/", doc, "/", fn_qtl, sep=""))
     if(!file.exists(paste("Data/", doc, "/", fn_png, sep=""))){
+      rawexp <- read.table(paste("Data/", doc, "/", fn_exp, sep=""), header=TRUE, row.names=1)
+      newexp <- rawexp[,17:164]
+      ind_tu <- grep("tu", rawexp[,"tu"])
+      qtl <- read.table(paste("Data/", doc, "/", fn_qtl, sep=""))
+      nprobes <- nrow(qtl)
       st <- proc.time()
       cat("Loading", fn_qtl, "\n")
       png(file = paste("Data/", doc,"/", fn_png, sep=""), bg="white", width=1024, height=1024)
       par(fig=c(0,1,0.5,1), mar=c(0,2.5,2,0), oma=c(0,0,0,0.5))
-      makePlot_Exp(fn_exp, rawexp, newexp, env, ind_tu)
+      makePlot_Exp(fn_exp, rawexp, newexp, nprobes, env, ind_tu)
       par(fig=c(0,1,0.2,0.5), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-      makePlot_eQTL(newexp, qtl, ind_tu, lodThreshold = 4, chrs = 1:5)
+      makePlot_eQTL(newexp, qtl, nprobes, ind_tu, lodThreshold = 4, chrs = 1:5)
       par(fig=c(0,1,0,0.2), mar=c(2.5,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-      makePlot_Env(newexp, env, p)
+      makePlot_Env(newexp, env, nprobes)
       dev.off()
       et <- proc.time()
       cat("Done with QTL mapping after:",(et-st)[3],"secs\n")
