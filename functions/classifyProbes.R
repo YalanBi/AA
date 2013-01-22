@@ -31,8 +31,8 @@ getProbesOnChr <- function(ann_m, chr = 1){
   which(ann_m[,1] == chr)
 }
 
-getGeneStats <- function(filename, lodThreshold = 4, chrs = 5){
-  qtl <- read.table(paste("Data/chr1/", gsub(".txt", "_QTL.txt", filename), sep=""))
+getGeneStats <- function(filename, lodThreshold = 5, chrs = 5){
+  qtl <- read.table(filename)
   nprobes <- nrow(qtl)
   sum_num <- NULL
   idmatrix <- vector("list", chrs)
@@ -47,9 +47,7 @@ getGeneStats <- function(filename, lodThreshold = 4, chrs = 5){
       }
     }
     sum_num <- c(sum_num, s)
-    if(is.null(ind)){
-      idmatrix[[chr]] <- NA
-    }else{
+    if(!is.null(ind)){
       idmatrix[[chr]] <- ind
     }
   }
@@ -59,31 +57,68 @@ getGeneStats <- function(filename, lodThreshold = 4, chrs = 5){
   return(res)
 }
 
-expprobes <- function(newexp, ratio = 0.1){
+expprobes <- function(newexp, expThreshold=4.5, ratio = 0.1){
   expprb_ind <- NULL
   for(a in 1:nrow(newexp)){
-    if(sum(newexp[a,] >= 4.5)/ncol(newexp) >= ratio){
+    if(sum(newexp[a,] >= expThreshold)/ncol(newexp) >= ratio){
       expprb_ind <- c(expprb_ind, a)
     }
   }
   return(expprb_ind)
 }
 
-classifyProbes <- function(filename, ratio){
-  rawexp <- read.table(paste("Data/", doc, "/", filename, sep=""), header=TRUE, row.names=1)
+expprobes_mean <- function(newexp, expThreshold=4.5){
+  expprb_ind <- NULL
+  for(a in 1:nrow(newexp)){
+    if(mean(as.numeric(newexp[a,])) >= expThreshold){
+      expprb_ind <- c(expprb_ind, a)
+    }
+  }
+  return(expprb_ind)
+}
+
+classifyProbes <- function(filename, lodThreshold = 5, expThreshold = 5, ratio = 0.1, chrs = 5){
+  rawexp <- read.table(file=gsub("_QTL", "", filename), header=TRUE, row.names=1)
   newexp <- rawexp[,17:164]
-  res <- getGeneStats(filename, lodThreshold = 4, chrs = 5)
+  res <- getGeneStats(filename, lodThreshold = lodThreshold, chrs = chrs)
   classInf <- NULL
   allprobes <- 1:res$nprobes
   qtlprobes <- unique(unlist(res$ind))
-  expprobes <- expprobes(newexp, ratio)
-  goodprobes <- unique(c(qtlprobes, expprobes))
-  badprobes <- which(!allprobes %in% goodprobes)
-  classInf$badP <- badprobes
-  classInf$goodP <- goodprobes
+  expprobes <- expprobes_mean(newexp, expThreshold=expThreshold)
+  intronprobes <- which(! allprobes %in% grep("tu", rawexp[,"tu"]))
+  goodprobes <- unique(c(qtlprobes, expprobes, intronprobes))# A intron probe is always GOOD !
+  classInf$badP <- which(!allprobes %in% goodprobes)
+  classInf$goodP <- goodprobes[order(goodprobes, decreasing = FALSE)]
   classInf$qtlP <- qtlprobes
   classInf$expP <- expprobes
+  classInf$introP <- intronprobes
   return(classInf)
 }
 
-classifyProbes(filename, ratio = 0.5)
+setwd("C:\\Arabidopsis Arrays\\Data\\chr4")
+res <- list()
+for(x in dir()[grepl("_QTL",dir())]){
+  st <- proc.time()
+  res[[x]] <- classifyProbes(filename = x) #Please note: Filename = QTL file !!
+  et <- proc.time()
+  cat(x, "done after:", (et-st)[3], "secs\n")
+}
+save(res,  file="Classification_chr4.Rdata")
+
+
+
+
+#only bad probes
+classifyBadP <- function(filename, lodThreshold = 5, expThreshold = 5, ratio = 0.1, chrs = 5){
+  rawexp <- read.table(file=gsub("_QTL", "", filename), header=TRUE, row.names=1)
+  newexp <- rawexp[,17:164]
+  res <- getGeneStats(filename, lodThreshold = lodThreshold, chrs = chrs)
+  classInf <- NULL
+  allprobes <- 1:res$nprobes
+  qtlprobes <- unique(unlist(res$ind))
+  expprobes <- expprobes_mean(newexp, expThreshold=expThreshold)
+  intronprobes <- which(! allprobes %in% grep("tu", rawexp[,"tu"]))
+  goodprobes <- unique(c(qtlprobes, expprobes, intronprobes))# A intron probe is always GOOD !
+  classInf <- which(!allprobes %in% goodprobes)
+  return(classInf)
+}

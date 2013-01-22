@@ -36,15 +36,16 @@ getProbesOnChr <- function(ann_m, chr = 1){
   which(ann_m[,1] == chr)
 }
 
-makePlot_eQTL <- function(newexp, qtl, nprobes, ind_tu, lodThreshold = 4, chrs = 1:5){
-  plot(c(0.5, nprobes+0.5),c(1,5), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
+makePlot_eQTL <- function(newexp, qtl, nprobes, ind_tu, lodThreshold = 5, chrs = 1:5){
+  plot(c(0.5, nprobes+0.5),c(0.5, 5.5), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
   for(p in 1:nprobes){
     if(!p %in% ind_tu){
       rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
     }
     for(chr in chrs){
       if(any(qtl[p, getProbesOnChr(ann_m, chr)] >= lodThreshold)){
-        points(p,chr, pch=20,cex=1)
+        #cat("->",(round(max(qtl[p, getProbesOnChr(ann_m, chr)]),d=0)+1) - lodThreshold,"\n")
+        points(p, chr, pch=15,cex=1)
       }
     }
   }
@@ -85,36 +86,39 @@ makePlot_Env <- function(newexp, env, nprobes){
   box();
 }
 
+#Please note: Filename = QTL file !!
+singlePlot <- function(rawexp, qtl, fn_exp="Plot", lodThreshold = 5){
+  newexp <- rawexp[,17:164]
+  ind_tu <- grep("tu", rawexp[,"tu"])
+  nprobes <- nrow(qtl)
+  st <- proc.time()
+  par(fig=c(0,1,0.5,1), mar=c(0,2.5,2,0), oma=c(0,0,0,0.5))
+  makePlot_Exp(fn_exp, rawexp, newexp, nprobes, env, ind_tu)
+  par(fig=c(0,1,0.2,0.5), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
+  makePlot_eQTL(newexp, qtl, nprobes, ind_tu, lodThreshold = lodThreshold, chrs = 1:5)
+  par(fig=c(0,1,0,0.2), mar=c(2.5,2.5,0,0), oma=c(0,0,0,0.5), new=T)
+  makePlot_Env(newexp, env, nprobes)
+  et <- proc.time()
+  cat("Done with plot after:",(et-st)[3],"secs\n")
+}
+#singlePlot(rawexp, qtl, fn_exp="Plot", lodThreshold = 5)
 
-makePlot <- function(doc = "chr1"){
-  for(filename in dir(paste("Data/", doc, sep=""))[grepl("_QTL",dir(paste("Data/", doc, sep="")))]){
-    fn_exp <- gsub("_QTL.txt",".txt", filename)
+makePlot <- function(location = "C:/Arabidopsis Arrays/Data/chr1/", ...){
+  for(filename in dir(location)[grepl("_QTL",dir(location))]){
     fn_qtl <- filename
+    fn_exp <- gsub("_QTL.txt",".txt", filename)
     fn_png <- gsub("_QTL.txt",".png", filename)
-    if(!file.exists(paste("Data/", doc, "/", fn_png, sep=""))){
-      rawexp <- read.table(paste("Data/", doc, "/", fn_exp, sep=""), header=TRUE, row.names=1)
-      newexp <- rawexp[,17:164]
-      ind_tu <- grep("tu", rawexp[,"tu"])
-      qtl <- read.table(paste("Data/", doc, "/", fn_qtl, sep=""))
-      nprobes <- nrow(qtl)
-      st <- proc.time()
-      cat("Loading", fn_qtl, "\n")
-      png(file = paste("Data/", doc,"/", fn_png, sep=""), bg="white", width=1024, height=1024)
-      par(fig=c(0,1,0.5,1), mar=c(0,2.5,2,0), oma=c(0,0,0,0.5))
-      makePlot_Exp(fn_exp, rawexp, newexp, nprobes, env, ind_tu)
-      par(fig=c(0,1,0.2,0.5), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-      makePlot_eQTL(newexp, qtl, nprobes, ind_tu, lodThreshold = 4, chrs = 1:5)
-      par(fig=c(0,1,0,0.2), mar=c(2.5,2.5,0,0), oma=c(0,0,0,0.5), new=T)
-      makePlot_Env(newexp, env, nprobes)
+    if(!file.exists(paste(location, fn_png, sep=""))){
+      rawexp <- read.table(paste(location, fn_exp, sep=""), header=TRUE, row.names=1)
+      qtl <- read.table(paste(location, fn_qtl, sep=""))
+      png(file = paste(location, fn_png, sep=""), bg="white", width=1024, height=1024)
+      singlePlot(rawexp, qtl, fn_exp, ...)
       dev.off()
-      et <- proc.time()
-      cat("Done with QTL mapping after:",(et-st)[3],"secs\n")
-      }
-    else{
+    }else{
       cat("Skipping", fn_qtl," because it exists\n")
     }
   }
 }
 
-
-makePlot(doc = "chr1")
+makePlot(location = "C:/Arabidopsis Arrays/Data/chr1/", lodThreshold = 5)
+#lodThreshold = 5 <- -log10(0.01/716)
