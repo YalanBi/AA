@@ -46,6 +46,8 @@ getGeneStats <- function(filename, lodThreshold = 5, chrs = 5){
         ind <- c(ind, p)
       }
     }
+    #Here we know which probes we're going to summarize
+    
     sum_num <- c(sum_num, s)
     if(!is.null(ind)){
       idmatrix[[chr]] <- ind
@@ -95,7 +97,7 @@ classifyProbes <- function(filename, lodThreshold = 5, expThreshold = 5, ratio =
   return(classInf)
 }
 
-setwd("C:\\Arabidopsis Arrays\\Data\\chr4")
+setwd("C:\\Arabidopsis Arrays\\Data\\chr5")
 res <- list()
 for(x in dir()[grepl("_QTL",dir())]){
   st <- proc.time()
@@ -103,7 +105,7 @@ for(x in dir()[grepl("_QTL",dir())]){
   et <- proc.time()
   cat(x, "done after:", (et-st)[3], "secs\n")
 }
-save(res,  file="Classification_chr4.Rdata")
+save(res,  file="Classification_chr5.Rdata")
 
 
 

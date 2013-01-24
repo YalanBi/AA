@@ -5,6 +5,8 @@
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
+setwd("C:/Arabidopsis Arrays")
+
 splitChromosome <- function(filename, chr=1){
   fp <- file(filename)
   open(fp)
@@ -16,6 +18,7 @@ splitChromosome <- function(filename, chr=1){
   intergenic_seq <- NULL
   empty_seq <- NULL
   header <- c("ID", strsplit(readLines(fp, n=1),"\t")[[1]])
+  header <- header[-17]#####delete the additional colname in the header!!!#####
   igfilename <- paste("Data/intergenic",chr,".txt",sep="")
   cat(paste(header,collapse="\t"),"\n", file=igfilename, sep="")
   mline <- readLines(fp, n=1)
@@ -43,6 +46,7 @@ splitChromosome <- function(filename, chr=1){
   close(fp)
   cat(filename,"contains",cnt,"probes\n")
 }
+splitChromosome("Yalan map/offspring_phenotypes_chr1.txt", chr = 1)
 
 for(filename in dir("Yalan map/")[grepl("off",dir("Yalan map/"))]){
   chr <- which(filename == dir("Yalan map/")[grepl("off",dir("Yalan map/"))])
