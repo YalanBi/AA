@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 16-01-2013
+# last modified: 24-01-2013
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -69,7 +69,7 @@ mycolor <- function(){
 makePlot_Env <- function(newexp, env, nprobes){
   plot(c(0.5, nprobes+0.5),c(0.5,4.5), xlab="Probes", ylab="Env", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
   for(p in 1:nprobes){
-    pForCol <- round(envTtest(newexp,env,p))+1
+    pForCol <- round(envTtest(newexp,env,p)-0.5)+1
     pForCol[pForCol > 10] <- 10
     rect((p-0.5),0.6,(p+0.5),1.4,col=mycolor()[pForCol[1]],border = "transparent")
     rect((p-0.5),1.6,(p+0.5),2.4,col=mycolor()[pForCol[2]],border = "transparent")
