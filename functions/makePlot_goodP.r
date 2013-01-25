@@ -67,7 +67,8 @@ mycolor <- function(){
 }
 
 makePlot_Env <- function(newexp, env, nprobes){
-  plot(c(0.5, nprobes+0.5),c(0.5,4.5), xlab="Probes", ylab="Env", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
+  plot(c(0.5, nprobes+0.5),c(0.5,4.5), xaxt='n', xlab="", ylab="Env", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
+  axis(1, at=1:nprobes, labels=row.names(newexp), cex.axis=0.75, las=2, tck=-0.01, mgp=c(1.5,0.5,0))
   for(p in 1:nprobes){
     pForCol <- round(envTtest(newexp,env,p)-0.5)+1
     pForCol[pForCol > 10] <- 10
@@ -85,11 +86,11 @@ singlePlot <- function(rawexp, qtl, fn_exp="Plot", lodThreshold = 5){
   ind_tu <- grep("tu", rawexp[,"tu"])
   nprobes <- nrow(qtl)
   st <- proc.time()
-  par(fig=c(0,1,0.5,1), mar=c(0,2.5,2,0), oma=c(0,0,0,0.5))
+  par(fig=c(0,1,0.5,1), mar=c(0,3,3,0.5), oma=c(0,0,0,0.5))
   makePlot_Exp(fn_exp, rawexp, newexp, nprobes, env, ind_tu)
-  par(fig=c(0,1,0.2,0.5), mar=c(0,2.5,0,0), oma=c(0,0,0,0.5), new=T)
+  par(fig=c(0,1,0.27,0.5), mar=c(0,3,0,0.5), oma=c(0,0,0,0.5), new=T)
   makePlot_eQTL(newexp, qtl, nprobes, ind_tu, lodThreshold = lodThreshold, chrs = 1:5)
-  par(fig=c(0,1,0,0.2), mar=c(2.5,2.5,0,0), oma=c(0,0,0,0.5), new=T)
+  par(fig=c(0,1,0,0.27), mar=c(4,3,0,0.5), oma=c(0,0,0,0.5), new=T)
   makePlot_Env(newexp, env, nprobes)
   et <- proc.time()
   cat("Done with plot after:",(et-st)[3],"secs\n")

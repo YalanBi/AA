@@ -1,3 +1,16 @@
+#
+# Functions for analysing A. Thaliana Tiling Arrays
+# last modified: 24-01-2013
+# first written: 16-01-2013
+# (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
+#
+
+setwd("C:/Arabidopsis Arrays")
+ann_m <- read.table("refined map/map.txt")
+
+getProbesOnChr <- function(ann_m, chr = 1){
+  which(ann_m[,1] == chr)
+}
 
 
 createGenes <- function(chromosome = 1, empty = TRUE){  #TODO: Per chromosome we need a new file !!!
@@ -23,12 +36,12 @@ createGenes <- function(chromosome = 1, empty = TRUE){  #TODO: Per chromosome we
       if(length(probesa5) > 4){
         #Create a new gene !
         newgenename <- gsub(".txt", paste("_",chr,sep=""), fname)
-        expValues <- colMeans(exp_data[probesa5,17:ncol(exp_data)])
-        cat(newgenename, expValues, "\n", file="genes_by_chromosomes.txt",append=TRUE)
+        expValues <- colMeans(exp_data[probesa5, 16:ncol(exp_data)])
+        cat(newgenename, expValues, "\n", file="genes_by_chromosomes.txt", append=TRUE)
         cnt <- cnt+1
       }
     }
-    cat("Finished with",fname,"created:", cnt,"Genes\n")
+    cat("Finished with", fname, "created:", cnt, "Genes\n")
   }
 }
 
@@ -49,10 +62,10 @@ createSingleGenes <- function(chromosome = 1, empty = TRUE){
     }else{
       good <-  class$goodP
     }
-    expValues <- colMeans(exp_data[good,17:ncol(exp_data)])
+    expValues <- colMeans(exp_data[good, 16:ncol(exp_data)])
     newgenename <- gsub(".txt", "", fname)
-    cat(newgenename, expValues, "\n", file="genes_summarized.txt",append=TRUE)
-    cat("Finished with",fname, "\n")
+    cat(newgenename, expValues, "\n", file="genes_summarized.txt", append=TRUE)
+    cat("Finished with", fname, "\n")
   }
 }
 
