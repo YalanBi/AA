@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 24-01-2013
+# last modified: 29-01-2013
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -69,40 +69,3 @@ createSingleGenes <- function(chromosome = 1, empty = TRUE){
     cat("Finished with", fname, "\n")
   }
 }
-
-
-
-
-setwd("C:/Arabidopsis Arrays")
-geno <- read.table("refined map/genotypes.txt", row.names=1)
-#geno <- read.table("Data/Old/genotypes_n.txt", row.names=1)
-menvironment <- read.table("Data/ann_env.txt",sep="\t")[,2]
-#new_exp <- t(read.table("Data/Chr2/At2G01190.txt",row.names=1,header=FALSE)[,16:163])
-
-new_exp <- t(read.table("Data/new genes/genes_by_chromosomes2.txt",row.names=1,header=FALSE))
-
-#new_exp <- new_exp[,1:200]
-
-map.fast <- function(x, geno, pheno, menvironment){
-	res <- NULL
-  #envv <- as.factor(menvironment)
-	models  <- aov(as.matrix(pheno) ~ as.factor(menvironment) + as.numeric(geno[,x]) +  as.factor(menvironment):as.numeric(geno[,x]))
-	modelinfo <- summary(models)
-	res$env <- unlist(lapply(modelinfo,"[",1,5),use.names=T)
-	res$qtl <- unlist(lapply(modelinfo,"[",2,5),use.names=T)
-  res$int <- unlist(lapply(modelinfo,"[",3,5),use.names=T)
-	res
-}
-
-qtlmatrix <- NULL
-intmatrix <- NULL
-for(m in 1:ncol(geno)){
-  res <- map.fast(m, geno,new_exp, menvironment)
-  qtlmatrix <- cbind(qtlmatrix,res$qtl)
-  intmatrix <- cbind(intmatrix,res$int)
-  cat(m,"\n")
-}
-image(t(-log10(qtlmatrix))>5)
-
-
-hist(as.numeric(menvironment)+(geno[,326]-1.5)/10, breaks=20)

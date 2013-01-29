@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 21-01-2013
+# last modified: 29-01-2013
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -31,7 +31,7 @@ getProbesOnChr <- function(ann_m, chr = 1){
   which(ann_m[,1] == chr)
 }
 
-getGeneStats <- function(filename, lodThreshold = 5, chrs = 5){
+getGeneStats <- function(filename, lodThreshold = 4, chrs = 5){
   qtl <- read.table(filename)
   nprobes <- nrow(qtl)
   sum_num <- NULL
@@ -60,7 +60,7 @@ getGeneStats <- function(filename, lodThreshold = 5, chrs = 5){
 }
 
 #Simplify, without idmatrix
-getGeneStatsS <- function(filename, lodThreshold = 5, chrs = 5){
+getGeneStatsS <- function(filename, lodThreshold = 4, chrs = 5){
   #st <- proc.time()[3]
   qtl <- read.table(filename)
   nprobes <- nrow(qtl)
@@ -82,7 +82,7 @@ getGeneStatsS <- function(filename, lodThreshold = 5, chrs = 5){
    #cat(et-st, "\n")
    return(res)
 }
-#getGeneStatsS("C:\\Arabidopsis Arrays\\Data\\chr2\\AT2G01060_QTL.txt", lodThreshold = 5, chrs = 5)
+#getGeneStatsS("C:\\Arabidopsis Arrays\\Data\\chr2_normalized\\AT2G01060_QTL.txt", lodThreshold = 4, chrs = 5)
 
 #2 variables to control
 expprobes_ratio <- function(newexp, expThreshold=4.5, ratio = 0.1){
@@ -95,7 +95,7 @@ expprobes_ratio <- function(newexp, expThreshold=4.5, ratio = 0.1){
   return(expprb_ind)
 }
 
-expprobes_mean <- function(newexp, expThreshold=4.5){
+expprobes_mean <- function(newexp, expThreshold=5){
   expprb_ind <- NULL
   for(a in 1:nrow(newexp)){
     if(mean(as.numeric(newexp[a,])) >= expThreshold){
@@ -105,10 +105,10 @@ expprobes_mean <- function(newexp, expThreshold=4.5){
   return(expprb_ind)
 }
 
-classifyProbes <- function(filename, lodThreshold = 5, expThreshold = 5, ratio = 0.1, chrs = 5){
+classifyProbes <- function(filename, lodThreshold = 4, expThreshold = 5, chrs = 5){
   rawexp <- read.table(file=gsub("_QTL", "", filename), header=TRUE, row.names=1)
-  newexp <- rawexp[,16:163]
-  #res <- getGeneStats(filename, lodThreshold = lodThreshold, chrs = chrs)
+  newexp <- rawexp[,17:164]
+  #res <- getGeneStats(filename, lodThreshold = lodThreshold, chrs = chrs)#with idmatrix
   res <- getGeneStatsS(filename, lodThreshold = lodThreshold, chrs = chrs)
   classInf <- NULL
   allprobes <- 1:res$nprobes
@@ -126,7 +126,7 @@ classifyProbes <- function(filename, lodThreshold = 5, expThreshold = 5, ratio =
   return(classInf)
 }
 
-setwd("C:\\Arabidopsis Arrays\\Data\\chr5")
+setwd("C:\\Arabidopsis Arrays\\Data\\chr2_normalized")
 res <- list()
 for(x in dir()[grepl("_QTL",dir())]){
   st <- proc.time()
@@ -134,4 +134,4 @@ for(x in dir()[grepl("_QTL",dir())]){
   et <- proc.time()
   cat(x, "done after:", (et-st)[3], "secs\n")
 }
-save(res,  file="Classification_chr5.Rdata")
+save(res,  file="Classification_chr2_normalized.Rdata")

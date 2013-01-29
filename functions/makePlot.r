@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 24-01-2013
+# last modified: 29-01-2013
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -82,7 +82,7 @@ makePlot_Env <- function(newexp, env, nprobes){
 
 #Please note: Filename = QTL file !!
 singlePlot <- function(rawexp, qtl, fn_exp="Plot", lodThreshold = 5){
-  newexp <- rawexp[,16:163]
+  newexp <- rawexp[,17:164]
   ind_tu <- grep("tu", rawexp[,"tu"])
   nprobes <- nrow(qtl)
   st <- proc.time()
@@ -97,7 +97,7 @@ singlePlot <- function(rawexp, qtl, fn_exp="Plot", lodThreshold = 5){
 }
 #singlePlot(rawexp, qtl, fn_exp="Plot", lodThreshold = 5)
 
-makePlot <- function(location = "C:/Arabidopsis Arrays/Data/chr1/", ...){
+makePlot <- function(location = "C:/Arabidopsis Arrays/Data/chr1_normalized/", ...){
   for(filename in dir(location)[grepl("_QTL",dir(location))]){ #Please note: Filename = QTL file !!
     fn_qtl <- filename
     fn_exp <- gsub("_QTL.txt",".txt", filename)
@@ -114,5 +114,5 @@ makePlot <- function(location = "C:/Arabidopsis Arrays/Data/chr1/", ...){
   }
 }
 
-makePlot(location = "C:/Arabidopsis Arrays/Data/chr1/", lodThreshold = 5)
-#lodThreshold = 5 <- -log10(0.01/716)
+makePlot(location = "C:/Arabidopsis Arrays/Data/chr1_normalized/", lodThreshold = 4)
+#lodThreshold = 4 <- -log10(0.01/716)=4.146128

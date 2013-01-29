@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 16-01-2013
+# last modified: 29-01-2013
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -29,7 +29,7 @@ splitChromosome <- function(filename, chr=1){
     if(elements["gene"] != "intergenic" && elements["gene"] != ""){ # A gene !
       if(as.character(previous_gene) != as.character(elements["gene"])){ # A new gene
         cat(previous_x, as.character(previous_gene), "=", cnt, as.character(elements["gene"]),"in",(et-st)[3],"secs\n")
-        outfile <- paste("Data/normalized/chr",chr,"/", as.character(elements["gene"]),".txt",sep="")
+        outfile <- paste("Data/chr",chr,"_normalized/", as.character(elements["gene"]),".txt",sep="")
         cat(paste(header,collapse="\t"),"\n", file=outfile)
       } #Write the probe to the gene file
       cat(mline,"\n", file=outfile, sep="", append=TRUE)
