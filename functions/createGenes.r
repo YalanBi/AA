@@ -84,7 +84,7 @@ for(n in 1:5){
     createGenes(chromosome = n)
   }
   if(file.exists(paste("Data/genes_summarized_", n, "_normalized.txt", sep=""))){
-    cat(paste("Data/genes_summarized_", chromosome, "_normalized.txt", sep=""), "exist\n")
+    cat(paste("Data/genes_summarized_", n, "_normalized.txt", sep=""), "exist\n")
   }
   else{
     createSingleGenes(chromosome = n)

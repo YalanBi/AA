@@ -56,47 +56,37 @@ map.fast <- function(geno, pheno, menvironment){
   return(res)
 }
 
-mapNewQTLGenes <- function(geno, env){
+mapNewQTLGenes <- function(filename = "genes_by_chromosomes1_normalized.txt", geno, env){
   location <- "C:/Arabidopsis Arrays/Data/"
-  cnt <- 1
-  for(filename in dir(location)[grepl("genes_by_chromosomes", dir(location))]){
-    st <- proc.time()[3]
-    new_exp <- t(read.table(paste("Data/", filename, sep=""), row.names=1, header=FALSE))
-    res <- NULL
-    res <- apply(geno, 2, function(x, pheno, env){
-      -log10(map.fast(x, pheno, env)$qtl)
-    }, pheno=new_exp, env=env)
-    write.table(res, file=paste("Data/mapNewQTLgenes_chr", cnt, "_normalized.txt", sep=""))
-    et <- proc.time()[3]
-    cat("chr", cnt, " done in: ", et-st, "sec\n", sep="")
-    cnt <- cnt + 1
-  }
+  st <- proc.time()[3]
+  new_exp <- t(read.table(paste("Data/", filename, sep=""), row.names=1, header=FALSE))
+  res <- -log10(apply(geno, 2, function(x, pheno, env){
+    map.fast(x, pheno, env)$qtl
+  }, pheno=new_exp, env=env))
+  write.table(res, file=paste(location, gsub(".txt", "_QTL.txt", filename), sep=""))
+  et <- proc.time()[3]
+  cat(filename, " done in: ", et-st, "sec\n", sep="")
 }
-mapNewQTLGenes(geno, env)
+#mapNewQTLGenes(filename = "genes_by_chromosomes1_normalized.txt", geno, env)
 
 
 image(t(res)>4)
 
 
 
-mapNewGOODGenes <- function(geno, env){
+mapNewGOODGenes <- function(filename = "genes_summarized_1_normalized.txt", geno, env){
   location <- "C:/Arabidopsis Arrays/Data/"
-  cnt <- 1
-  for(filename in dir(location)[grepl("genes_summarized", dir(location))]){
-    st <- proc.time()[3]
-    new_exp <- t(read.table(paste("Data/", filename, sep=""), row.names=1, header=FALSE))
-    res <- NULL
-    res <- apply(geno, 2, function(x, pheno, env){
-      -log10(map.fast(x, pheno, env)$qtl)
-    }, pheno=new_exp, env=env)
-    write.table(res, file=paste("Data/mapNewGOODgenes_chr", cnt, "_normalized.txt", sep=""))
-    et <- proc.time()[3]
-    cat("chr", cnt, " done in: ", et-st, "sec\n", sep="")
-    cnt <- cnt + 1
-  }
+  st <- proc.time()[3]
+  new_exp <- t(read.table(paste("Data/", filename, sep=""), row.names=1, header=FALSE))
+  res <- NULL
+  res <- apply(geno, 2, function(x, pheno, env){
+    -log10(map.fast(x, pheno, env)$qtl)
+  }, pheno=new_exp, env=env)
+  write.table(res, file=paste(location, gsub(".txt", "_QTL.txt", filename), sep=""))
+  et <- proc.time()[3]
+  cat(filename, " done in: ", et-st, "sec\n", sep="")
 }
-
-mapNewGOODGenes(geno, env)
+#mapNewGOODGenes(filename = "genes_summarized_1_normalized.txt", geno, env)
 
 
 
