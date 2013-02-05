@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 29-01-2013
+# last modified: 05-02-2013
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -19,7 +19,7 @@ splitChromosome <- function(filename, chr=1){
   empty_seq <- NULL
   header <- c("ID", strsplit(readLines(fp, n=1),"\t")[[1]])
   #header <- header[-17]#####delete the additional colname in the header!!!#####
-  igfilename <- paste("Data/intergenic",chr,"_normalized.txt",sep="")
+  igfilename <- paste("Data/intergenic",chr,"_norm_hf_cor.txt",sep="")
   cat(paste(header,collapse="\t"),"\n", file=igfilename, sep="")
   mline <- readLines(fp, n=1)
   while(length(mline) != 0L){
@@ -29,7 +29,7 @@ splitChromosome <- function(filename, chr=1){
     if(elements["gene"] != "intergenic" && elements["gene"] != ""){ # A gene !
       if(as.character(previous_gene) != as.character(elements["gene"])){ # A new gene
         cat(previous_x, as.character(previous_gene), "=", cnt, as.character(elements["gene"]),"in",(et-st)[3],"secs\n")
-        outfile <- paste("Data/chr",chr,"_normalized/", as.character(elements["gene"]),".txt",sep="")
+        outfile <- paste("Data/chr",chr,"_norm_hf_cor/", as.character(elements["gene"]),".txt",sep="")
         cat(paste(header,collapse="\t"),"\n", file=outfile)
       } #Write the probe to the gene file
       cat(mline,"\n", file=outfile, sep="", append=TRUE)
@@ -46,7 +46,7 @@ splitChromosome <- function(filename, chr=1){
   close(fp)
   cat(filename,"contains",cnt,"probes\n")
 }
-splitChromosome("Yalan map/offspring_phenotypes_chr1_normalized.txt", chr = 1)
+splitChromosome("Yalan map/offspring_phenotypes_chr2_norm_hf_cor.txt", chr = 2)
 
 for(filename in dir("Yalan map/")[grepl("off",dir("Yalan map/"))]){
   chr <- which(filename == dir("Yalan map/")[grepl("off",dir("Yalan map/"))])

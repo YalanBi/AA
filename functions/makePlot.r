@@ -97,7 +97,7 @@ singlePlot <- function(rawexp, qtl, fn_exp="Plot", lodThreshold = 5){
 }
 #singlePlot(rawexp, qtl, fn_exp="Plot", lodThreshold = 5)
 
-makePlot <- function(location = "C:/Arabidopsis Arrays/Data/chr1_normalized/", ...){
+makePlot <- function(location = "C:/Arabidopsis Arrays/Data/chr1_norm_hf_cor/", ...){
   for(filename in dir(location)[grepl("_QTL",dir(location))]){ #Please note: Filename = QTL file !!
     fn_qtl <- filename
     fn_exp <- gsub("_QTL.txt",".txt", filename)
@@ -114,5 +114,5 @@ makePlot <- function(location = "C:/Arabidopsis Arrays/Data/chr1_normalized/", .
   }
 }
 
-makePlot(location = "C:/Arabidopsis Arrays/Data/chr1_normalized/", lodThreshold = 4)
+makePlot(location = "C:/Arabidopsis Arrays/Data/chr1_norm_hf_cor/", lodThreshold = 4)
 #lodThreshold = 4 <- -log10(0.01/716)=4.146128

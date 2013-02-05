@@ -20,11 +20,11 @@ map.fast <- function(geno, pheno, menvironment){
 
 mapGenotypes <- function(geno, menvironment, chr=1){
   env <- as.factor(menvironment)
-  for(filename in dir(paste("Data/chr", chr, "_normalized/", sep=""))[grepl(".txt",dir(paste("Data/chr", chr, "_normalized/", sep="")))]){
-    if(!file.exists(paste("Data/chr", chr, "_normalized/", gsub(".txt","_QTL.txt",filename), sep="")) && !grepl("_QTL",filename)){
+  for(filename in dir(paste("Data/chr", chr, "_norm_hf_cor/", sep=""))[grepl(".txt",dir(paste("Data/chr", chr, "_norm_hf_cor/", sep="")))]){
+    if(!file.exists(paste("Data/chr", chr, "_norm_hf_cor/", gsub(".txt","_QTL.txt",filename), sep="")) && !grepl("_QTL",filename)){
       st <- proc.time()
       cat("Loading", filename,"\n")
-      Pheno <- read.table(paste("Data/chr", chr, "_normalized/", filename, sep=""),row.names=1, header=TRUE)
+      Pheno <- read.table(paste("Data/chr", chr, "_norm_hf_cor/", filename, sep=""),row.names=1, header=TRUE)
       if(nrow(Pheno) < 4){
         cat("Skipping", filename," because it has to few probes\n")
       }else{
@@ -35,7 +35,7 @@ mapGenotypes <- function(geno, menvironment, chr=1){
         }, pheno=pheno, env=env)
         rownames(resQTL) <- colnames(pheno)
         colnames(resQTL) = colnames(geno)
-        write.table(resQTL, file=paste("Data/chr", chr, "_normalized/", gsub(".txt","_QTL.txt",filename), sep=""))
+        write.table(resQTL, file=paste("Data/chr", chr, "_norm_hf_cor/", gsub(".txt","_QTL.txt",filename), sep=""))
         et <- proc.time()
         cat("Done with QTL mapping after:",(et-st)[3],"secs\n")
       }
