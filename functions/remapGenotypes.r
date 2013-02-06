@@ -56,7 +56,7 @@ map.fast <- function(geno, pheno, menvironment){
   return(res)
 }
 
-mapNewQTLGenes <- function(filename = "genes_by_chromosomes1_normalized.txt", geno, env){
+mapNewQTLGenes <- function(filename = "genes_by_chromosomes1_norm_hf_cor.txt", geno, env){
   location <- "C:/Arabidopsis Arrays/Data/"
   st <- proc.time()[3]
   new_exp <- t(read.table(paste("Data/", filename, sep=""), row.names=1, header=FALSE))
@@ -67,14 +67,14 @@ mapNewQTLGenes <- function(filename = "genes_by_chromosomes1_normalized.txt", ge
   et <- proc.time()[3]
   cat(filename, " done in: ", et-st, "sec\n", sep="")
 }
-#mapNewQTLGenes(filename = "genes_by_chromosomes1_normalized.txt", geno, env)
+mapNewQTLGenes(filename = "genes_by_chromosomes2_norm_hf_cor.txt", geno, env)
 
 
-image(t(res)>4)
+#image(t(res)>4)
 
 
 
-mapNewGOODGenes <- function(filename = "genes_summarized_1_normalized.txt", geno, env){
+mapNewGOODGenes <- function(filename = "genes_summarized_1_norm_hf_cor.txt", geno, env){
   location <- "C:/Arabidopsis Arrays/Data/"
   st <- proc.time()[3]
   new_exp <- t(read.table(paste("Data/", filename, sep=""), row.names=1, header=FALSE))
@@ -86,7 +86,7 @@ mapNewGOODGenes <- function(filename = "genes_summarized_1_normalized.txt", geno
   et <- proc.time()[3]
   cat(filename, " done in: ", et-st, "sec\n", sep="")
 }
-#mapNewGOODGenes(filename = "genes_summarized_1_normalized.txt", geno, env)
+mapNewGOODGenes(filename = "genes_summarized_2_norm_hf_cor.txt", geno, env)
 
 
 

@@ -126,7 +126,7 @@ classifyProbes <- function(filename, lodThreshold = 4, expThreshold = 5, chrs = 
   return(classInf)
 }
 
-setwd("C:\\Arabidopsis Arrays\\Data\\chr5_normalized")
+setwd("C:\\Arabidopsis Arrays\\Data\\chr2_norm_hf_cor")
 res <- list()
 for(x in dir()[grepl("_QTL",dir())]){
   st <- proc.time()
@@ -134,4 +134,4 @@ for(x in dir()[grepl("_QTL",dir())]){
   et <- proc.time()
   cat(x, "done after:", (et-st)[3], "secs\n")
 }
-save(res,  file="Classification_chr5_normalized.Rdata")
+save(res,  file="Classification_chr2_norm_hf_cor.Rdata")

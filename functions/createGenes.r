@@ -14,9 +14,9 @@ getProbesOnChr <- function(ann_m, chr = 1){
 
 
 createGenes <- function(chromosome = 1, empty = TRUE){  #TODO: Per chromosome we need a new file !!!
-  location <- paste("C:/Arabidopsis Arrays/Data/chr",chromosome,"_normalized/",sep="")
-  if(empty) cat("", file=paste("Data/genes_by_chromosomes", chromosome, "_normalized.txt", sep=""))
-  load(paste(location,"Classification_chr",chromosome,"_normalized.Rdata",sep=""))
+  location <- paste("C:/Arabidopsis Arrays/Data/chr",chromosome,"_norm_hf_cor/",sep="")
+  if(empty) cat("", file=paste("Data/genes_by_chromosomes", chromosome, "_norm_hf_cor.txt", sep=""))
+  load(paste(location,"Classification_chr",chromosome,"_norm_hf_cor.Rdata",sep=""))
   ann_m <- read.table("C:/Arabidopsis Arrays/refined map/map.txt")
 
   for(filename in dir(location)[grepl("_QTL",dir(location))]){
@@ -37,20 +37,20 @@ createGenes <- function(chromosome = 1, empty = TRUE){  #TODO: Per chromosome we
         #Create a new gene !
         newgenename <- gsub(".txt", paste("_",chr,sep=""), fname)
         expValues <- colMeans(exp_data[probesa4, 17:ncol(exp_data)])
-        cat(newgenename, expValues, "\n", file=paste("Data/genes_by_chromosomes", chromosome, "_normalized.txt", sep=""), append=TRUE)
+        cat(newgenename, expValues, "\n", file=paste("Data/genes_by_chromosomes", chromosome, "_norm_hf_cor.txt", sep=""), append=TRUE)
         cnt <- cnt+1
       }
     }
     cat("Finished with", fname, "created:", cnt, "Genes\n")
   }
 }
-#createGenes(chromosome = 1)
+createGenes(chromosome = 2)
 
 
 createSingleGenes <- function(chromosome = 1, empty = TRUE){
-  location <- paste("C:/Arabidopsis Arrays/Data/chr", chromosome, "_normalized/", sep="")
-  if(empty) cat("", file=paste("Data/genes_summarized_", chromosome, "_normalized.txt", sep=""))
-  load(paste(location,"Classification_chr",chromosome,"_normalized.Rdata",sep=""))
+  location <- paste("C:/Arabidopsis Arrays/Data/chr", chromosome, "_norm_hf_cor/", sep="")
+  if(empty) cat("", file=paste("Data/genes_summarized_", chromosome, "_norm_hf_cor.txt", sep=""))
+  load(paste(location,"Classification_chr",chromosome,"_norm_hf_cor.Rdata",sep=""))
   ann_m <- read.table("C:/Arabidopsis Arrays/refined map/map.txt")
 
   for(filename in dir(location)[grepl("_QTL",dir(location))]){
@@ -66,25 +66,25 @@ createSingleGenes <- function(chromosome = 1, empty = TRUE){
     if(length(good) > 0){
       expValues <- colMeans(exp_data[good, 17:ncol(exp_data)])
       newgenename <- gsub(".txt", "", fname)
-      cat(newgenename, expValues, "\n", file=paste("Data/genes_summarized_", chromosome, "_normalized.txt", sep=""), append=TRUE)
+      cat(newgenename, expValues, "\n", file=paste("Data/genes_summarized_", chromosome, "_norm_hf_cor.txt", sep=""), append=TRUE)
       cat("Finished with", fname, "\n")
     }else{
       cat(fname, "no good probes\n")
     }
   }
 }
-#createSingleGenes(chromosome = 1)
+createSingleGenes(chromosome = 2)
 
 
 for(n in 1:5){
-  if(file.exists(paste("Data/genes_by_chromosomes", n, "_normalized.txt", sep=""))){
-    cat(paste("Data/genes_by_chromosomes", n, "_normalized.txt", sep=""), "exist\n")
+  if(file.exists(paste("Data/genes_by_chromosomes", n, "_norm_hf_cor.txt", sep=""))){
+    cat(paste("Data/genes_by_chromosomes", n, "_norm_hf_cor.txt", sep=""), "exist\n")
   }
   else{
     createGenes(chromosome = n)
   }
-  if(file.exists(paste("Data/genes_summarized_", n, "_normalized.txt", sep=""))){
-    cat(paste("Data/genes_summarized_", n, "_normalized.txt", sep=""), "exist\n")
+  if(file.exists(paste("Data/genes_summarized_", n, "_norm_hf_cor.txt", sep=""))){
+    cat(paste("Data/genes_summarized_", n, "_norm_hf_cor.txt", sep=""), "exist\n")
   }
   else{
     createSingleGenes(chromosome = n)

@@ -10,7 +10,7 @@ env <- read.table("Data/ann_env.txt")
 ann_m <- read.table("refined map/map.txt")
 
 makePlot_Exp <- function(fn_exp, rawexp, newexp, nprobes, env, ind_tu){
-  plot(c(0.5, nprobes+0.5), c(min(newexp) * .9, max(newexp)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=0.75, cex.lab=1.2, cex.main=1.5, las=1, mgp=c(1.5,0.5,0), t="n", main=fn_exp)
+  plot(c(0.5, nprobes+0.5), c(min(newexp) * .9, max(newexp)* 1.1), xaxt='n', xlab="", ylab="Intensity", cex.axis=1, cex.lab=1.5, cex.main=2, las=1, mgp=c(1.5,0.5,0), t="n", main=fn_exp)
   s <- 1
   for(p in 1:nprobes){
     if(!p %in% ind_tu){
@@ -31,7 +31,7 @@ getProbesOnChr <- function(ann_m, chr = 1){
 }
 
 makePlot_eQTL <- function(newexp, qtl, nprobes, ind_tu, lodThreshold = 5, chrs = 1:5){
-  plot(c(0.5, nprobes+0.5),c(0.5, 5.5), xaxt='n', xlab="", ylab="eQTL", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
+  plot(c(0.5, nprobes+0.5),c(0.5, 5.5), xaxt='n', xlab="", ylab="eQTL", cex.axis=1, cex.lab=1.5, las=1, mgp=c(1.5,0.5,0), t="n")
   for(p in 1:nprobes){
     if(!p %in% ind_tu){
       rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
@@ -67,8 +67,8 @@ mycolor <- function(){
 }
 
 makePlot_Env <- function(newexp, env, nprobes){
-  plot(c(0.5, nprobes+0.5),c(0.5,4.5), xaxt='n', xlab="", ylab="Env", cex.axis=0.75, cex.lab=1.2, las=1, mgp=c(1.5,0.5,0), t="n")
-  axis(1, at=1:nprobes, labels=row.names(newexp), cex.axis=0.75, las=2, tck=-0.01, mgp=c(1.5,0.5,0))
+  plot(c(0.5, nprobes+0.5),c(0.5,4.5), xaxt='n', xlab="", ylab="Env", cex.axis=1, cex.lab=1.5, las=1, mgp=c(1.5,0.5,0), t="n")
+  axis(1, at=1:nprobes, labels=row.names(newexp), cex.axis=1, las=2, tck=-0.01, mgp=c(1.5,0.5,0))
   for(p in 1:nprobes){
     pForCol <- round(envTtest(newexp,env,p)-0.5)+1
     pForCol[pForCol > 10] <- 10
@@ -115,4 +115,4 @@ makePlot <- function(location = "C:/Arabidopsis Arrays/Data/chr1_norm_hf_cor/", 
 }
 
 makePlot(location = "C:/Arabidopsis Arrays/Data/chr1_norm_hf_cor/", lodThreshold = 4)
-#lodThreshold = 4 <- -log10(0.01/716)=4.146128
+#lodThreshold = 4 <- -log10(0.05/716)=4.146128
