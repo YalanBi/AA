@@ -67,7 +67,7 @@ mapNewQTLGenes <- function(filename = "genes_by_chromosomes1_norm_hf_cor.txt", g
   et <- proc.time()[3]
   cat(filename, " done in: ", et-st, "sec\n", sep="")
 }
-mapNewQTLGenes(filename = "genes_by_chromosomes2_norm_hf_cor.txt", geno, env)
+mapNewQTLGenes(filename = "genes_by_chromosomes4_norm_hf_cor.txt", geno, env)
 
 
 #image(t(res)>4)
@@ -86,7 +86,7 @@ mapNewGOODGenes <- function(filename = "genes_summarized_1_norm_hf_cor.txt", gen
   et <- proc.time()[3]
   cat(filename, " done in: ", et-st, "sec\n", sep="")
 }
-mapNewGOODGenes(filename = "genes_summarized_2_norm_hf_cor.txt", geno, env)
+mapNewGOODGenes(filename = "genes_summarized_4_norm_hf_cor.txt", geno, env)
 
 
 
