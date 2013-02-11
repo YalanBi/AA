@@ -44,7 +44,7 @@ createGenes <- function(chromosome = 1, empty = TRUE){  #TODO: Per chromosome we
     cat("Finished with", fname, "created:", cnt, "Genes\n")
   }
 }
-createGenes(chromosome = 4)
+createGenes(chromosome = 5)
 
 
 createSingleGenes <- function(chromosome = 1, empty = TRUE){
@@ -73,7 +73,7 @@ createSingleGenes <- function(chromosome = 1, empty = TRUE){
     }
   }
 }
-createSingleGenes(chromosome = 4)
+createSingleGenes(chromosome = 5)
 
 
 for(n in 1:5){

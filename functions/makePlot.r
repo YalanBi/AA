@@ -94,6 +94,7 @@ mycolz <- function(){
   return(colz)
 }
 
+library("colorspace", lib.loc="C:/R/win-library/2.15")
 cols <- diverge_hcl(31, h=c(195,330), c = 95, l = c(20, 90), power = 1.25)
 
 makePlot_Env <- function(newexp, env, nprobes){
