@@ -37,9 +37,9 @@ abline(h=lengthsy)
 abline(v=lengthsx)
 y <- 0
 for(chr in 1:5){
-  qtlchr <- read.table(paste("Data/genes_summarized_", chr, "_normalized_QTL.txt", sep=""), row.names=1, header=TRUE)
+  qtlchr <- read.table(paste("Data/genes_summarized_", chr, "_norm_hf_cor_QTL.txt", sep=""), row.names=1, header=TRUE)
   for(fn in rownames(qtlchr)){
-    exp <- read.table(paste("Data/chr", chr, "_normalized/", gsub(" Response ", "", fn), ".txt", sep=""), row.names=1, header=TRUE)
+    exp <- read.table(paste("Data/chr", chr, "_norm_hf_cor/", gsub(" Response ", "", fn), ".txt", sep=""), row.names=1, header=TRUE)
     y <- rep(mean(exp[ ,"bp"]), 716) + lengthsy[chr]
     colz <- as.numeric(qtlchr[fn,])
     col2 <- colz
@@ -58,11 +58,11 @@ abline(h=lengthsy)
 abline(v=lengthsx)
 y <- 0
 for(chr in 1:5){
-  qtlgood <- read.table(paste("Data/genes_by_chromosomes", chr, "_normalized_QTL.txt", sep=""), row.names=1, header=TRUE)
-  location <- paste("Data/chr", chr, "_normalized/", sep="")
-  dir(location)[grepl(".png",dir(location))]
+  qtlgood <- read.table(paste("Data/genes_by_chromosomes", chr, "_norm_hf_cor_QTL.txt", sep=""), row.names=1, header=TRUE)
+  location <- paste("Data/chr", chr, "_norm_hf_cor/", sep="")
+  dir(location)[grepl(".png", dir(location))]
   for(fn_s in rownames(qtlgood)){
-    exp <- read.table(paste("Data/chr", chr, "_normalized/", gsub("_[12345]","", gsub(" Response ", "", fn_s)), ".txt", sep=""), row.names=1, header=TRUE)
+    exp <- read.table(paste("Data/chr", chr, "_norm_hf_cor/", gsub("_[12345]","", gsub(" Response ", "", fn_s)), ".txt", sep=""), row.names=1, header=TRUE)
     y <- rep(mean(exp[ ,"bp"]), 716) + lengthsy[chr]
     colz <- as.numeric(qtlgood[fn_s,])
     col2 <- colz
