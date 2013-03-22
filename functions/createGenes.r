@@ -51,10 +51,8 @@ createSingleGenes <- function(chromosome = 1, empty = TRUE){
   location <- paste("C:/Arabidopsis Arrays/Data/chr", chromosome, "_norm_hf_cor/", sep="")
   if(empty) cat("", file=paste("Data/genes_summarized_", chromosome, "_norm_hf_cor.txt", sep=""))
   load(paste(location,"Classification_chr",chromosome,"_norm_hf_cor.Rdata",sep=""))
-  ann_m <- read.table("C:/Arabidopsis Arrays/refined map/map.txt")
 
   for(filename in dir(location)[grepl("_QTL",dir(location))]){
-    qtl_data <- read.table(paste(location,filename,sep=""))
     fname <- gsub("_QTL.txt",".txt", filename)
     exp_data <- read.table(paste(location,fname,sep=""),header=T,row.names=1)
     class <- res[[filename]]

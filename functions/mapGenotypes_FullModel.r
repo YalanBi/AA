@@ -1,13 +1,13 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 29-01-2013
-# first written: 16-01-2013
+# last modified: 20-03-2013
+# first written: 22-03-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
-setwd("C:/Arabidopsis Arrays")
-geno <- read.table("refined map/genotypes.txt",sep="\t",row.names=1,header=TRUE)
-menvironment <- read.table("Data/ann_env.txt",sep="\t")[,2]
+setwd("D:/Arabidopsis Arrays")
+geno <- read.table("refined map/genotypes.txt",sep="\t", row.names=1, header=TRUE)
+menvironment <- read.table("Data/ann_env.txt", sep="\t")[,2]
 
 map.fast <- function(geno, pheno, menvironment){
   res <- NULL
