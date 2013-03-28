@@ -17,7 +17,6 @@ new_exp <- t(read.table("Data/OLD_unnormalized/new genes/genes_by_chromosomes2.t
 
 map.fast <- function(x, geno, pheno, menvironment){
   res <- NULL
-  #envv <- as.factor(menvironment)
   models  <- aov(as.matrix(pheno) ~ as.factor(menvironment) + as.numeric(geno[,x]) +  as.factor(menvironment):as.numeric(geno[,x]))
   modelinfo <- summary(models)
   res$env <- unlist(lapply(modelinfo,"[",1,5),use.names=T)
@@ -29,7 +28,7 @@ map.fast <- function(x, geno, pheno, menvironment){
 qtlmatrix <- NULL
 intmatrix <- NULL
 for(m in 1:ncol(geno)){
-  res <- map.fast(m, geno,new_exp, menvironment)
+  res <- map.fast(m, geno, new_exp, menvironment)
   qtlmatrix <- cbind(qtlmatrix,res$qtl)
   intmatrix <- cbind(intmatrix,res$int)
   cat(m,"\n")
