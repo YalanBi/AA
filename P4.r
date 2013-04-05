@@ -12,6 +12,7 @@ for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
 	cat(filename, badprobes,"\n")
 }
 
+
 st  <- proc.time()
 ratiomatrix <- NULL
 for(filename in dir("Data/gene_eff~lm")[grepl(".txt",dir("Data/gene_eff~lm"))]){
