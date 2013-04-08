@@ -18,7 +18,7 @@ getGene <- function(chr = 1, what="QTL", startG = "AT1G01010", untill = "AT1G218
   fp <- file(paste0("genesByTU_chr", chr, "_norm_hf_cor_", what, "_t.txt"))
   open(fp)
   line <- readLines(fp, 1)
-  tnames <- strsplit(line,"\t")[[1]][-1]
+  tnames <- strsplit(line, "\t")[[1]][-1]
   line <- readLines(fp, 1)
   x <- x+1
   
@@ -26,7 +26,7 @@ getGene <- function(chr = 1, what="QTL", startG = "AT1G01010", untill = "AT1G218
   e <- max(which(grepl(untill, tnames)))
   
   while(length(line) > 0 && line != ""){
-    data <- strsplit(line,"\t")[[1]]
+    data <- strsplit(line, "\t")[[1]]
     mnames <- c(mnames, data[1])
     cat("Done",x,"\n")
     
