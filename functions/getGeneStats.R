@@ -41,7 +41,7 @@ getGeneStats <- function(filename, lodThreshold = 4, chrs = 1:5){
 
 
 
-setwd("C:/Arabidopsis Arrays")
+setwd("D:/Arabidopsis Arrays")
 ann_m <- read.table("refined map/map.txt")
 doc <- chr1
 rawexp <- read.table(paste("Data/", doc, "/", fn_exp, sep=""), header=TRUE, row.names=1)

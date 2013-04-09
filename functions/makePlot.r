@@ -5,7 +5,7 @@
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
-setwd("C:/Arabidopsis Arrays")
+setwd("D:/Arabidopsis Arrays")
 env <- read.table("Data/ann_env.txt")
 ann_m <- read.table("refined map/map.txt")
 

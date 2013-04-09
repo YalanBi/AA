@@ -1,21 +1,136 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 26-03-2013
+# last modified: 09-04-2013
 # first written: 22-03-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
-###########
-# library #
-###########
 
 setwd("D:/Arabidopsis Arrays")
 menvironment <- read.table("Data/ann_env.txt", sep="\t")[,2]
 
-#############
-# Functions #
-#############
 
-#####This function does more stuff#####
+################################################################# selection #################################################################
+#direction selection
+probesDir <- function(exp_data = rawexp){
+  if(unique(exp_data[,"strand"]) == "sense"){
+    direction_id <- which(exp_data[, "direction"] == "reverse")
+  }
+  if(unique(exp_data[,"strand"]) == "complement"){
+    direction_id <- which(exp_data[, "direction"] == "forward")
+  }
+  return(direction_id)
+}
+
+#select expressed exon probes
+chooseExpExon <- function(exonID, newexp, ind_env, cutoff2){
+  expExonID <- NULL
+  for(p in exonID){
+    #cat(p, mean(unlist(newexp[p, ind_env])), "\n")
+    
+    #cutoff2 <- cutoff used to check whether mean(each exon of right direction) is high enough to be regatded as expressed or not
+    #           then remove low expressed exons
+    if(mean(unlist(newexp[p, ind_env])) >= cutoff2){
+      expExonID <- c(expExonID, p)
+    }
+  }
+  return(expExonID)
+}
+
+#test for intron retention
+checkRetention <- function(rawexp, newexp, intronID, exonExpID, ind_env, threshould){
+  
+  #retentionList <- a list of retained intron names of current gene under this environment
+  retentionList <- NULL
+  for(i in unique(rawexp[intronID,"tu"])){
+    
+    #probes4i <- probes that of current intron names and of the right direction
+    probes4i <- intronID[which(rawexp[intronID,"tu"]==i)]
+    
+    if(length(probes4i) >= 2){
+      
+      #compare mean(current intron probes) and mean(expressed exons which are in the right direction)
+      if(mean(unlist(newexp[probes4i, ind_env])) >= mean(unlist(newexp[exonExpID, ind_env]))){
+        retentionList <- c(retentionList, i)
+      }
+      
+      else{
+        
+        #t.test (current intron probes) against (expressed exons which are in the right direction), we want unsignificant p-value
+        if(-log10(t.test(newexp[probes4i, ind_env], newexp[exonExpID, ind_env])$p.value) <= threshould){
+          retentionList <- c(retentionList, i)
+        }
+      }
+    }
+  }
+  return(retentionList)
+}
+
+#pro
+
+chr=1
+location <- paste0("Data/chr", chr, "_norm_hf_cor/")
+
+#number of genes that expressed in each environmet
+countGene <- c(0,0,0,0)
+#number of genes that has retention in each environmet
+countRetention <- c(0,0,0,0)
+
+for(filename in dir(location)[which(grepl(".txt", dir(location)) & !grepl("_QTL", dir(location)))]){
+  rawexp <- read.table(paste0(location, filename), row.names=1, header=T)
+  newexp <- rawexp[,17:164]
+  
+  probes_dir <- probesDir(rawexp)
+  #exonID <- exons of right direction
+  exonID <- probes_dir[which(grepl("tu", rawexp[probes_dir, "tu"]))]
+  #intronID <- introns of right direction
+  intronID <- probes_dir[which(grepl("intron", rawexp[probes_dir, "tu"]))]
+  
+  for(env in 1:4){
+    ind_env <- which(as.numeric(menvironment) == env)
+    retainedInList <- NULL
+    
+    #check whether current gene expressed or not under this environment, True: continue test intron retention
+    #cutoff1 <- cutoff used to check whether mean(all exons of right direction) is high enough to be regatded as expressed or not
+    if(mean(unlist(newexp[exonID, ind_env])) >= cutoff1){################################# H E R E! cutoff1 #################################
+      exonExpID <- chooseExpExon(exonID, newexp, ind_env, cutoff2)
+      retainedInList <- checkRetention(rawexp, newexp, intronID, exonExpID, ind_env, threshould)
+      
+      cat(filename, "env", env, retainedInList, "\n")
+      countGene[env] <- countGene[env] + 1
+    }
+    else{cat(filename, "env", env, "lower than", cutoff1, "\n")}
+    
+    if(length(retainedInList) != 0){
+      countRetention[env] <- countRetention[env] + 1
+    }
+  }
+  
+}
+
+function(){
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############################################################################################################################################
 ProbesSelect <- function(location, chromosome, filename, exp_data){#check the expression of exons of right direction
   load(paste(location, "Classification_chr", chromosome, "_norm_hf_cor.Rdata", sep=""))
   class <- res[[gsub(".txt", "_QTL.txt", filename)]]#res[["AT1G01010_QTL.txt"]]
