@@ -4,7 +4,8 @@
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
-# OLD DON"t USE ANYMORE !!!
+
+########################################################## OLD DON"t USE ANYMORE !!! ##########################################################
 
 makeSubsets <- function(filename, ){
   read.table(filename)########?????????#######
@@ -62,10 +63,6 @@ makeSubsets <- function(filename, ){
     }
   }
 
-
-
-
-
   without <- arr[-intergenic_seq,] #remove intergenic from the original data
   for(gene_name in unique(as.character(without[,"gene"]))){ #by unique(), each gene name check once
     if(gene_name != "intergenic" && gene_name != ""){##########????????????##########
@@ -80,5 +77,3 @@ makeSubsets <- function(filename, ){
     }
   }
 }
-
-

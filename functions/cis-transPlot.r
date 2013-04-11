@@ -1,7 +1,7 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 8-04-2013
-# first written: 1-02-2013
+# last modified: 10-04-2013
+# first written: 01-02-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
@@ -10,7 +10,7 @@ setwd("D:/Arabidopsis Arrays")
 #load map file---markers' Morgan position
 mpos <- read.table("refined map/map.txt")
 
-##########for x, use Morgan##########
+########## for x, use Morgan ##########
 totlength <- 0
 lengthsx <- 0
 msumlength <- NULL
@@ -23,7 +23,7 @@ for(x in 1:5){
   lengthsx <- c(lengthsx, totlength)
 }
 
-##########for y, use bp##########
+########## for y, use bp ##########
 #the bp length of each chr
 chr1 <- 34964571
 chr2 <- 22037565
@@ -71,7 +71,6 @@ drawPoints <- function(qtlchr){
   #all genes' names of this chr
   genenames <- unique(as.character(unlist(lapply(strsplit(rownames(qtlchr),"_"),"[[",1))))
   for(fn in genenames){
-    exp <- NULL
     #load file "AT1G01010.txt"
     cat("loading", fn, "file\n")
     exp <- read.table(paste("Data/chr", chr, "_norm_hf_cor/", fn, ".txt", sep=""), row.names=1, header=TRUE)
@@ -106,19 +105,31 @@ for(chr in 1:5){
     cat("loading chr", chr, "QTL file...\n")
     qtlchr <- read.table(paste("Data/newTU/genesByTU_chr", chr, "_norm_hf_cor_QTL.txt", sep=""), row.names=1, header=TRUE)
   }
-  drawPoints(qtlchr)
+  tunames <- rownames(qtlchr)
+  #all genes' names of this chr
+  genenames <- unique(as.character(unlist(lapply(strsplit(rownames(qtlchr),"_"),"[[",1))))
+  for(fn in genenames){
+    #load file "AT1G01010.txt"
+    cat("loading", fn, "file\n")
+    expressions <- read.table(paste("Data/chr", chr, "_norm_hf_cor/", fn, ".txt", sep=""), row.names=1, header=TRUE)
+    
+    for(tu in tunames[which(grepl(fn, tunames))]){
+      y <- rep(mean(expressions[which(expressions[,"tu"]==strsplit(tu, "_")[[1]][2]),"bp"]), 716) + lengthsy[chr]
+      cat(tu, "bp is:", unique(y), "\n")
+      
+      colz <- as.numeric(qtlchr[tu,])
+      col2 <- colz
+      col2[colz < 5] <- rgb(1, 1, 1,0)
+      col2[colz >= 5 & colz < 10] <- rgb(0.5, 0.5, 0.5 , 0.5)
+      col2[colz >= 10] <- "black"
+      points(x=msumlength, y=y, col=col2, pch=20,cex=0.5)
+    }
+    rm(expressions)
+    gc();gc();gc();gc();gc();gc();gc();
+  }
+  rm(qtlchr)
+  gc();gc();gc();gc();gc();gc();gc();
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

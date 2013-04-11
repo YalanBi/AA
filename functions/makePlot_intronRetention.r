@@ -7,81 +7,104 @@
 
 setwd("D:/Arabidopsis Arrays")
 #load environment file
-env <- read.table("Data/ann_env.txt")
+menvironment <- read.table("Data/ann_env.txt", sep="\t")[,2]
 #load genomap
 ann_m <- read.table("refined map/map.txt")
 
 
-################################################################# panel 1 #################################################################
-#list genes containing retention under any environment
-retentionSum <- function(threshould=6, IRfile){
-  retentionlist <- NULL
-  for(env in 1:4){
-    #retained <- the names of all retented introns of this chr
-    retained <- rownames(IRfile[which(IRfile[ ,(env*4-1)] < threshould), ])
-    #uniqueRetained <- the names of genes containing retented introns of this chr
-    UniqueRetained <- unique(as.character(unlist(lapply(strsplit(retained,"_"),"[[",1))))
-    
-    retentionlist <- c(retentionlist, UniqueRetained)
-  }
-  retentionlist <- unique(retentionlist)
-}
-
-#choose genes randomly
-geneID <- function(seed=1, ng=10, ...){
-  set.seed(seed)
-  
-  retainedGenes <- retentionSum(threshould=6, IRfile)
-  ind <- sample(1:length(retainedGenes), ng, replace=FALSE)
-  orderind <- ind[order(ind, decreasing=FALSE)]
-  filenames <- retainedGenes[orderind]
-  
-  return(filenames)
-}
-
-#select either good exons of right direction or introns of right direction
-ProbesSelect <- function(chr, filename, exp_data=rawexp){
-  #check the expression of exons of right direction
-  load(paste("D:/Arabidopsis Arrays/Data/chr", chr, "_norm_hf_cor/", "Classification_chr", chr, "_norm_hf_cor.Rdata", sep=""))
-  class <- res[[paste(filename, "_QTL.txt", sep="")]]#res[["AT1G01010_QTL.txt"]]
-  
-  probes <- NULL
-  
-  #decide which is right direction
+############################################################## probes selection ##############################################################
+#direction selection
+probesDir <- function(exp_data = rawexp){
   if(unique(exp_data[,"strand"]) == "sense"){
     direction_id <- which(exp_data[, "direction"] == "reverse")
   }
   if(unique(exp_data[,"strand"]) == "complement"){
     direction_id <- which(exp_data[, "direction"] == "forward")
   }
-  
-  #list good exons of right direction and introns of right direction
-  probesDirExp <- direction_id[which(direction_id %in% class$goodP)]
-  probes$In <- probesDirExp[which(probesDirExp %in% class$introP)]
-  probes$Ex <- probesDirExp[-which(probesDirExp %in% class$introP)]
-  
-  return(probes)
+  return(direction_id)
 }
 
+#select expressed exon probes
+chooseExpExon <- function(exonID, newexp, ind_env, cutoff){
+  expExonID <- NULL
+  for(p in exonID){
+    #cat(p, mean(unlist(newexp[p, ind_env])), "\n")
+    
+    #cutoff <- cutoff used to check whether mean(each exon of right direction) is high enough to be regatded as expressed or not
+    #           then remove low expressed exons
+    if(mean(unlist(newexp[p, ind_env])) >= cutoff){
+      expExonID <- c(expExonID, p)
+    }
+  }
+  return(expExonID)
+}
+
+################################################################# test #################################################################
+#test for intron retention: a list of introns
+checkRetentionList <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould){
+  
+  #retentionList <- a list of retained intron names of current gene under this environment
+  retentionList <- NULL
+  for(i in unique(rawexp[intronID,"tu"])){
+    
+    #probes4i <- probes that of current intron names and of the right direction
+    probes4i <- intronID[which(rawexp[intronID,"tu"]==i)]
+    #cat(i, ":", probes4i, "\n")
+    
+    if(length(probes4i) >= nIn){#number of intron probes************************ changed *************************
+      
+      #compare mean(current intron probes) and mean(expressed exons which are in the right direction)
+      if(mean(unlist(newexp[probes4i, ind_env])) >= mean(unlist(newexp[exonExpID, ind_env]))){
+        retentionList <- c(retentionList, i)
+        #cat("means of", i, "is higher than expressed exons\n")
+      }
+      
+      else{
+        
+        #t.test (current intron probes) against (expressed exons which are in the right direction), we want unsignificant p-value
+        if(-log10(t.test(newexp[probes4i, ind_env], newexp[exonExpID, ind_env])$p.value) <= threshould){
+          retentionList <- c(retentionList, i)
+          #cat("means of", i, "is lower than expressed exons, but not sig different.\n")
+        }
+      }
+    }
+  }
+  return(retentionList)
+}
+
+
+################################################################# panel 1 #################################################################
 #plot for expression intensity
-makePlot_Exp <- function(filename, IRfile, rawexp, newexp, nprobes, env, ind_tu, ...){
+makePlot_Exp <- function(filename, rawexp, newexp, nprobes, intronID, exonExpID, menvironment, ind_tu, res){
   plot(c(0.5, nprobes+0.5), c(round(min(newexp)-0.5), round(max(newexp)+0.5)), xaxt='n', xlab="", ylab="Intensity", cex.axis=1, cex.lab=1.5, cex.main=2, las=1, mgp=c(3,1,0), tck=-0.017, t="n", main=filename)
   
-  #retainedIn <- which(rawexp[,"tu"] %in% unique(as.character(unlist(lapply(strsplit(rownames(IRfile)[which(grepl(filename, rownames(IRfile)))],"_"),"[[",2)))))
-  probesid <- unlist(ProbesSelect(chr, filename, exp_data=rawexp))
-  
   for(p in 1:nprobes){
+    
     #background for introns
     if(!p %in% ind_tu){
       rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
     }
-    #mark retained introns########################################## U N S U R E !!!!!*******************************************************
-    #if(p %in% retainedIn){#####Here!!!!!
-      #rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.75), border = "transparent")
-    #}
+    
+    #which probes are showing in the panel 1: expressed exons and introns
+    probesID <- unique(c(exonExpID, intronID))[order(unique(c(exonExpID, intronID)))]
     #points of expression of probes used to check intron retention
-    if(p %in% probesid){
-      points(rep(p,148)+0.06*as.numeric(env[,2])-0.15, newexp[p,], t='p', col=env[,2], pch=20, cex=0.7)
+    if(p %in% probesID){
+      points(rep(p,148)+0.06*as.numeric(menvironment)-0.15, newexp[p,], t='p', col=menvironment, pch=20, cex=0.7)
+    }
+    
+    #show intron retention
+    for(env in 1:4){
+      #if in current environment, there is retention, show retention
+      if(length(res[[env]]) > 0){
+        #present means of expressed exon in current environment
+        lines(c(0+0.2*env, nprobes+0.2*env), c(mean(unlist(newexp[exonExpID, which(as.numeric(menvironment) == env)])), mean(unlist(newexp[exonExpID, which(as.numeric(menvironment) == env)]))), col=as.factor(levels(menvironment))[env], lty=8, lwd=1)
+        
+        for(i in res[[env]]){
+          ind_env <- which(as.numeric(menvironment) == env)
+          probes4i <- intronID[which(rawexp[intronID,"tu"]==i)]
+          lines(c(min(which(rawexp[ ,"tu"] == i)-0.5), max(which(rawexp[ ,"tu"] == i)+0.5)), c(mean(unlist(newexp[probes4i, ind_env])), mean(unlist(newexp[probes4i, ind_env]))), col=as.factor(levels(menvironment))[env], lwd=2)
+        }
+      }
     }
   }
   
@@ -96,14 +119,14 @@ getProbesOnChr <- function(ann_m, chrs = 1){
 }
 
 #plot for eQTL
-makePlot_eQTL <- function(newexp, qtl, nprobes, ind_tu, lodThreshold = 5, lchr){
+makePlot_eQTL <- function(qtl, nprobes, ind_tu, lodThreshold = 5, lchr = chr){
   plot(c(0.5, nprobes+0.5),c(0.5, 5.5), xaxt='n', xlab="", yaxt='n', ylab="eQTL", cex.axis=1, cex.lab=1.5, las=1, mgp=c(3,1,0), t="n")
   axis(2, at=1:5, labels=paste("chr", c("I", "II", "III", "IV", "V"),sep=""), cex.axis=1, las=2, tck=-0.035, mgp=c(2,0.5,0))
   
   #background for introns
   for(p in 1:nprobes){
     if(!p %in% ind_tu){
-      rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
+      rect((p-0.5), -3, (p+0.5), 8, col=grey(0.85), border = "transparent")
     }
   }
   
@@ -128,11 +151,11 @@ makePlot_eQTL <- function(newexp, qtl, nprobes, ind_tu, lodThreshold = 5, lchr){
 
 ################################################################# panel 3 #################################################################
 #means of individuals under each environment for every probe
-envTtest2 <- function(newexp, env, p){
-  env1 <- mean(as.numeric(newexp[p, which(as.numeric(env[,2])==1)]))
-  env2 <- mean(as.numeric(newexp[p, which(as.numeric(env[,2])==2)]))
-  env3 <- mean(as.numeric(newexp[p, which(as.numeric(env[,2])==3)]))
-  env4 <- mean(as.numeric(newexp[p, which(as.numeric(env[,2])==4)]))
+envTtest2 <- function(newexp, menvironment, p){
+  env1 <- mean(as.numeric(newexp[p, which(as.numeric(menvironment)==1)]))
+  env2 <- mean(as.numeric(newexp[p, which(as.numeric(menvironment)==2)]))
+  env3 <- mean(as.numeric(newexp[p, which(as.numeric(menvironment)==3)]))
+  env4 <- mean(as.numeric(newexp[p, which(as.numeric(menvironment)==4)]))
   #lgp <- -log10(c(t.test(env1, mu=mean(c(env2,env3,env4)))$p.value,t.test(env2, mu=mean(c(env1,env3,env4)))$p.value,t.test(env3, mu=mean(c(env1,env2,env4)))$p.value,t.test(env4, mu=mean(c(env1,env2,env3)))$p.value))
   #env_mean <- mean(c(env1,env2,env3,env4))
   #lgp <- -log10(c(t.test(env1, mu=env_mean)$p.value,t.test(env2, mu=env_mean)$p.value,t.test(env3, mu=env_mean)$p.value,t.test(env4, mu=env_mean)$p.value))
@@ -144,7 +167,7 @@ library("colorspace", lib.loc="C:/R/win-library/2.15")
 cols <- diverge_hcl(31, h=c(195,330), c = 95, l = c(20, 90), power = 1.25)
 
 #plot of environment comparison
-makePlot_Env <- function(newexp, nprobes){
+makePlot_Env <- function(newexp, nprobes, menvironment){
   plot(c(0.5, nprobes+0.5),c(0.5,4.5), xaxt='n', xlab="", yaxt='n', ylab="Env", cex.axis=1, cex.lab=1.5, las=1, mgp=c(3,1,0), t="n")
   axis(1, at=1:nprobes, labels=row.names(newexp), cex.axis=1, las=2, tck=0.035, mgp=c(2,1,0))
   axis(2, at=1, labels="6H", cex.axis=1, col.axis='black', las=2, tck=-0.035, mgp=c(2,0.5,0))
@@ -153,7 +176,7 @@ makePlot_Env <- function(newexp, nprobes){
   axis(2, at=4, labels="RP", cex.axis=1, col.axis='blue', las=2, tck=-0.035, mgp=c(2,0.5,0))
   for(p in 1:nprobes){
     #pForCol <- round(envTtest(newexp,env,p)-0.5)+1
-    pForCol <- ((envTtest2(newexp, env, p) - mean(as.numeric(newexp[p,])))*7.5) + 16
+    pForCol <- ((envTtest2(newexp, menvironment, p) - mean(as.numeric(newexp[p,])))*7.5) + 16
     pForCol[pForCol > 31] <- 31
     pForCol[pForCol < 1] <- 1
     #cat(pForCol,"\n")
@@ -166,50 +189,100 @@ makePlot_Env <- function(newexp, nprobes){
 }
 
 ################################################################# make 3 in 1 #################################################################
-singlePlot <- function(rawexp, qtl, filename, ...){
-  newexp <- rawexp[,17:164]
+singlePlot <- function(chr, rawexp, newexp, qtl, filename, intronID, exonExpID, menvironment, ind_tu, res, lodThreshold){
   ind_tu <- grep("tu", rawexp[,"tu"])
   nprobes <- nrow(qtl)
   st <- proc.time()
   par(fig=c(0,1,0.5,1), mar=c(0,5,5,2), oma=c(0,0,0,0.5))
-  makePlot_Exp(filename, IRfile, rawexp, newexp, nprobes, env, ind_tu)
+  makePlot_Exp(filename, rawexp, newexp, nprobes, intronID, exonExpID, menvironment, ind_tu, res)
   par(fig=c(0,1,0.3,0.5), mar=c(0,5,0,2), oma=c(0,0,0,0.5), new=T)
-  makePlot_eQTL(newexp, qtl, nprobes, ind_tu, lodThreshold = 5, lchr=chr)
+  makePlot_eQTL(qtl, nprobes, ind_tu, lodThreshold = 5, lchr = chr)
   par(fig=c(0,1,0,0.3), mar=c(5,5,0,2), oma=c(0,0,0,0.5), new=T)
-  makePlot_Env(newexp, nprobes)
+  makePlot_Env(newexp, nprobes, menvironment)
   et <- proc.time()
   cat("Done with", filename, "after:",(et-st)[3],"secs\n")
 }
-#singlePlot(rawexp, qtl, plotname="Plot", lodThreshold = 4, lchr)
-
-
-#makePlot(location = "C:/Arabidopsis Arrays/Data/chr1_norm_hf_cor/", lodThreshold = 4, lchr=1)
-#lodThreshold = 4 <- -log10(0.05/716)=4.146128
 
 
 
 
 
-makePlot <- function(chr, seed=1, ng=10, threshould=6){
-  location = paste0("D:/Arabidopsis Arrays/Data/chr", chr, "_norm_hf_cor/")
-  IRfile <- read.table(paste("Data/intronRetention/intronRetention_chr", chr, ".txt", sep=""), row.name=1, header=T)
-  id <- geneID(seed=1, ng=10)
-  for(filename in id){ #Please note: filename = AT1G01010!!!
-    if(!file.exists(paste("Data/intronRetention/", filename, ".png", sep=""))){
-      rawexp <- read.table(paste(location, filename, ".txt", sep=""), header=TRUE, row.names=1)
-      qtl <- read.table(paste(location, filename, "_QTL.txt", sep=""), header=TRUE, row.names=1)
+
+plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshould = 7, lodThreshold = 4){
+  location <- paste0("Data/chr", chr, "_norm_hf_cor/")
+  nPlot <- 0
+  
+  #only find genes containing more than 4 probes in total
+  #filename(AT1G01010)
+  for(filename in gsub("_QTL.txt", "", dir(location)[which(grepl("_QTL", dir(location)))])){
+    if(nPlot < 20){
+      rawexp <- read.table(paste0(location, filename, ".txt"), row.names=1, header=T)
+      newexp <- rawexp[,17:164]
       
-      png(file = paste("Data/intronRetention/", filename, ".png", sep=""), bg="white", width=1024, height=1024)
-      singlePlot(rawexp, qtl, filename)
-      dev.off()
-    }
-    else{
-      cat("Skipping", filename," because it exists\n")
+      probes_dir <- probesDir(rawexp)
+      #cat(filename, "\nprobeDir:", probes_dir, "\n")
+      #exonID <- exons of right direction
+      exonID <- probes_dir[which(grepl("tu", rawexp[probes_dir, "tu"]))]
+      #cat("exons:", exonID, "\n")
+      #intronID <- introns of right direction
+      intronID <- probes_dir[which(grepl("intron", rawexp[probes_dir, "tu"]))]
+      #cat("introns:", intronID, "\n")
+      
+      #store result by environment
+      res <- vector("list", 4)
+      
+      #decide whether to make plot or not
+      draw <- FALSE
+      
+      for(env in 1:4){
+        ind_env <- which(as.numeric(menvironment) == env)
+        retainedInList <- NULL
+        
+        #check whether current gene expressed or not under this environment, True: continue test intron retention
+        #cutoff <- cutoff used to check whether mean(all exons of right direction) is high enough to be regatded as expressed or not
+        if(length(exonID) > 0 && mean(unlist(newexp[exonID, ind_env])) >= cutoff){
+          #cat("means of exons in env", env, "higher than cutoff=", cutoff, "\n")
+          
+          exonExpID <- chooseExpExon(exonID, newexp, ind_env, cutoff)
+          #cat("expressed exons:", exonExpID, "\n")
+          
+          retainedInList <- checkRetentionList(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould)
+          #cat("introns in env", env, "lower than threshould=", threshould, ":", retainedInList, "\n")
+          
+        }
+        else{
+          #cat("means of exons in env", env, "lower than cutoff=", cutoff, "\n")
+        }
+        
+        if(length(retainedInList) != 0){
+          draw <- TRUE
+          res[[env]] <- retainedInList
+        }
+        
+      }
+      
+      if(draw){
+        if(!file.exists(paste("Data/intronRetention/", filename, "_nIn", nIn, "_Exp", cutoff, "_reThres", threshould, ".png", sep=""))){
+          #DRAW PICTURE!!!!!
+          qtl <- read.table(paste(location, filename, "_QTL.txt", sep=""), header=TRUE, row.names=1)
+          
+          png(file = paste("Data/intronRetention/", filename, "_nIn", nIn, "_Exp", cutoff, "_reThres", threshould, ".png", sep=""), bg="white", width=1024, height=1024)
+          singlePlot(chr, rawexp, newexp, qtl, filename, intronID, exonExpID, menvironment, ind_tu, res, lodThreshold)
+          dev.off()
+          nPlot <- nPlot + 1
+        } else{
+          cat("Skipping", filename," because it exists\n")
+        }
+      } else{
+        cat("Skipping", filename, "no retention\n")
+      }
+
     }
   }
+  
 }
 
-########################## chr unchanged!!!
+
 for(chr in 1:5){
-  makePlot(chr, seed=1, ng=10, threshould=6)
+  plotReBYchr(chr, menvironment, nIn=2, cutoff = 5, threshould = 7, lodThreshold = 4)
 }
