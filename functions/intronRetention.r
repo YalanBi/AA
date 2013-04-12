@@ -30,7 +30,7 @@ chooseExpExon <- function(exonID, newexp, ind_env, cutoff){
   for(p in exonID){
     #cat(p, mean(unlist(newexp[p, ind_env])), "\n")
     
-    #cutoff <- cutoff used to check whether mean(each exon of right direction) is high enough to be regatded as expressed or not
+    #cutoff <- cutoff used to check whether mean(each exon of right direction) is high enough to be regarded as expressed or not
     #           then remove low expressed exons
     if(mean(unlist(newexp[p, ind_env])) >= cutoff){
       expExonID <- c(expExonID, p)
@@ -97,29 +97,35 @@ countReBYchr <- function(chr, menvironment, nIn, cutoff, threshould){
     intronID <- probes_dir[which(grepl("intron", rawexp[probes_dir, "tu"]))]
     cat("introns:", intronID, "\n")
     
-    for(env in 1:4){
-      ind_env <- which(as.numeric(menvironment) == env)
-      
-      #check whether current gene expressed or not under this environment, True: continue test intron retention
-      #cutoff <- cutoff used to check whether mean(all exons of right direction) is high enough to be regatded as expressed or not
-      if(length(exonID) > 0 && length(intronID) > 0 && mean(unlist(newexp[exonID, ind_env])) >= cutoff){
-        cat("means of exons in env", env, "higher than cutoff=", cutoff, "\n")
+    #there must be at least 1 intron probe, then we test for intron retention
+    if(length(intronID) > 0){
+      for(env in 1:4){
+        ind_env <- which(as.numeric(menvironment) == env)
+        retainedORnot <- FALSE
         
-        exonExpID <- chooseExpExon(exonID, newexp, ind_env, cutoff)
-        cat("expressed exons:", exonExpID, "\n")
+        #check whether current gene expressed or not under this environment, True: continue test intron retention
+        #cutoff <- cutoff used to check whether mean(all exons of right direction) is high enough to be regatded as expressed or not
+        if(length(exonID) > 0 && mean(unlist(newexp[exonID, ind_env])) >= cutoff){
+          cat("means of exons in env", env, "higher than cutoff=", cutoff, "\n")
+          
+          exonExpID <- chooseExpExon(exonID, newexp, ind_env, cutoff)
+          cat("expressed exons:", exonExpID, "\n")
+          
+          retainedORnot <- checkRetentionTF(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould)
+          cat("introns retained in env", env, retainedORnot, "\n")
+          
+          countGene[env] <- countGene[env] + 1
+        }
+        else{
+          cat("means of exons in env", env, "lower than cutoff=", cutoff, "\n")
+        }
         
-        retainedORnot <- checkRetentionTF(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould)
-        cat("introns retained in env", env, retainedORnot, "\n")
-        
-        countGene[env] <- countGene[env] + 1
+        if(retainedORnot){
+          countRetention[env] <- countRetention[env] + 1
+        }
       }
-      else{
-        cat("means of exons in env", env, "lower than cutoff=", cutoff, "\n")
-      }
-      
-      if(retainedORnot){
-        countRetention[env] <- countRetention[env] + 1
-      }
+    } else{
+      cat("no intron!\n")
     }
     
   }
@@ -131,15 +137,15 @@ countReBYchr <- function(chr, menvironment, nIn, cutoff, threshould){
 
 resmatrix <- NULL
 for(chr in 1:5){
-  resmatrix <- rbind(resmatrix, countReBYchr(chr, menvironment, nIn = 1, cutoff = 5, threshould = 7))
+  resmatrix <- rbind(resmatrix, countReBYchr(chr, menvironment, nIn = 1, cutoff = 4.5, threshould = 10))
   colnames(resmatrix) <- c("6H", "Dry_AR", "Dry_Fresh", "RP")
 }
-#cat("nIntronProbes", nIn, "; expCutoff", cutoff, "; pThres", threshould, "\n")
 resmatrix
+cat("nIntronProbes1; expCutoff4.5; pThres10\n")
 
 resmatrix <- rbind(resmatrix,resmatrix[1,]+resmatrix[4,]+resmatrix[7,]+resmatrix[10,]+resmatrix[13,], resmatrix[2,]+resmatrix[5,]+resmatrix[8,]+resmatrix[11,]+resmatrix[14,], (resmatrix[1,]+resmatrix[4,]+resmatrix[7,]+resmatrix[10,]+resmatrix[13,])/(resmatrix[2,]+resmatrix[5,]+resmatrix[8,]+resmatrix[11,]+resmatrix[14,]))
 rownames(resmatrix)[16:18] <- c("genome_nRetained", "genome_nExpGene", "genome_ratio")
-write.table(resmatrix, file="Data/intronRetention/intronRetention_ratioSum_nIn1_Exp5_reThres7.txt")
+write.table(resmatrix, file="Data/intronRetention/intronRetention_ratioSum_nIn1_Exp4.5_reThres10.txt")
 
 
 
@@ -234,7 +240,7 @@ makePlot_eQTL <- function(qtl, nprobes, ind_tu, lodThreshold = 5, lchr = chr){
   abline(h=lchr, col="burlywood3", lty=8, lwd=3)
   points(-1, lchr, pch=">", cex=5, col="burlywood3")
   
-  #rectangles for eQTL >= cutoff
+  #rectangles for sig eQTL >= lodThreshold
   for(p in 1:nprobes){
     for(chrs in 1:5){
       if(any(qtl[p, getProbesOnChr(ann_m, chrs)] >= lodThreshold)){
@@ -329,31 +335,32 @@ plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshould = 7, lodT
       #decide whether to make plot or not
       draw <- FALSE
       
-      for(env in 1:4){
-        ind_env <- which(as.numeric(menvironment) == env)
-        retainedInList <- NULL
-        
-        #check whether current gene expressed or not under this environment, True: continue test intron retention
-        #cutoff <- cutoff used to check whether mean(all exons of right direction) is high enough to be regatded as expressed or not
-        if(length(exonID) > 0 && mean(unlist(newexp[exonID, ind_env])) >= cutoff){
-          #cat("means of exons in env", env, "higher than cutoff=", cutoff, "\n")
+      if(length(intronID) > 0){
+        for(env in 1:4){
+          ind_env <- which(as.numeric(menvironment) == env)
+          retainedInList <- NULL
           
-          exonExpID <- chooseExpExon(exonID, newexp, ind_env, cutoff)
-          #cat("expressed exons:", exonExpID, "\n")
+          #check whether current gene expressed or not under this environment, True: continue test intron retention
+          #cutoff <- cutoff used to check whether mean(all exons of right direction) is high enough to be regatded as expressed or not
+          if(length(exonID) > 0 && mean(unlist(newexp[exonID, ind_env])) >= cutoff){
+            #cat("means of exons in env", env, "higher than cutoff=", cutoff, "\n")
+            
+            exonExpID <- chooseExpExon(exonID, newexp, ind_env, cutoff)
+            #cat("expressed exons:", exonExpID, "\n")
+            
+            retainedInList <- checkRetentionList(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould)
+            #cat("introns in env", env, "lower than threshould=", threshould, ":", retainedInList, "\n")
+            
+          }
+          else{
+            #cat("means of exons in env", env, "lower than cutoff=", cutoff, "\n")
+          }
           
-          retainedInList <- checkRetentionList(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould)
-          #cat("introns in env", env, "lower than threshould=", threshould, ":", retainedInList, "\n")
-          
+          if(length(retainedInList) != 0){
+            draw <- TRUE
+            res[[env]] <- retainedInList
+          }
         }
-        else{
-          #cat("means of exons in env", env, "lower than cutoff=", cutoff, "\n")
-        }
-        
-        if(length(retainedInList) != 0){
-          draw <- TRUE
-          res[[env]] <- retainedInList
-        }
-        
       }
       
       if(draw){
@@ -371,7 +378,7 @@ plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshould = 7, lodT
       } else{
         cat("Skipping", filename, "no retention\n")
       }
-
+      
     }
   }
   
@@ -379,5 +386,5 @@ plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshould = 7, lodT
 
 
 for(chr in 1:5){
-  plotReBYchr(chr, menvironment, nIn=2, cutoff = 5, threshould = 7, lodThreshold = 4)
+  plotReBYchr(chr, menvironment, nIn=1, cutoff = 5, threshould = 7, lodThreshold = 4)
 }
