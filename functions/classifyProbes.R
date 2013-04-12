@@ -24,7 +24,7 @@ classifyProbes <- function(filename, expthreshold = 0.1){
 
 
 #New version
-setwd("C:/Arabidopsis Arrays")
+setwd("D:/Arabidopsis Arrays")
 ann_m <- read.table("refined map/map.txt")
 
 getProbesOnChr <- function(ann_m, chr = 1){

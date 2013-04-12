@@ -20,14 +20,14 @@ createGenes <- function(chromosome = 1, empty = TRUE){  #TODO: Per chromosome we
   ann_m <- read.table("C:/Arabidopsis Arrays/refined map/map.txt")
 
   for(filename in dir(location)[grepl("_QTL",dir(location))]){
-    qtl_data <- read.table(paste(location,filename,sep=""))
-    fname <- gsub("_QTL.txt",".txt", filename)
-    exp_data <- read.table(paste(location,fname,sep=""),header=T,row.names=1)
+    qtl_data <- read.table(paste(location, filename, sep=""))
+    fname <- gsub("_QTL.txt", ".txt", filename)
+    exp_data <- read.table(paste(location, fname, sep=""),header=T,row.names=1)
     class <- res[[filename]]
     if(length(which(class$goodP %in% class$introP)) > 0){
-      good <-  class$goodP[- which(class$goodP %in% class$introP)]
+      good <- class$goodP[- which(class$goodP %in% class$introP)]
     }else{
-      good <-  class$goodP
+      good <- class$goodP
     }
     cnt <- 0
     for(chr in 1:5){
