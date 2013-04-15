@@ -1,11 +1,11 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 05-02-2013
+# last modified: 15-04-2013
 # first written: 16-01-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
-setwd("C:/Arabidopsis Arrays")
+setwd("D:/Arabidopsis Arrays")
 
 splitChromosome <- function(filename, chr=1){
   fp <- file(filename)
