@@ -45,7 +45,7 @@ chooseExpExon <- function(exonID, newexp, ind_env, cutoff){
 
 #*************************************************************** counting part ***************************************************************#
 #test for intron retention: TRUE / FALSE
-checkRetentionTF <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould){
+checkRetentionTF <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshold){
   
   #retentionList <- a list of retained intron names of current gene under this environment
   retained <- FALSE
@@ -64,7 +64,7 @@ checkRetentionTF <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env, 
         #cat("means of", i, "is higher than expressed exons\n")
       }else{ 
         #t.test (current intron probes) against (expressed exons which are in the right direction), we want unsignificant p-value
-        if(-log10(t.test(newexp[probes4i, ind_env], newexp[exonExpID, ind_env])$p.value) <= threshould){
+        if(-log10(t.test(newexp[probes4i, ind_env], newexp[exonExpID, ind_env])$p.value) <= threshold){
           retained <- TRUE
           #cat("means of", i, "is lower than expressed exons, but not sig different.\n")
         }
@@ -75,7 +75,7 @@ checkRetentionTF <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env, 
 }
 
 ################################################################# count by chr #################################################################
-countReBYchr <- function(chr, menvironment, nIn, cutoff, threshould){
+countReBYchr <- function(chr, menvironment, nIn, cutoff, threshold){
   location <- paste0("Data/chr", chr, "_norm_hf_cor/")
 
   #number of genes that expressed in each environmet and have at least 1 intron probe in the right direction!!!
@@ -111,7 +111,7 @@ countReBYchr <- function(chr, menvironment, nIn, cutoff, threshould){
           exonExpID <- chooseExpExon(exonID, newexp, ind_env, cutoff)
           cat("expressed exons:", exonExpID, "\n")
           
-          retainedORnot <- checkRetentionTF(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould)
+          retainedORnot <- checkRetentionTF(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshold)
           cat("introns retained in env", env, retainedORnot, "\n")
           
           countGene[env] <- countGene[env] + 1
@@ -137,7 +137,7 @@ countReBYchr <- function(chr, menvironment, nIn, cutoff, threshould){
 
 resmatrix <- NULL
 for(chr in 1:5){
-  resmatrix <- rbind(resmatrix, countReBYchr(chr, menvironment, nIn = 1, cutoff = 4.5, threshould = 10))
+  resmatrix <- rbind(resmatrix, countReBYchr(chr, menvironment, nIn = 1, cutoff = 4.5, threshold = 10))
   colnames(resmatrix) <- c("6H", "Dry_AR", "Dry_Fresh", "RP")
 }
 resmatrix
@@ -151,7 +151,7 @@ write.table(resmatrix, file="Data/intronRetention/intronRetention_ratioSum_nIn1_
 
 #*************************************************************** plot part ***************************************************************#
 #test for intron retention: a list of introns
-checkRetentionList <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould){
+checkRetentionList <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshold){
   
   #retentionList <- a list of retained intron names of current gene under this environment
   retentionList <- NULL
@@ -170,7 +170,7 @@ checkRetentionList <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env
         #cat("means of", i, "is higher than expressed exons\n")
       } else{
         #t.test (current intron probes) against (expressed exons which are in the right direction), we want unsignificant p-value
-        if(-log10(t.test(newexp[probes4i, ind_env], newexp[exonExpID, ind_env])$p.value) <= threshould){
+        if(-log10(t.test(newexp[probes4i, ind_env], newexp[exonExpID, ind_env])$p.value) <= threshold){
           retentionList <- c(retentionList, i)
           #cat("means of", i, "is lower than expressed exons, but not sig different.\n")
         }
@@ -309,7 +309,7 @@ singlePlot <- function(chr, rawexp, newexp, qtl, filename, intronID, exonExpID, 
 }
 
 ######################################################### plot 20 pictures each chr #########################################################
-plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshould = 7, lodThreshold = 4){
+plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshold = 7, lodThreshold = 4){
   location <- paste0("Data/chr", chr, "_norm_hf_cor/")
   nPlot <- 0
   
@@ -348,8 +348,8 @@ plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshould = 7, lodT
             exonExpID <- chooseExpExon(exonID, newexp, ind_env, cutoff)
             #cat("expressed exons:", exonExpID, "\n")
             
-            retainedInList <- checkRetentionList(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshould)
-            #cat("introns in env", env, "lower than threshould=", threshould, ":", retainedInList, "\n")
+            retainedInList <- checkRetentionList(rawexp, newexp, intronID, exonExpID, nIn, ind_env, threshold)
+            #cat("introns in env", env, "lower than threshold=", threshold, ":", retainedInList, "\n")
             
           }
           else{
@@ -364,11 +364,11 @@ plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshould = 7, lodT
       }
       
       if(draw){
-        if(!file.exists(paste("Data/intronRetention/", filename, "_nIn", nIn, "_Exp", cutoff, "_reThres", threshould, ".png", sep=""))){
+        if(!file.exists(paste("Data/intronRetention/", filename, "_nIn", nIn, "_Exp", cutoff, "_reThres", threshold, ".png", sep=""))){
           #DRAW PICTURE!!!!!
           qtl <- read.table(paste(location, filename, "_QTL.txt", sep=""), header=TRUE, row.names=1)
           
-          png(file = paste("Data/intronRetention/", filename, "_nIn", nIn, "_Exp", cutoff, "_reThres", threshould, ".png", sep=""), bg="white", width=1024, height=1024)
+          png(file = paste("Data/intronRetention/", filename, "_nIn", nIn, "_Exp", cutoff, "_reThres", threshold, ".png", sep=""), bg="white", width=1024, height=1024)
           singlePlot(chr, rawexp, newexp, qtl, filename, intronID, exonExpID, menvironment, ind_tu, res, lodThreshold)
           dev.off()
           nPlot <- nPlot + 1
@@ -386,5 +386,5 @@ plotReBYchr <- function(chr, menvironment, nIn, cutoff = 5, threshould = 7, lodT
 
 
 for(chr in 1:5){
-  plotReBYchr(chr, menvironment, nIn=1, cutoff = 5, threshould = 7, lodThreshold = 4)
+  plotReBYchr(chr, menvironment, nIn=1, cutoff = 5, threshold = 7, lodThreshold = 4)
 }
