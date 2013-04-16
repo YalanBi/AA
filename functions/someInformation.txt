@@ -1,0 +1,8 @@
+On each chr, there are * genes:
+*: 7734 5022 6321 4797 6968
+
+environment Levels: 6H, Dry_AR, Dry_Fresh, RP
+number of RILs: 35, 38, 39, 36
+
+
+Across 5 chr, there are 132497 intron probes.
