@@ -20,10 +20,10 @@ probesDir <- function(exp_data = rawexp){
   return(direction_id)
 }
 
-intronExp <- function(rawexp, intronID, threshould){
+intronExp <- function(rawexp, intronID, threshold){
   for(p in intronID){
     for(i in 17:164){
-      if(rawexp[p, i] >= threshould){
+      if(rawexp[p, i] >= threshold){
         rawexp[p, i] <- 1
       } else{
         rawexp[p, i] <- 0
@@ -35,7 +35,7 @@ intronExp <- function(rawexp, intronID, threshould){
 
 
 #*************************************************************** ratio, intron ***************************************************************#
-threshould = 5
+threshold = 5
 
 nGene <- NULL
 nInall <- 0
@@ -59,8 +59,8 @@ for(chr in 1:5){
     #cat("introns:", intronID, "\n")
         
     if(length(intronID) > 0){
-      #number of intron individuals higher than threshould
-      nInHigh <- nInHigh + length(which(rawexp[intronID, 17:164] >= threshould))
+      #number of intron individuals higher than threshold
+      nInHigh <- nInHigh + length(which(rawexp[intronID, 17:164] >= threshold))
       #number of all intron individuals
       nInall <- nInall + length(intronID)*148
     }
@@ -70,7 +70,7 @@ for(chr in 1:5){
   et <- proc.time()[3]
   cat("chr", chr, "has", counting, "genes; and ends up in", et-st, "s\n")
   
-  cat("until chr", chr, "there are", nInHigh, "intron individuals higher than", threshould, "and", nInall, "intron individuals in all\n")
+  cat("until chr", chr, "there are", nInHigh, "intron individuals higher than", threshold, "and", nInall, "intron individuals in all\n")
   nGene <- c(nGene, counting)
 }
 
@@ -99,7 +99,6 @@ for(chr in 1:5){
     rawexp <- read.table(paste0(location, filename), row.names=1, header=T)
     
     probes_dir <- probesDir(rawexp)
-    
     #intronID <- introns of right direction
     intronID <- probes_dir[which(grepl("intron", rawexp[probes_dir, "tu"]))]
         
@@ -113,10 +112,10 @@ for(chr in 1:5){
 
 set.seed(1)
 selectGene <- intronGene[sample(1:length(intronGene), 1000, replace=F)]
-set.seed(2)
-selectGenee <- intronGene[sample(1:length(intronGene), 1000, replace=F)]
-set.seed(3)
-selectGeneee <- intronGene[sample(1:length(intronGene), 1000, replace=F)]
+#set.seed(2)
+#selectGenee <- intronGene[sample(1:length(intronGene), 1000, replace=F)]
+#set.seed(3)
+#selectGeneee <- intronGene[sample(1:length(intronGene), 1000, replace=F)]
 
 selectINmatrix <- NULL
 selectExmatrix <- NULL
@@ -132,36 +131,42 @@ for(chr in 1:5){
     intronID <- probes_dir[which(grepl("intron", rawexp[probes_dir, "tu"]))]
     #cat("introns:", intronID, "\n")
     
-    set.seed(1)
-    selectINmatrix <- rbind(selectINmatrix, rawexp[intronID[sample(1:length(intronID), 1, replace=F)], 17:164])
-    selectExmatrix <- rbind(selectExmatrix, rawexp[exonID[sample(1:length(exonID), 1, replace=F)], 17:164])
+    #use all intron/exon probes to draw histogram
+    selectINmatrix <- rbind(selectINmatrix, rawexp[intronID, 17:164])
+    selectExmatrix <- rbind(selectExmatrix, rawexp[exonID, 17:164])
+    
+    #randomly choose 1 intron/exon probe
+    #set.seed(1)
+    #selectINmatrix <- rbind(selectINmatrix, rawexp[intronID[sample(1:length(intronID), 1, replace=F)], 17:164])
+    #set.seed(1)
+    #selectExmatrix <- rbind(selectExmatrix, rawexp[exonID[sample(1:length(exonID), 1, replace=F)], 17:164])
   }
-  for(fn in selectGenee[which(grepl(paste0("AT", chr), selectGenee))]){
-    cat(fn, "\n")
-    rawexp <- read.table(paste0(location, fn), row.names=1, header=T)
+  #for(fn in selectGenee[which(grepl(paste0("AT", chr), selectGenee))]){
+    #cat(fn, "\n")
+    #rawexp <- read.table(paste0(location, fn), row.names=1, header=T)
     
-    probes_dir <- probesDir(rawexp)
-    exonID <- probes_dir[which(grepl("tu", rawexp[probes_dir, "tu"]))]
-    #intronID <- introns of right direction
+    #probes_dir <- probesDir(rawexp)
+    #exonID <- probes_dir[which(grepl("tu", rawexp[probes_dir, "tu"]))]
+    ##intronID <- introns of right direction
     
-    set.seed(2)
-    selectExmatrix <- rbind(selectExmatrix, rawexp[exonID[sample(1:length(exonID), 1, replace=F)], 17:164])
-  }
-  for(fn in selectGeneee[which(grepl(paste0("AT", chr), selectGeneee))]){
-    cat(fn, "\n")
-    rawexp <- read.table(paste0(location, fn), row.names=1, header=T)
+    #set.seed(2)
+    #selectExmatrix <- rbind(selectExmatrix, rawexp[exonID[sample(1:length(exonID), 1, replace=F)], 17:164])
+  #}
+  #for(fn in selectGeneee[which(grepl(paste0("AT", chr), selectGeneee))]){
+    #cat(fn, "\n")
+    #rawexp <- read.table(paste0(location, fn), row.names=1, header=T)
     
-    probes_dir <- probesDir(rawexp)
-    exonID <- probes_dir[which(grepl("tu", rawexp[probes_dir, "tu"]))]
-    #intronID <- introns of right direction
+    #probes_dir <- probesDir(rawexp)
+    #exonID <- probes_dir[which(grepl("tu", rawexp[probes_dir, "tu"]))]
+    ##intronID <- introns of right direction
     
-    set.seed(3)
-    selectExmatrix <- rbind(selectExmatrix, rawexp[exonID[sample(1:length(exonID), 1, replace=F)], 17:164])
-  }
+    #set.seed(3)
+    #selectExmatrix <- rbind(selectExmatrix, rawexp[exonID[sample(1:length(exonID), 1, replace=F)], 17:164])
+  #}
 }
 
-hist(unlist(selectExmatrix), breaks=50)
-hist(unlist(selectINmatrix), breaks=50, col=rgb(1,0,0.8,0.5), add=TRUE)
+hist(unlist(selectExmatrix), breaks=50, freq=TRUE, main="Histogram of Expression Intensity", xlab="Intensity") #freq=FALSE, y axis is density.
+hist(unlist(selectINmatrix), breaks=50, col=grey(0.85), freq=TRUE, add=TRUE)
 
 
 
@@ -261,8 +266,8 @@ for(seed in 1:5){
   cat(seed, "seed", "starts!\n")
   intronList <- unlist(randomInmatrix(intronGene, seed = seed))
   intergenicList <- unlist(randomIntermatrix(seed = seed))
-  ratioIntron <- c(ratioIntron, length(which(intronList >= threshould))/length(intronList))
-  ratioInter <- c(ratioInter, length(which(intergenicList >= threshould))/length(intergenicList))
+  ratioIntron <- c(ratioIntron, length(which(intronList >= threshold))/length(intronList))
+  ratioInter <- c(ratioInter, length(which(intergenicList >= threshold))/length(intergenicList))
   
   png(filename = paste0("intron-intergenic_seed", seed, ".png"), width = 1280, height = 960, bg = "white")
   hist(intronList, breaks=50, col=rgb(1,0,0.8,0.5))
