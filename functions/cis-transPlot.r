@@ -164,6 +164,8 @@ for(chr in 1:5){
   qtlgood <- read.table(paste("Data/genes_by_chromosomes", chr, "_norm_hf_cor_QTL.txt", sep=""), row.names=1, header=TRUE)
   location <- paste("Data/chr", chr, "_norm_hf_cor/", sep="")
   dir(location)[grepl(".png", dir(location))]
+  
+  #fn_s: AT1G01010_chr*
   for(fn_s in rownames(qtlgood)){
     exp <- read.table(paste("Data/chr", chr, "_norm_hf_cor/", gsub("_[12345]", "", gsub(" Response ", "", fn_s)), ".txt", sep=""), row.names=1, header=TRUE)
     y <- rep(mean(exp[ ,"bp"]), 716) + lengthsy[chr]
