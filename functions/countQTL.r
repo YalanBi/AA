@@ -36,7 +36,7 @@ countMainQTL <- function(chr = 1, expGeneList, threshold_qtl = 4, threshold_int 
   nGene <- 0
   #filename="AT1G01010.txt"
   for(filename in genenames){
-    cat(filename, "starts...\n")
+    #cat(filename, "starts...\n")
     #load rawexp file, qtl file and int file
     rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
     #cat("rawexp loading succeed!\n")
@@ -65,7 +65,7 @@ countMainQTL <- function(chr = 1, expGeneList, threshold_qtl = 4, threshold_int 
       #cat(as.character(uniqueExon[cnt_tu]), "has probes", tuID, "\n")
       
       #if there are at least 3 probes in this tu, then we test
-      if(length(tuID) >= 3){
+      #if(length(tuID) >= 3){
         #cat(as.character(uniqueExon[cnt_tu]), "has >= 3 probes!\n")
         
         m <- 1
@@ -74,25 +74,28 @@ countMainQTL <- function(chr = 1, expGeneList, threshold_qtl = 4, threshold_int 
           #threshold_qtl=4, threshold_int=5, cutoffratio=60%
           #if there are at least 60% probes of this tu are qtl>=4 and int<5, then we stop finding within current gene, and nGene+1
           if(length(which(qtl[tuID, m] >= threshold_qtl && int[tuID, m] < threshold_int))/length(tuID) >= cutoffratio){
-            cat(as.character(uniqueExon[cnt_tu]), "marker", m, "has main eQTL!!! and quit from", filename, "!\n\n")
+            cat(filename, as.character(uniqueExon[cnt_tu]), "marker", m, "has main eQTL!!! and quit from", filename, "!\n")
             continue <- FALSE
             nGene <- nGene + 1
           } else{
             m <- m+1
           }
         }
-      }
+      #}
       cnt_tu <- cnt_tu + 1
     }
   }
   et <- proc.time()[3]
   cat("chr", chr, "has", nGene, "main eQTL, and finished in", et-st, "s!\n")
+  
+  return(nGene)
 }
 
+mainList <- NULL
 for(chr in 1:5){
-  countMainQTL(chr, expGeneList, threshold_qtl = 4, threshold_int = 5, cutoffratio = 0.6)
+  mainList <- c(mainList, countMainQTL(chr, expGeneList, threshold_qtl = 4, threshold_int = 5, cutoffratio = 0.6))
 }
-
+mainList
 
 #count interaction eQTL(int >= 5)
 countInt <- function(chr = 1, expGeneList, threshold_int = 5, cutoffratio = 0.6){
@@ -105,7 +108,7 @@ countInt <- function(chr = 1, expGeneList, threshold_int = 5, cutoffratio = 0.6)
   nGene <- 0
   #filename="AT1G01010.txt"
   for(filename in genenames){
-    cat(filename, "starts...\n")
+    #cat(filename, "starts...\n")
     #load rawexp file and int file
     rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
     #cat("rawexp loading succeed!\n")
@@ -132,7 +135,7 @@ countInt <- function(chr = 1, expGeneList, threshold_int = 5, cutoffratio = 0.6)
       #cat(as.character(uniqueExon[cnt_tu]), "has probes", tuID, "\n")
       
       #if there are at least 3 probes in this tu, then we test
-      if(length(tuID) >= 3){
+      #if(length(tuID) >= 3){
         #cat(as.character(uniqueExon[cnt_tu]), "has >= 3 probes!\n")
         
         m <- 1
@@ -141,21 +144,24 @@ countInt <- function(chr = 1, expGeneList, threshold_int = 5, cutoffratio = 0.6)
           #threshold_int=5, cutoffratio=60%
           #if there are at least 60% probes of this tu are int<5, then we stop finding within current gene, and nGene+1
           if(length(which(int[tuID, m] >= threshold_int))/length(tuID) >= cutoffratio){
-            cat(as.character(uniqueExon[cnt_tu]), "marker", m, "has Int!!! and quit from", filename, "!\n\n")
+            cat(filename, as.character(uniqueExon[cnt_tu]), "marker", m, "has Int!!! and quit from", filename, "!\n")
             continue <- FALSE
             nGene <- nGene + 1
           } else{
             m <- m+1
           }
         }
-      }
+      #}
       cnt_tu <- cnt_tu + 1
     }
   }
   et <- proc.time()[3]
   cat("chr", chr, "has", nGene, "Int, and finished in", et-st, "s!\n")
+  
+  return(nGene)
 }
 
+intList <- NULL
 for(chr in 1:5){
-  countInt(chr, expGeneList, threshold_int = 5, cutoffratio = 0.6)
+  intList <- c(intList, countInt(chr, expGeneList, threshold_int = 5, cutoffratio = 0.6))
 }
