@@ -17,7 +17,7 @@ lengthsx <- 0
 msumlength <- NULL
 for(x in 1:5){
   #msumlength <- each marker's Morgan position
-  msumlength <- c(msumlength, mpos[which(mpos[,1]==x),2]+totlength)
+  msumlength <- c(msumlength, mpos[which(mpos[,1]==x),2] + totlength)
   #totlength <- total length until current chr(Morgan)
   totlength = totlength + max(mpos[which(mpos[,1]==x),2])
   #lengthsx <- c(0, the max position of each chr separately(Morgan))
@@ -42,18 +42,19 @@ abline(h=lengthsy)
 abline(v=lengthsx)
 y <- 0
 for(chr in 1:5){
-  qtlgood <- read.table(paste("Data/genes_by_chromosomes", chr, "_norm_hf_cor_QTL.txt", sep=""), row.names=1, header=TRUE)
-  location <- paste("Data/chr", chr, "_norm_hf_cor/", sep="")
-  dir(location)[grepl(".png", dir(location))]
-  for(fn_s in rownames(qtlgood)){
-    exp <- read.table(paste("Data/chr", chr, "_norm_hf_cor/", gsub("_[12345]", "", gsub(" Response ", "", fn_s)), ".txt", sep=""), row.names=1, header=TRUE)
-    y <- rep(mean(exp[ ,"bp"]), 716) + lengthsy[chr]
-    colz <- as.numeric(qtlgood[fn_s,])
+  location <- paste("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", sep="")
+  
+  #filename = "AT1G01010_FM_QTL.txt"
+  for(filename in dir(location)[grepl("_QTL", dir(location))]){
+    rawexp <- read.table(paste("Data/chr", chr, "_norm_hf_cor/", gsub("_FM_QTL", "", filename), sep=""), row.names=1, header=TRUE)
+    qtlgood <- read.table(paste("Data/genes_by_chromosomes", chr, "_norm_hf_cor_QTL.txt", sep=""), row.names=1, header=TRUE)
+    y <- rep(mean(rawexp[ ,"bp"]), 716) + lengthsy[chr]
+    colz <- as.numeric(qtlgood[filename,])
     col2 <- colz
     col2[colz < 5] <- rgb(1, 1, 1,0)
     col2[colz >= 5 & colz < 10] <- rgb(0.5, 0.5, 0.5 , 0.5)
     col2[colz >= 10] <- "black"
     points(x = msumlength, y = y, col = col2, pch = 20, cex = 0.5)
-    cat(fn_s, "\n")
+    cat(filename, "\n")
   }
 }
