@@ -10,6 +10,8 @@ setwd("D:/Arabidopsis Arrays")
 #load SNP probes' number, snp is a list of 475009 integers
 snp <- read.table("snp ids.txt")[,1]
 
+
+#*************************************************************** remove part ***************************************************************#
 for(chr in 1:5){
   st <- proc.time()[3]
   cat("chr", chr, "starts now!\n")
@@ -59,4 +61,39 @@ for(chr in 1:5){
   }
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s!\n\n")
+}
+
+
+#*************************************************************** check part ***************************************************************#
+filename="AT5G01400.txt"
+rawexp <- read.table(paste0(location, filename), row.names=1, header=T)
+dim(rawexp)
+rawSNP <- read.table(paste0(location_snpCor, gsub(".txt", "_SNPin.txt", filename)), row.names=1, header=T)
+dim(rawSNP)
+newraw <- read.table(paste0(location_snpCor, filename), row.names=1, header=T)
+dim(newraw)
+newenv <- read.table(paste0(location_snpCor, gsub(".txt", "_FM_Env.txt", filename)), row.names=1, header=T)
+dim(newenv)
+any(rownames(rawexp) %in% snp)
+any(rownames(rawSNP) %in% snp)
+any(rownames(newraw) %in% snp)
+any(rownames(newenv) %in% snp)
+
+
+#************************************************************ move and replace ************************************************************#
+for(chr in 1:5){
+  location <- paste0("Data/chr", chr, "_norm_hf_cor/")
+  location_FM <- paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/")
+  location_snpCor <- paste0("Data/snpCorrection/chr", chr, "_norm_hf_cor/")
+
+  #first, move "AT1G01010_SNPin.txt"
+  snps <- dir(location_snpCor)[grepl("_SNPin.txt", dir(location_snpCor))]
+  file.rename(paste0(location_snpCor, snps), paste0(location, snps))
+
+  #next, move "AT1G01010_FM_Env.txt", "AT1G01010_FM_QTL.txt" and "AT1G01010_FM_Int.txt"
+  fms <- dir(location_snpCor)[grepl("FM", dir(location_snpCor))]
+  file.rename(paste0(location_snpCor, fms), paste0(location_FM, fms))
+
+  #finally, only "AT1G01010.txt" left, and move them
+  file.rename(paste0(location_snpCor, dir(location_snpCor)), paste0(location, dir(location_snpCor)))
 }
