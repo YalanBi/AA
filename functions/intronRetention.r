@@ -52,7 +52,7 @@ checkRetentionTF <- function(rawexp, newexp, intronID, exonExpID, nIn, ind_env, 
   for(i in unique(rawexp[intronID,"tu"])){
     
     #probes4i <- probes that of current intron names and of the right direction
-    probes4i <- intronID[which(rawexp[intronID,"tu"]==i)]
+    probes4i <- intronID[which(rawexp[intronID,"tu"] == i)]
     #cat(i, ":", probes4i, "\n")
     
     #to decide the min number of intron probes
