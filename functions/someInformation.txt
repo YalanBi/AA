@@ -1,5 +1,10 @@
 On each chr, there are * genes:
 *: 7734 5022 6321 4797 6968
+After removing SNPs: 7683 4966 6249 4734 6896
+
+On each chr, there are * genes expressed:
+*: 3555 2172 2839 2072 3192
+After removing SNPs: 3579 2174 2888 2124 3244
 
 environment Levels: 6H, Dry_AR, Dry_Fresh, RP
 number of RILs: 35, 38, 39, 36
