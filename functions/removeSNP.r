@@ -97,3 +97,35 @@ for(chr in 1:5){
   #finally, only "AT1G01010.txt" left, and move them
   file.rename(paste0(location_snpCor, dir(location_snpCor)), paste0(location, dir(location_snpCor)))
 }
+
+#********************************************************** delete no probe files **********************************************************#
+for(chr in 1:5){
+  location <- paste0("Data/chr", chr, "_norm_hf_cor/")
+  location_FM <- paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/")
+  
+  #filename = "AT1G01010.txt"
+  for(filename in dir(location)[grepl(".txt", dir(location)) & !grepl("_QTL.txt", dir(location)) & !grepl("_SNPin.txt", dir(location))]){
+    rawexp <- read.table(paste0(location, filename), row.names=1, header=T)
+    if(nrow(rawexp) == 0){
+      cat(filename, "no probe left!\n")
+      
+      #remove no probe gene files from exp folder
+      file.rename(paste0(location, filename), paste0("no probe genes/", filename))
+      
+      #remove no probe gene files from mapping folder. If current gene have no mapping files, it won't move any files!
+      file.rename(paste0(location_FM, dir(location_FM)[grepl(gsub(".txt", "", filename), dir(location_FM))]), paste0("no probe genes/", dir(location_FM)[grepl(gsub(".txt", "", filename), dir(location_FM))]))
+    }
+  }
+  
+}
+
+#********************************************************** calculate gene numbers **********************************************************#
+ngene <- NULL
+nexp <- NULL
+for(chr in 1:5){
+  location <- paste0("Data/chr", chr, "_norm_hf_cor/")
+  location_FM <- paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/")
+  
+  ngene <- c(ngene, length(dir(location)[grepl(".txt", dir(location)) & !grepl("_QTL.txt", dir(location)) & !grepl("_SNPin.txt", dir(location))]))
+  nexp <- c(nexp, length(dir(location_FM)[grepl("QTL", dir(location_FM))]))
+}
