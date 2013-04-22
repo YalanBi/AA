@@ -29,7 +29,7 @@ findExpGene <- function(chr, threshold = 5){
   st <- proc.time()[3]
   
   expGene <- NULL
-  genenames <- dir(location)[which(grepl(".txt", dir(location)) & !grepl("_QTL", dir(location)))]
+  genenames <- dir(location)[grepl(".txt", dir(location)) & !grepl("_QTL.txt", dir(location)) & !grepl("_SNPin.txt", dir(location))]
   
   #filename "AT1G01010.txt"
   for(filename in genenames){
