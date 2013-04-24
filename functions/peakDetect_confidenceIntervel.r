@@ -18,7 +18,7 @@ peakDetect <- function(data = qtl[p, ], cutoff = 4){
   above   <- as.numeric(data > cutoff)
   below   <- -as.numeric((data < (-cutoff)))
   pattern <- above+below
-
+  
   inPeek  <- 0  # Are we in a peak ?
   top     <- 0  # What was our previous TOP score ?
   for(x in 1:length(pattern)){
