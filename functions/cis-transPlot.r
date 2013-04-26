@@ -36,7 +36,7 @@ lengthsy <- c(0, chr1, chr1+chr2, chr1+chr2+chr3, chr1+chr2+chr3+chr4, chr1+chr2
 
 #for chr1/chr5, use function "loadQTLfile" to load the QTL_t file
 loadQTLfile <- function(chr = 1){
-  x <- 0
+  #x <- 0
   matrix <- NULL
   mnames <- NULL
   fp <- file(paste0("Data/newTU/genesByTU_chr", chr, "_norm_hf_cor_QTL_t.txt"))
@@ -44,7 +44,7 @@ loadQTLfile <- function(chr = 1){
   line <- readLines(fp, 1)
   tnames <- strsplit(line,"\t")[[1]][-1]
   line <- readLines(fp, 1)
-  x <- x+1
+  #x <- x+1
   
   while(length(line) > 0 && line != ""){
     data <- strsplit(line,"\t")[[1]]
@@ -55,7 +55,7 @@ loadQTLfile <- function(chr = 1){
     matrix <- cbind(matrix, data)
     line <- readLines(fp, 1)
     
-    x <- x+1
+    #x <- x+1
   }
   colnames(matrix) <- mnames
   rownames(matrix) <- tnames
