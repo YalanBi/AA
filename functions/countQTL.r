@@ -25,8 +25,8 @@ load(file="Data/fullModeMapping/expGenes.Rdata")
 
 
 #************************************************************* test and count *************************************************************#
-#count main eQTL(qtl >= 4 && int < 5)
-countMainQTL <- function(chr = 1, expGeneList, threshold_qtl = 4, threshold_int = 5, cutoffratio = 0.6){
+#count main eQTL(qtl >= 8.0 && int < 11.6)
+countMainQTL <- function(chr = 1, expGeneList, threshold_qtl = 8.0, threshold_int = 11.6, cutoffratio = 0.6){
   location <- paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/")
   cat("Now chr", chr, "starts!\n")
   st <- proc.time()[3]
@@ -93,12 +93,13 @@ countMainQTL <- function(chr = 1, expGeneList, threshold_qtl = 4, threshold_int 
 
 mainList <- NULL
 for(chr in 1:5){
-  mainList <- c(mainList, countMainQTL(chr, expGeneList, threshold_qtl = 4, threshold_int = 5, cutoffratio = 0.6))
+  mainList <- c(mainList, countMainQTL(chr, expGeneList, threshold_qtl = 8.0, threshold_int = 11.6, cutoffratio = 0.6))
 }
 mainList
 
-#count interaction eQTL(int >= 5)
-countInt <- function(chr = 1, expGeneList, threshold_int = 5, cutoffratio = 0.6){
+
+#count interaction eQTL(int >= 11.6)
+countInt <- function(chr = 1, expGeneList, threshold_int = 11.6, cutoffratio = 0.6){
   location <- paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/")
   cat("Now chr", chr, "starts!\n")
   st <- proc.time()[3]
@@ -163,5 +164,6 @@ countInt <- function(chr = 1, expGeneList, threshold_int = 5, cutoffratio = 0.6)
 
 intList <- NULL
 for(chr in 1:5){
-  intList <- c(intList, countInt(chr, expGeneList, threshold_int = 5, cutoffratio = 0.6))
+  intList <- c(intList, countInt(chr, expGeneList, threshold_int = 11.6, cutoffratio = 0.6))
 }
+intList
