@@ -67,3 +67,45 @@ hist(qtl, breaks=100, col="lightpink2", border="maroon", main="Histogram of QTL 
 abline(v=7.95960219666518, col="maroon")
 text(x=9, y=125, labels="FDR=95%", col="maroon", cex=1.2)
 dev.off()
+
+
+
+#************************************************* count nQTL/nInt higher than threshold *************************************************#
+#first, QTL counting
+qtlFDR <- read.table("Permutation/permutation_qtl_FDR.txt", row.names=1, header=T)
+cat("QTL counting for 3 FDRs starts!\n")
+
+chrall <- c(0, 0, 0)
+for(chr in 1:5){
+  cat("chr", chr, "starts counting...\n")
+  
+  countm <- read.table(paste0("Data/fullModeMapping/expGenes_chr", chr, "_FM_QTL.txt"), row.names=1, header=T)
+  
+  for(fdr in 1:3){
+    chrall[fdr] <- chrall[fdr] + length(which(abs(countm) >= qtlFDR[fdr,1]))
+    cat("higher than", qtlFDR[fdr,1], ":", length(which(abs(countm) >= qtlFDR[fdr,1])), "\n")
+  }
+  cat("chr", chr, "counting finished\n")
+}
+res <- cbind(chrall, qtlFDR)
+
+#next, Int counting
+intFDR <- read.table("Permutation/permutation_int_FDR.txt", row.names=1, header=T)
+cat("Int counting for 3 FDRs starts!\n")
+
+chrall <- c(0, 0, 0)
+for(chr in 1:5){
+  cat("chr", chr, "starts counting...\n")
+  
+  countm <- read.table(paste0("Data/fullModeMapping/expGenes_chr", chr, "_FM_Int.txt"), row.names=1, header=T)
+  
+  for(fdr in 1:3){
+    chrall[fdr] <- chrall[fdr] + length(which(abs(countm) >= intFDR[fdr,1]))
+    cat("higher than", intFDR[fdr,1], ":", length(which(abs(countm) >= intFDR[fdr,1])), "\n")
+  }
+  cat("chr", chr, "counting finished\n")
+}
+res <- cbind(res, chrall, intFDR)
+
+#res is the result table
+colnames(res) <- c("nQTL", "-log10(QTL)", "nInt", "-log10(Int)")
