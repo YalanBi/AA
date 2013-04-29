@@ -11,3 +11,10 @@ number of RILs: 35, 38, 39, 36
 
 
 Across 5 chr, there are 132497 intron probes.
+
+
+
+> intList
+[1] 33 17 27 20 34
+> mainList
+[1] 227 134 174 148 226
