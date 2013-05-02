@@ -18,7 +18,7 @@ map.fast <- function(geno, pheno, menvironment){
   res$env   <- unlist(lapply(modelinfo,"[",1,5),use.names=T)
   res$qtl   <- unlist(lapply(modelinfo,"[",2,5),use.names=T)
   res$int   <- unlist(lapply(modelinfo,"[",3,5),use.names=T)
-  res$eff   <- unlist(models$coefficients[2,])
+  res$eff   <- unlist(models$coefficients[5,])
   res
 }
 
