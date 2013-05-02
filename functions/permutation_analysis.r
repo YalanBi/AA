@@ -72,40 +72,54 @@ dev.off()
 
 #************************************************* count nQTL/nInt higher than threshold *************************************************#
 #first, QTL counting
-qtlFDR <- read.table("Permutation/permutation_qtl_FDR.txt", row.names=1, header=T)
+#qtlFDR <- unlist(read.table("Permutation/permutation_qtl_FDR.txt", row.names=1, header=T))
+qtlFDR <- c(7.6, 8.0, 8.8)
 cat("QTL counting for 3 FDRs starts!\n")
 
-chrall <- c(0, 0, 0)
+nSample <- c(0, 0, 0)
+nExon <- c(0, 0, 0)
+nGene <- c(0, 0, 0)
 for(chr in 1:5){
   cat("chr", chr, "starts counting...\n")
   
-  countm <- read.table(paste0("Data/fullModeMapping/expGenes_chr", chr, "_FM_QTL.txt"), row.names=1, header=T)
+  countm <- read.table(paste0("Data/fullModeMapping/expGenes_chr", chr, "_FMD_QTL.txt"), row.names=1, header=T)
   
   for(fdr in 1:3){
-    chrall[fdr] <- chrall[fdr] + length(which(abs(countm) >= qtlFDR[fdr,1]))
-    cat("higher than", qtlFDR[fdr,1], ":", length(which(abs(countm) >= qtlFDR[fdr,1])), "\n")
+    nSample[fdr] <- nSample[fdr] + length(which(abs(countm) >= qtlFDR[fdr], arr.ind=F))
+    cat("higher than", qtlFDR[fdr], ":", length(which(abs(countm) >= qtlFDR[fdr], arr.ind=F)), "RILs\n")
+    nExon[fdr] <- nExon[fdr] + length(unique(rownames(which(abs(countm) >= qtlFDR[fdr], arr.ind=T))))
+    cat("higher than", qtlFDR[fdr], ":", length(unique(rownames(which(abs(countm) >= qtlFDR[fdr], arr.ind=T)))), "exons\n")
+    nGene[fdr] <- nGene[fdr] + length(unique(apply(as.matrix(unique(rownames(which(abs(countm) >= qtlFDR[fdr], arr.ind=T)))), 1, function(x) strsplit(x , "_")[[1]][1])))
+    cat("higher than", qtlFDR[fdr], ":", length(unique(apply(as.matrix(unique(rownames(which(abs(countm) >= qtlFDR[fdr], arr.ind=T)))), 1, function(x) strsplit(x , "_")[[1]][1]))), "genes\n")
   }
   cat("chr", chr, "counting finished\n")
 }
-res <- cbind(chrall, qtlFDR)
+res <- cbind(qtlFDR, nSample, nExon, nGene)
+colnames(res) <- c("-log10(QTL)", "nSample", "nExon", "nGene")
+
 
 #next, Int counting
-intFDR <- read.table("Permutation/permutation_int_FDR.txt", row.names=1, header=T)
+#intFDR <- unlist(read.table("Permutation/permutation_int_FDR.txt", row.names=1, header=T))
+intFDR <- c(10.4, 11.6, 13.3)
 cat("Int counting for 3 FDRs starts!\n")
 
-chrall <- c(0, 0, 0)
+nSample <- c(0, 0, 0)
+nExon <- c(0, 0, 0)
+nGene <- c(0, 0, 0)
 for(chr in 1:5){
   cat("chr", chr, "starts counting...\n")
   
-  countm <- read.table(paste0("Data/fullModeMapping/expGenes_chr", chr, "_FM_Int.txt"), row.names=1, header=T)
+  countm <- read.table(paste0("Data/fullModeMapping/expGenes_chr", chr, "_FMD_Int.txt"), row.names=1, header=T)
   
   for(fdr in 1:3){
-    chrall[fdr] <- chrall[fdr] + length(which(abs(countm) >= intFDR[fdr,1]))
-    cat("higher than", intFDR[fdr,1], ":", length(which(abs(countm) >= intFDR[fdr,1])), "\n")
+    nSample[fdr] <- nSample[fdr] + length(which(abs(countm) >= intFDR[fdr], arr.ind=F))
+    cat("higher than", intFDR[fdr], ":", length(which(abs(countm) >= intFDR[fdr], arr.ind=F)), "RILs\n")
+    nExon[fdr] <- nExon[fdr] + length(unique(rownames(which(abs(countm) >= intFDR[fdr], arr.ind=T))))
+    cat("higher than", intFDR[fdr], ":", length(unique(rownames(which(abs(countm) >= intFDR[fdr], arr.ind=T)))), "exons\n")
+    nGene[fdr] <- nGene[fdr] + length(unique(apply(as.matrix(unique(rownames(which(abs(countm) >= intFDR[fdr], arr.ind=T)))), 1, function(x) strsplit(x , "_")[[1]][1])))
+    cat("higher than", intFDR[fdr], ":", length(unique(apply(as.matrix(unique(rownames(which(abs(countm) >= intFDR[fdr], arr.ind=T)))), 1, function(x) strsplit(x , "_")[[1]][1]))), "genes\n")
   }
   cat("chr", chr, "counting finished\n")
 }
-res <- cbind(res, chrall, intFDR)
-
-#res is the result table
-colnames(res) <- c("nQTL", "-log10(QTL)", "nInt", "-log10(Int)")
+res <- cbind(intFDR, nSample, nExon, nGene)
+colnames(res) <- c("-log10(Int)", "nSample", "nExon", "nGene")
