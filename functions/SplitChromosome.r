@@ -48,7 +48,8 @@ splitChromosome <- function(filename, chr=1){
 }
 splitChromosome("Yalan map/offspring_phenotypes_chr2_norm_hf_cor.txt", chr = 2)
 
-for(filename in dir("Yalan map/")[grepl("off",dir("Yalan map/"))]){
-  chr <- which(filename == dir("Yalan map/")[grepl("off",dir("Yalan map/"))])
+
+for(filename in dir("Yalan map/")[grepl("cor",dir("Yalan map/"))]){
+  chr <- which(filename == dir("Yalan map/")[grepl("cor",dir("Yalan map/"))])
   splitChromosome(paste("Yalan map/", filename, sep=""), chr)
 }
