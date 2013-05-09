@@ -109,7 +109,19 @@ gene_count#(for median)
 [1] 2395 1365 1836 1406 2165
 #sum(gene_count)=9167
 
-#count ngene having
+#count ngene having cassette exon
+use = "median"
+geneCExon_cnt <- NULL
+for(chr in 1:5){
+  cematrix <- read.table(paste0("Data/cassetteExon/cassetteExon_chr", chr, "_", use, "_D2p.txt"), row.names=1, header=T)
+  
+  #for all genes which have cassette exons in at least one env
+  geneCExon_cnt <- c(geneCExon_cnt, length(unique(unlist(lapply(strsplit(rownames(cematrix)[which(cematrix >= ce_threshold, arr.ind=T)],"_"),"[[",1)))))
+}
+geneCExon_cnt
+[1] 1412  818 1080  838 1293
+#sum(geneCExon_cnt)=5441
+
 
 #************************************************************* summary part *************************************************************#
 #mean or median, change!!!
@@ -189,8 +201,8 @@ plotcExonExp <- function(chr, filename, ce_threshold, use = "median"){
 
 
 use = "median"
-for(chr in 1:1){
-  cematrix <- read.table(paste0("Data/cassetteExon/cassetteExon_chr1_", use, "_D2p.txt"), row.names=1, header=T)
+for(chr in 1:5){
+  cematrix <- read.table(paste0("Data/cassetteExon/cassetteExon_chr", chr, "_", use, "_D2p.txt"), row.names=1, header=T)
   
   #for all genes which have cassette exons in at least one env
   plotGenenames <- unique(unlist(lapply(strsplit(rownames(cematrix)[which(cematrix >= ce_threshold, arr.ind=T)],"_"),"[[",1)))
