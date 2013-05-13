@@ -22,13 +22,13 @@ probesDir <- function(exp_data = rawexp){
   return(direction_id)
 }
 
-#3'/5' skipping exon test
-test5Skipping <- function(expdata = rawexp[exonID, ind_env + 16], ind, use){
-  fexonProbe <- apply(expdata[ind, ], 2, use)
-  #cat(exonprobe, "\n")
+#cassette exon test
+testSkipping <- function(expdata = rawexp[exonID, ind_env + 16], ind, use){
+  testProbe <- apply(expdata[ind, ], 2, use)
+  #cat(testProbe, "\n")
   otherProbe <- apply(expdata[!ind, ], 2, use)
-  #cat(otherprobe, "\n")
-  return(-log10(t.test(exonprobe, otherprobe, alternative="less")$p.value))
+  #cat(otherProbe, "\n")
+  return(-log10(t.test(testProbe, otherProbe, alternative="less")$p.value))
 }
 
 
@@ -38,8 +38,12 @@ load(file="Data/fullModeMapping/expGenes.Rdata")
 
 
 #*************************************************************** test part ***************************************************************#
-cnt_mem <- NULL
-#mean or median, change!!!
+#ngenes which are qualified for analysis
+gene_count <- c(0, 0, 0, 0, 0)
+#number of t.test we have done, used for FDR
+cnt <- c(0, 0, 0, 0, 0)
+
+#Before start, mean, median or all individuals, change!!!
 for(chr in 1:5){
   st <- proc.time()[3]
   cat("chr", chr, "starts...\n")
@@ -47,8 +51,6 @@ for(chr in 1:5){
   genenames <- expGeneList[[chr]]
   resmatrix <- NULL
   rownameList <- NULL
-  
-  cnt <- 0
   
   for(filename in genenames){
     cat(filename, "...\n")
@@ -68,35 +70,40 @@ for(chr in 1:5){
     #at least 2 exons in a gene!!!
     if(length(uniqueExon) >= 2){
       #cat("we have >= 2 exons!\n")
-      gene_count <- gene_count+1
-      exon <- uniqueExon[1]
-        #ind <- judge which probe in exonID is of current exon name (T/F)
-        ind <- rawexp[exonID, "tu"] == exon
-        #cat(as.character(exon), "has probes", exonID[ind], "\n")
-        if(length(which(ind)) >= 2){
-          #cat("I'm", exon, ">= 2 good probes, t.test me and remember my tu name!\n")
+      
+      #ngenes which are qualified for analysis + 1 #be here or after length(which(ind))>=3???????????????????????????????????????????????
+      gene_count[chr] <- gene_count[chr] + 1
+      
+      #********************check 5'/first exon now!!!
+      #ind <- judge which probe in exonID is of current exon name (T/F)
+      ind <- rawexp[exonID, "tu"] == exon
+      #cat(as.character(exon), "has probes", exonID[ind], "\n")
+      
+        #at least 3 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
+        if(length(which(ind)) >= 3){
+          #cat("I'm", exon, ">= 3 good probes, t.test me and remember my tu name!\n")
           rownameList <- c(rownameList, paste0(gsub(".txt", "", filename), "_", exon))
           
           res <- NULL
           for(env in 1:4){
             ind_env <- which(as.numeric(menvironment) == env)
             
-            #use mean/median to test cassette
-            res <- c(res, testCassette(expdata = rawexp[exonID, ind_env + 16], ind, use = mean)) #********** change!!! **********#
+            #use mean/median/all individuals(unlist) to do the t.test for cassette exon
+            res <- c(res, testCassette(expdata = rawexp[exonID, ind_env + 16], ind, use = median)) #********** change!!! **********#
             
-            #t.test once, counter plus 1!!! to calculate the 
-            cnt <- cnt + 1
+            #t.test once, counter plus 1!!! to calculate the number of t.test we have done. for FDR
+            cnt[chr] <- cnt[chr] + 1
           }
-       resmatrix <- rbind(resmatrix, res)
+          
+        resmatrix <- rbind(resmatrix, res)
         }
-
+      
     }
   }
-  cnt_mem <- c(cnt_mem, cnt)
   
   rownames(resmatrix) <- rownameList
   colnames(resmatrix) <- c("6H", "Dry_AR", "Dry_Fresh", "RP")
-  write.table(resmatrix, file=paste0("Data/cassetteExon/cassetteExon_chr", chr, "_mean_D2p.txt"), sep="\t") #change!!! 
+  write.table(resmatrix, file=paste0("Data/cassetteExon/cassetteExon_chr", chr, "_median.txt"), sep="\t") #********** change!!! **********#
   
   et <- proc.time()[3]
   cat("and finished in", et-st, "s\n")
