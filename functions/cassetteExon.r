@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 02-05-2013
+# last modified: 13-05-2013
 # first written: 02-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -24,11 +24,11 @@ probesDir <- function(exp_data = rawexp){
 
 #cassette exon test
 testCassette <- function(expdata = rawexp[exonID, ind_env + 16], ind, use){
-  exonprobe <- apply(expdata[ind, ], 2, use)
-  #cat(exonprobe, "\n")
-  otherprobe <- apply(expdata[!ind, ], 2, use)
-  #cat(otherprobe, "\n")
-  return(-log10(t.test(exonprobe, otherprobe, alternative="less")$p.value))
+  testProbe <- apply(expdata[ind, ], 2, use)
+  #cat(testProbe, "\n")
+  otherProbe <- apply(expdata[!ind, ], 2, use)
+  #cat(otherProbe, "\n")
+  return(-log10(t.test(testProbe, otherProbe, alternative="less")$p.value))
 }
 
 
@@ -38,9 +38,10 @@ load(file="Data/fullModeMapping/expGenes.Rdata")
 
 
 #*************************************************************** test part ***************************************************************#
-gene_count <- c(0, 0, 0, 0, 0)
-cnt_mem <- NULL
-#mean or median, change!!!
+#number of t.test we have done, used for FDR
+cnt <- c(0, 0, 0, 0, 0)
+
+#Before start, mean, median or all individuals, change!!!
 for(chr in 1:5){
   st <- proc.time()[3]
   cat("chr", chr, "starts...\n")
@@ -48,8 +49,6 @@ for(chr in 1:5){
   genenames <- expGeneList[[chr]]
   resmatrix <- NULL
   rownameList <- NULL
-  
-  cnt <- 0
   
   for(filename in genenames){
     cat(filename, "...\n")
@@ -69,77 +68,108 @@ for(chr in 1:5){
     #at least 3 exons in a gene!!!
     if(length(uniqueExon) >= 3){
       #cat("we have >= 3 exons!\n")
-      gene_count[chr] <- gene_count[chr] + 1
+      
       for(exon in uniqueExon[2: (length(uniqueExon)-1)]){
         #ind <- judge which probe in exonID is of current exon name (T/F)
         ind <- rawexp[exonID, "tu"] == exon
         #cat(as.character(exon), "has probes", exonID[ind], "\n")
-        if(length(which(ind)) >= 2){
-          #cat("I'm", exon, ">= 2 good probes, t.test me and remember my tu name!\n")
+        
+        #at least 3 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
+        if(length(which(ind)) >= 3){
+          #cat("I'm", exon, ">= 3 good probes, t.test me and remember my tu name!\n")
           rownameList <- c(rownameList, paste0(gsub(".txt", "", filename), "_", exon))
           
           res <- NULL
           for(env in 1:4){
             ind_env <- which(as.numeric(menvironment) == env)
             
-            #use mean/median to test cassette
-            res <- c(res, testCassette(expdata = rawexp[exonID, ind_env + 16], ind, use = median)) #********** change!!! **********#
+            #use mean/median/all individuals(unlist) to do the t.test for cassette exon
+            res <- c(res, testCassette(expdata = rawexp[exonID, ind_env + 16], ind, use = unlist)) #********** change!!! **********#
             
-            #t.test once, counter plus 1!!! to calculate the 
-            cnt <- cnt + 1
+            #t.test once, counter plus 1!!! to calculate the number of t.test we have done. for FDR
+            cnt[chr] <- cnt[chr] + 1
           }
-       resmatrix <- rbind(resmatrix, res)
+          
+        resmatrix <- rbind(resmatrix, res)
         }
       }
     }
   }
-  cnt_mem <- c(cnt_mem, cnt)
   
   rownames(resmatrix) <- rownameList
   colnames(resmatrix) <- c("6H", "Dry_AR", "Dry_Fresh", "RP")
-  write.table(resmatrix, file=paste0("Data/cassetteExon/cassetteExon_chr", chr, "_median_D2p.txt"), sep="\t") #change!!! 
+  write.table(resmatrix, file=paste0("Data/cassetteExon/cassetteExon_chr", chr, "_allind.txt"), sep="\t") #********** change!!! **********#
   
   et <- proc.time()[3]
   cat("and finished in", et-st, "s\n")
 }
 
-sum(cnt_mem)
-#93820
-gene_count#(for median)
-[1] 2395 1365 1836 1406 2165
-#sum(gene_count)=9167
+cnt #cnt = length(rownameList * 4)
+[1] 9344 5260 7428 5568 8416
+#sum(cnt)=36016
+
+
+#count nTestTus and nTestGenes
+ce_threshold = 5.86
+
+nTestTus <- NULL
+nTestGenes <- NULL
+
+matrixSigGenes <- NULL
+matrixSigTus <- NULL
+
+for(chr in 1:5){
+  cematrix <- read.table(paste0("Data/cassetteExon/cassetteExon_chr", chr, "_allind.txt"), row.names=1, header=T) #********** change!!! **********#
+  
+  nTestTus <- c(nTestTus, nrow(cematrix))
+  nTestGenes <- c(nTestGenes, length(unique(unlist(lapply(strsplit(rownames(cematrix),"_"),"[[",1)))))
+  
+  #for all genes which have cassette exons in one env
+  nSigGenes <- NULL
+  nSigTus <- NULL
+  #for all genes which have cassette exons in one env
+  for(env in 1:4){
+    nSigGenes <- c(nSigGenes, length(unique(unlist(lapply(strsplit(rownames(cematrix)[which(cematrix[ ,env] >= ce_threshold)],"_"),"[[",1)))))
+    nSigTus <- c(nSigTus, length(which(cematrix[ ,env] >= ce_threshold)))
+  }
+  matrixSigGenes <- rbind(matrixSigGenes, nSigGenes)
+  matrixSigTus <- rbind(matrixSigTus, nSigTus)
+}
+
+nTestTus
+[1] 2336 1315 1857 1392 2104
+
+nTestGenes
+[1] 1338  742 1058  784 1227
+
+matrixSigGenes(AS genes)
+      Env1  Env2  Env3  Env4
+chr1  488   526   530   528
+chr2  302   318   322   296
+chr3  386   413   433   395
+chr4  291   304   309   302
+chr5  447   483   475   453
+
+matrixSigTus(AS exons)
+      Env1  Env2  Env3  Env4
+chr1  606   647   647   657
+chr2  356   378   381   357
+chr3  466   501   524   469
+chr4  355   380   383   358
+chr5  540   586   569   536
+
+
 
 #count ngene having cassette exon
-use = "median"
 geneCExon_cnt <- NULL
 for(chr in 1:5){
-  cematrix <- read.table(paste0("Data/cassetteExon/cassetteExon_chr", chr, "_", use, "_D2p.txt"), row.names=1, header=T)
+  cematrix <- read.table(paste0("Data/cassetteExon/cassetteExon_chr", chr, "_allind.txt"), row.names=1, header=T) #********** change!!! **********#
   
-  #for all genes which have cassette exons in at least one env
-  geneCExon_cnt <- c(geneCExon_cnt, length(unique(unlist(lapply(strsplit(rownames(cematrix)[which(cematrix >= ce_threshold, arr.ind=T)],"_"),"[[",1)))))
+  
+  geneCExon_cnt <- rbind(geneCExon_cnt, nSigGenes)
+  
 }
 geneCExon_cnt
-[1] 1412  818 1080  838 1293
-#sum(geneCExon_cnt)=5441
-
-
-#************************************************************* summary part *************************************************************#
-#mean or median, change!!!
-res <- NULL
-for(chr in 1:5){
-  cematrix <- read.table(paste0("Data/cassetteExon/cassetteExon_chr", chr, "_mean_D2p.txt"), row.names=1, header=TRUE) #********** change!!! **********#
-  rr <- NULL
-  for(env in 1:4){
-    rr <- c(rr, length(which(cematrix[ ,env] >= -log10(0.05/sum(cnt_mem))))/sum(cnt_mem/4))
-  }
-  res <- rbind(res, rr)
-}
-res <- rbind(res, colSums(res))
-rownames(res) <- c("chr1", "chr2", "chr3", "chr4", "chr5", "Sum")
-colnames(res) <- c("6H", "Dry_AR", "Dry_Fresh", "RP")
-write.table(res, file=paste0("Data/cassetteExon/cassetteExon_sum_mean_D2p.txt"), sep="\t") #********** change!!! **********#
-
-
 
 
 
@@ -171,10 +201,10 @@ plotcExonExp <- function(chr, filename, ce_threshold, use = "median"){
   for(p in 1:nprobes){
     #background for introns
     if(!p %in% ind_tu){
-      rect((p-0.5), -3, (p+0.5), max(newexp)* 2.1, col=grey(0.85), border = "transparent")
+      rect((p-0.5), -3, (p+0.5), max(newexp)* 2, col=grey(0.85), border = "transparent")
     }
     if(p %in% probes_dir){
-      points(rep(p,148)+0.06*as.numeric(menvironment)-0.15, newexp[p,], t='p', col=menvironment, pch=20, cex=0.7)
+      points(rep(p,148)+0.06*as.numeric(menvironment)-05, newexp[p,], t='p', col=menvironment, pch=20, cex=0.7)
     }
   }
   for(exon in uniqueExon){
@@ -186,11 +216,11 @@ plotcExonExp <- function(chr, filename, ce_threshold, use = "median"){
       ind_env <- which(as.numeric(menvironment) == env)
       
       #use mean/median to test cassette
-      lines(c(min(which(rawexp[,"tu"] == exon))-0.5+0.1*env, max(which(rawexp[,"tu"] == exon))+0.1*env), c(mean(unlist(newexp[exonID[ind], ind_env])), mean(unlist(newexp[exonID[ind], ind_env]))), col=env, lwd=2)       
+      lines(c(min(which(rawexp[,"tu"] == exon))-0.5+0*env, max(which(rawexp[,"tu"] == exon))+0*env), c(mean(unlist(newexp[exonID[ind], ind_env])), mean(unlist(newexp[exonID[ind], ind_env]))), col=env, lwd=2)       
       
       cExoninEnv <- unlist(lapply(strsplit(row.names(cematrix[which(cematrix[,env]>=ce_threshold),])[grepl(filename, row.names(cematrix[which(cematrix[,env]>=ce_threshold),]))],"_"),"[[",2))
       if(exon %in% cExoninEnv){
-        text(x=median(exonID[ind]), y=max(newexp)-0.1*env, labels=exon, col=env, cex=1)
+        text(x=median(exonID[ind]), y=max(newexp)-0*env, labels=exon, col=env, cex=1)
       }
     }
   }
