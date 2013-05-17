@@ -273,7 +273,7 @@ probesDir <- function(exp_data = rawexp){
   return(direction_id)
 }
 
-plotExpEnvSep <- function(rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes){
+plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, ce_threshold){
   #par(mfrow = c(4, 1), pty = "m", oma = c(5, 3, 5, 0.5))
   for(env in 1:4){
     ind_env <- which(as.numeric(menvironment) == env)
@@ -332,7 +332,7 @@ plotcExonExp <- function(chr, filename, ce_threshold){
   nprobes <- nrow(rawexp)
   
   png(filename = paste0("Data/cassetteExon/chr", chr, "/", filename, "_ceExp_allind_", ce_threshold, "_4s.png"), width = 960, height = 1728, bg = "white")
-  plotExpEnvSep(rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes)
+  plotExpEnvSep(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, ce_threshold)
   dev.off()
 }
 
@@ -351,5 +351,38 @@ for(chr in 1:1){
   #filename(AT1G01010)
   for(filename in plotGenenames[1:15]){
     plotcExonExp(chr, filename, ce_threshold = 5.86)
+  }
+}
+
+
+
+
+#*********************************************************** find best examples ***********************************************************#
+getOne <- function(aa, cond = 1, cutoff=30){
+  bb <- aa[which(aa[ ,cond] > cutoff), ]
+  l10 <- sort(apply(bb[ ,(1:4)[-cond]], 1, sum), index.return=T)$ix[1:10]#sort(apply(bb[ ,-cond], 1, sum), index.return=T)$ix[1:10]
+  bb[l10, ]
+}
+
+getOne <- function(aa, cond = 1, cutoff=30){
+  bb <- aa[which(aa[ ,cond] > cutoff), ]
+  l10 <- NULL
+  for(r in 1:nrow(bb)){
+    if(any(bb[r, -cond] <= (cutoff - 15))) l10 <- c(l10, r)
+  }
+  bb[l10, ]
+}
+
+for(chr in 1:5){
+  cematrix <- read.table(paste0("Data/cassetteExon/cassetteExon_chr", chr, "_allind.txt"), row.names=1, header=T)
+  
+  posPerfectEg <- NULL
+  for(env in 1:4){
+    posPerfectEg <- c(posPerfectEg, unlist(lapply(strsplit(rownames(getOne(cematrix, env, 30)), "_"), "[[", 1)))
+  }
+  cat("I'm chr", chr, ", I have\n", posPerfectEg, "\n")
+  for(filename in sort(unique(posPerfectEg))){
+    chr <- gsub("AT", "", unlist(lapply(strsplit(filename, "G"), "[[", 1)))
+    plotcExonExp(chr, filename, ce_threshold = 6.23)
   }
 }
