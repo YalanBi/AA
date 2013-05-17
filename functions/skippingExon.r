@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 15-05-2013
+# last modified: 16-05-2013
 # first written: 02-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -141,6 +141,7 @@ cntL
 #sum(cntF)=25068
 
 
+#************************************************************* analysis part *************************************************************#
 #count nSkipF and nSkipL
 fs_threshold = 5.68
 ls_threshold = 5.70
@@ -193,6 +194,55 @@ Env4  358   190   251   212   309
 
 
 
+#********************************************************** merge 5'/3' together **********************************************************#
+fs_threshold = 5.68
+ls_threshold = 5.70
+nMergeTest <- NULL
+for(chr in 1:5){
+  fsmatrix <- read.table(paste0("Data/skippingExon/5skippingExon_chr", chr, "_allind.txt"), row.names=1, header=T) #********** change!!! **********#
+  lsmatrix <- read.table(paste0("Data/skippingExon/3skippingExon_chr", chr, "_allind.txt"), row.names=1, header=T) #********** change!!! **********#
+  
+  frn <- rownames(fsmatrix)
+  lrn <- rownames(lsmatrix)
+  namerange <- unique(c(frn, lrn))[order(unique(c(frn, lrn)))]#sort()????????????
+  nMergeTest <- c(nMergeTest, length(unique(c(frn, lrn))))
+  
+  mergeSigmatrix <- NULL
+  mergeSigRnames <- NULL
+  for(g in namerange){
+    if(g %in% frn && any(fsmatrix[g, ] >= fs_threshold)){
+      mergeSigmatrix <- rbind(mergeSigmatrix, fsmatrix[g, ])
+      mergeSigRnames <- c(mergeSigRnames, paste0(g, "_first"))
+    }
+    if(g %in% lrn && any(lsmatrix[g, ] >= ls_threshold)){
+      mergeSigmatrix <- rbind(mergeSigmatrix, lsmatrix[g, ])
+      mergeSigRnames <- c(mergeSigRnames, paste0(g, "_last"))
+    }
+  }
+  rownames(mergeSigmatrix) <- mergeSigRnames
+  colnames(mergeSigmatrix) <- c("6H", "Dry_AR", "Dry_Fresh", "RP")
+  write.table(mergeSigmatrix, file=paste0("Data/skippingExon/skippingExon_chr", chr, "_merge.txt"), sep="\t")
+}
+nMergeTest
+[1] 2270 1307 1784 1351 2056
+
+totmatrix <- NULL
+for(chr in 1:5){
+  mmatrix <- read.table(paste0("Data/skippingExon/skippingExon_chr", chr, "_merge.txt"), row.names=1, header=T)
+  ntot <- NULL
+  for(env in 1:4){
+    ntot <- c(ntot, length(unique(c(unlist(lapply(strsplit(rownames(mmatrix)[grepl("f", rownames(mmatrix))][mmatrix[grepl("f", rownames(mmatrix)),env] >= fs_threshold], "_"), "[[", 1)), unlist(lapply(strsplit(rownames(mmatrix)[grepl("l", rownames(mmatrix))][mmatrix[grepl("l", rownames(mmatrix)),1] >= ls_threshold], "_"), "[[", 1))))))
+  }
+  totmatrix <- rbind(totmatrix, ntot)
+}
+totmatrix
+#5'or3'skipping genes
+     Env1 Env2 Env3 Env4
+chr1  646  651  651  639
+chr2  386  388  400  388
+chr3  506  516  516  494
+chr4  395  394  403  398
+chr5  615  621  626  618
 
 
 
@@ -294,7 +344,7 @@ for(chr in 1:1){
 #plot 4 env separately in 4 panel
 setwd("D:/Arabidopsis Arrays")
 #load environment file
-menvironment <- read.table("Data/ann_env.txt", sep="\t")[,2]
+menvironment <- read.table("Data/ann_env.txt", sep="\t")[ ,2]
 
 
 #direction selection
