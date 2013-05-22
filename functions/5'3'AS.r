@@ -84,12 +84,35 @@ for(chr in 1:5){
           
           #to find max difference between each probe in exp, to group them
           dff <- NULL
-          for(p in exonID[ind][2:length(exonID[ind])]){
-            dff <- c(dff, abs())
+          for(n in 2:length(exonID[ind])){
+            dff <- c(dff, abs(sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164])))
+            cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
+          }
+          cat(dff, "\n")
+          
+          #find the max difference and separate into 2 parts
+          cat("max dff is between p", exonID[ind][which.max(dff)], "and p", exonID[ind][which.max(dff)+1], ", is", max(dff), "\n")
+          part1 <- exonID[ind][1:which.max(dff)]
+          cat("I'm part1, I have", part1, "\n")
+          part2 <- exonID[ind][-(1:which.max(dff))]
+          cat("I'm part2, I have", part2, "\n")
+          #>= 3 probes left in each group to do t.test
+          if(length(part1) >= 3 && length(part2) >= 3){
+            for(env in 1:4){
+              ind_env <- which(as.numeric(menvironment) == env)
+              cat("Now is env", env, "\n")
+              -log10(t.test(rawexp[part1, ind_env+16], rawexp[part2, ind_env+16])$p.value)
+            }
           }
         }
       }
-    #*************************first, test the 1st exon/5' exon*************************#
+    #************************* HERE!!! *************************#
+    
+    
+    
+    
+    
+    
       indF <- rawexp[exonID, "tu"] == uniqueExon[1]
       
       
@@ -98,7 +121,6 @@ for(chr in 1:5){
         
         resF <- NULL
         for(env in 1:4){
-          ind_env <- which(as.numeric(menvironment) == env)
           
           #use mean/median/all individuals(unlist) to do the t.test for cassette exon
           resF <- c(resF, testSkipping(expdata = rawexp[exonID,(ind_env + 16)], ind = indF, use = unlist)) #********** change!!! **********#
