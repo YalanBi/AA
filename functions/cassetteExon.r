@@ -108,10 +108,9 @@ cnt #cnt = length(rownameList) * 4
 [1] 9344 5260 7428 5568 8416
 #sum(cnt)=36016
 
+ce_threshold = -log10(0.05/sum(cnt)) = 5.86
 
 #count nTestTus and nTestGenes
-ce_threshold = 5.86
-
 nTestTus <- NULL
 nTestGenes <- NULL
 
