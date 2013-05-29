@@ -1,9 +1,10 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 18-04-2013
-# first written: 18-04-2013
+# last modified: 21-05-2013
+# first written: 19-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
+
 
 #*************************************************************** basic part ***************************************************************#
 #plot 4 env separately in 4 panel
