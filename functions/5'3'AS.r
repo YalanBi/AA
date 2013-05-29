@@ -1,7 +1,7 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 16-05-2013
-# first written: 02-05-2013
+# last modified: 29-05-2013
+# first written: 21-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
@@ -141,7 +141,7 @@ nTest
 [1] 1468  816 1088  708 1256
 sum(nTest) = 5336
 
-asPartExon_thr = -log10(0.05/sum(nTest)) = 5.03
+ps_threshold = -log10(0.05/sum(nTest)) = 5.03
 
 nTest3or5Genes
 [1] 353 196 266 173 298
@@ -151,33 +151,67 @@ nTest3Genes
 [1] 183 102 136  84 155
 
 
-#************************************* HERE!!! ************************************#
+matrixSig3or5 <- NULL
+matrixSig5 <- NULL
+matrixSig3 <- NULL
 for(chr in 1:5){
   aa <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_allind.txt"), row.names=1, header=T)
   
-  nTestTus <- c(nTestTus, nrow(cematrix))
-  nTestGenes <- c(nTestGenes, length(unique(unlist(lapply(strsplit(rownames(cematrix), "_"), "[[", 1)))))
-  
   #for all genes which have cassette exons in one env
-  nSigGenes <- NULL
-  nSigTus <- NULL
+  nSig3or5Genes <- NULL
+  nSig5Genes <- NULL
+  nSig3Genes <- NULL
   #for all genes which have cassette exons in one env
   for(env in 1:4){
-    rowGenes <- unlist(lapply(strsplit(rownames(aa)[aa[ ,env] >= asPartExon_thr], "_"), "[[", 1))
+    rowSigGenes <- unlist(lapply(strsplit(rownames(aa)[aa[ ,env] >= ps_threshold], "_"), "[[", 1))
+    nSig3or5Genes <- c(nSig3or5Genes, length(unique(rowSigGenes)))
     
+    firstSigGenes <- rowSigGenes[unlist(lapply(strsplit(rownames(aa)[aa[ ,env] >= ps_threshold], "_"), "[[", 2)) == 1]
+    nSig5Genes <- c(nSig5Genes, length(firstSigGenes))
     
+    lastSigGenes <- rowSigGenes[unlist(lapply(strsplit(rownames(aa)[aa[ ,env] >= ps_threshold], "_"), "[[", 2)) != 1]
+    nSig3Genes <- c(nSig3Genes, length(lastSigGenes))
     
-    nSigGenes <- c(nSigGenes, length(unique(unlist(lapply(strsplit(rownames(cematrix)[which(cematrix[ ,env] >= ce_threshold)], "_"), "[[", 1)))))
-    nSigTus <- c(nSigTus, length(which(cematrix[ ,env] >= ce_threshold)))
   }
-  matrixSigGenes <- rbind(matrixSigGenes, nSigGenes)
-  matrixSigTus <- rbind(matrixSigTus, nSigTus)
+  matrixSig3or5 <- rbind(matrixSig3or5, nSig3or5Genes)
+  matrixSig5 <- rbind(matrixSig5, nSig5Genes)
+  matrixSig3 <- rbind(matrixSig3, nSig3Genes)
 }
+rownames(matrixSig3or5) <- c("chr1", "chr2", "chr3", "chr4", "chr5")
+colnames(matrixSig3or5) <- c("Env1", "Env2", "Env3", "Env4")
+rownames(matrixSig5) <- c("chr1", "chr2", "chr3", "chr4", "chr5")
+colnames(matrixSig5) <- c("Env1", "Env2", "Env3", "Env4")
+rownames(matrixSig3) <- c("chr1", "chr2", "chr3", "chr4", "chr5")
+colnames(matrixSig3) <- c("Env1", "Env2", "Env3", "Env4")
+
+matrixSig3or5(ngenes having AS at 3|5 site)
+      Env1 Env2 Env3 Env4
+chr1  240  247  250  234
+chr2  131  138  141  132
+chr3  172  179  177  167
+chr4  121  119  119  111
+chr5  208  213  224  195
+matrixSig5(ngenes having AS at 5 site)
+      Env1 Env2 Env3 Env4
+chr1  132  130  132  131
+chr2   64   69   69   60
+chr3   95   90   90   89
+chr4   67   67   66   61
+chr5  112  110  117  104
+matrixSig3(ngenes having AS at 3 site)
+      Env1 Env2 Env3 Env4
+chr1  113  123  124  108
+chr2   69   72   75   72
+chr3   78   90   88   79
+chr4   55   54   55   51
+chr5  101  108  112   98
 
 
 
 
-#main idea
+
+
+#*************************************************************** main idea ***************************************************************#
 rr <- NULL
 for(x in 1:(nrow(rawexp)-1)){
   rr <- c(rr, sum(abs(rawexp[x,17:164]-rawexp[(x+1),17:164])))
