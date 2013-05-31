@@ -77,9 +77,7 @@ countMainQTL <- function(chr = 1, expGeneList, threshold_qtl = 8.0, threshold_in
             cat(filename, as.character(uniqueExon[cnt_tu]), "marker", m, "has main eQTL!!! and quit from", filename, "!\n")
             continue <- FALSE
             nGene <- nGene + 1
-          } else{
-            m <- m+1
-          }
+          } else m <- m+1
         }
       #}
       cnt_tu <- cnt_tu + 1
