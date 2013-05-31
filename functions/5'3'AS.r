@@ -24,13 +24,21 @@ probesDir <- function(exp_data = rawexp){
 
 
 #5'/3' AS test
-#use = unlist -> use all individuals to do t.test, better than mean/median
+#t.test; use = unlist -> use all individuals to do t.test, better than mean/median
 testASinExon <- function(expdata = rawexp[ ,ind_env + 16], part1, part2, use){
   part1Probes <- apply(expdata[part1, ], 2, use)
   #cat("We are part1Probes:", part1, "\n")
   part2Probes <- apply(expdata[part2, ], 2, use)
   #cat("We are part2Probes:", part2, "\n")
   return(-log10(t.test(part1Probes, part2Probes) $ p.value))
+}
+#wilcox.test; use = unlist -> use all individuals to do t.test, better than mean/median
+testASinExon <- function(expdata = rawexp[ ,ind_env + 16], part1, part2, use){
+  part1Probes <- apply(expdata[part1, ], 2, use)
+  #cat("We are part1Probes:", part1, "\n")
+  part2Probes <- apply(expdata[part2, ], 2, use)
+  #cat("We are part2Probes:", part2, "\n")
+  return(-log10(wilcox.test(part1Probes, part2Probes) $ p.value))
 }
 
 
@@ -62,7 +70,7 @@ for(chr in 1:5){
     #cat("exons of right direction:", exonID, "\n")
     
     #uniqueExon <- all tu names of exon probes
-    uniqueExon <- unique(rawexp[exonID,"tu"])
+    uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
     #cat(" =>tu names:", as.character(uniqueExon), "\n")
     
     #for 5'/3' AS, at least 2 exons in a gene!!!
@@ -112,7 +120,8 @@ for(chr in 1:5){
   }
   rownames(resmatrix) <- rownameList
   colnames(resmatrix) <- c("6H", "Dry_AR", "Dry_Fresh", "RP")
-  write.table(resmatrix, file=paste0("Data/53terminalAS/53terminalAS_chr", chr, "_allind.txt"), sep="\t") #********** change!!! **********#
+  #write.table(resmatrix, file=paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), sep="\t") #********** change!!! **********#
+  write.table(resmatrix, file=paste0("Data/53terminalAS/53terminalAS_chr", chr, "_wtest.txt"), sep="\t") #********** change!!! **********#
   
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
@@ -125,7 +134,8 @@ nTest3or5Genes <- NULL
 nTest5Genes <- NULL
 nTest3Genes <- NULL
 for(chr in 1:5){
-  aa <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_allind.txt"), row.names=1, header=T)
+  #aa <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), row.names=1, header=T)
+  aa <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_wtest.txt"), row.names=1, header=T)
   nTest <- c(nTest, nrow(aa) * ncol(aa))
   
   rowGenes <- unlist(lapply(strsplit(rownames(aa), "_"), "[[", 1))
@@ -138,24 +148,25 @@ for(chr in 1:5){
   nTest3Genes <- c(nTest3Genes, length(lastGenes))
 }
 nTest
-[1] 1468  816 1088  708 1256
+[1] 1476  812 1084  712 1252
 sum(nTest) = 5336
 
 ps_threshold = -log10(0.05/sum(nTest)) = 5.03
 
 nTest3or5Genes
-[1] 353 196 266 173 298
+[1] 355 196 265 174 297
 nTest5Genes
-[1] 184 102 136  93 159
+[1] 182 100 135  94 160
 nTest3Genes
-[1] 183 102 136  84 155
+[1] 187 103 136  84 153
 
 
 matrixSig3or5 <- NULL
 matrixSig5 <- NULL
 matrixSig3 <- NULL
 for(chr in 1:5){
-  aa <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_allind.txt"), row.names=1, header=T)
+  #aa <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), row.names=1, header=T)
+  aa <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_wtest.txt"), row.names=1, header=T)
   
   #for all genes which have cassette exons in one env
   nSig3or5Genes <- NULL
@@ -184,27 +195,28 @@ colnames(matrixSig5) <- c("Env1", "Env2", "Env3", "Env4")
 rownames(matrixSig3) <- c("chr1", "chr2", "chr3", "chr4", "chr5")
 colnames(matrixSig3) <- c("Env1", "Env2", "Env3", "Env4")
 
+#results of t.test
 matrixSig3or5(ngenes having AS at 3|5 site)
       Env1 Env2 Env3 Env4
-chr1  240  247  250  234
-chr2  131  138  141  132
-chr3  172  179  177  167
-chr4  121  119  119  111
-chr5  208  213  224  195
+chr1  242  247  250  234
+chr2  131  138  141  133
+chr3  170  177  175  166
+chr4  120  118  118  110
+chr5  208  212  223  196
 matrixSig5(ngenes having AS at 5 site)
       Env1 Env2 Env3 Env4
-chr1  132  130  132  131
-chr2   64   69   69   60
-chr3   95   90   90   89
-chr4   67   67   66   61
-chr5  112  110  117  104
+chr1  132  129  131  130
+chr2   63   67   67   60
+chr3   94   89   89   89
+chr4   66   67   66   61
+chr5  113  111  118  105
 matrixSig3(ngenes having AS at 3 site)
       Env1 Env2 Env3 Env4
-chr1  113  123  124  108
-chr2   69   72   75   72
-chr3   78   90   88   79
-chr4   55   54   55   51
-chr5  101  108  112   98
+chr1  115  124  125  109
+chr2   70   73   76   73
+chr3   77   89   87   78
+chr4   55   53   54   50
+chr5  100  106  110   98
 
 
 
