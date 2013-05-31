@@ -41,7 +41,7 @@ plotcExonExp <- function(chr, filename, ps_threshold){
   ind_tu <- grep("tu", rawexp[ ,"tu"])
   nprobes <- nrow(rawexp)
   
-  png(filename = paste0("Data/53terminalAS/plot_53ps/", filename,"_spExp_allind_", ps_threshold, ".png"), width = 1024, height = 1024, bg = "white")
+  png(filename = paste0("Data/53terminalAS/plot_53ps/", filename,"_ttest_", ps_threshold, ".png"), width = 1024, height = 1024, bg = "white")
   plot(c(0.5, nprobes+ 0.5), c(min(newexp) - 0.2, max(newexp) + 0.2), xaxt = 'n', xlab = "Probes", ylab = "Intensity", cex.axis = 1, cex.lab = 1.5, cex.main = 2, las = 1, mgp = c(3,0.75,0), tck = -0.017, t = "n", main = filename)
   
   if(any(unlist(lapply(strsplit(rownames(psmatrix)[grepl(filename, rownames(psmatrix))], "_"), "[[", 2)) == 1)){
@@ -116,7 +116,7 @@ plotcExonExp <- function(chr, filename, ps_threshold){
 ps_threshold = 5.03
 
 for(chr in 1:1){
-  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_allind.txt"), row.names=1, header=T)
+  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), row.names=1, header=T)
   
   #for all genes which have cassette exons in at least one env
   plotGenenames <- sort(unique(unlist(lapply(strsplit(rownames(which(psmatrix >= ps_threshold, arr.ind=T)), "_"), "[[", 1))))
@@ -153,6 +153,10 @@ probesDir <- function(exp_data = rawexp){
 
 plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, thr = ps_threshold){
   #par(mfrow = c(4, 1), pty = "m", oma = c(5, 3, 5, 0.5))
+  
+  #which tu is in rownames(test result matrix)
+  testTuID <- unlist(lapply(strsplit(rownames(psmatrix)[grepl(filename, rownames(psmatrix))], "_"), "[[", 2))
+  
   for(env in 1:4){
     ind_env <- which(as.numeric(menvironment) == env)
     
@@ -166,7 +170,7 @@ plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueEx
     
     #nc <- to choose 1st/2nd row, if 5' and 3' exist at the same time
     nc <- 1
-    if(any(unlist(lapply(strsplit(rownames(psmatrix)[grepl(filename, rownames(psmatrix))], "_"), "[[", 2)) == 1)){
+    if(any(testTuID == 1)){
       #ind <- judge which probe in exonID is of 1st exon name (T/F)
       ind <- rawexp[exonID, "tu"] == uniqueExon[1]
       #cat("", as.character(uniqueExon[1]), "has probes", exonID[ind], "\n")
@@ -192,7 +196,7 @@ plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueEx
       
       nc <- 2
     }
-    if(any(unlist(lapply(strsplit(rownames(psmatrix)[grepl(filename, rownames(psmatrix))], "_"), "[[", 2)) != 1)){
+    if(any(testTuID != 1)){
       #ind <- judge which probe in exonID is of 1st exon name (T/F)
       ind <- rawexp[exonID, "tu"] == uniqueExon[length(uniqueExon)]
       #cat("", as.character(uniqueExon[1]), "has probes", exonID[ind], "\n")
@@ -208,9 +212,9 @@ plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueEx
       rect(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.5, -3, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, 20, density = 15, angle = 30, col = "azure2", border = "azure3")
       rect((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, -3, nprobes + 0.5, 20, density = 15, angle = 150, col = "azure2", border = "azure3")
       
-      #use mean/median to test AS in 5'|3' site
-      lines(c(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.5, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5), c(mean(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env])), mean(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env]))), col = env, lwd = 2)
-      lines(c((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, nprobes + 0.5), c(mean(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env])), mean(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env]))), col = env, lwd = 2)
+      #use mean/median to show exp level in first/last exon
+      lines(c(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.5, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5), c(median(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env])), median(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env]))), col = env, lwd = 2)
+      lines(c((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, nprobes + 0.5), c(median(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env])), median(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env]))), col = env, lwd = 2)
       
       if(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env] >= thr){
         text(x = median(which(rawexp[ ,"tu"] == uniqueExon[length(uniqueExon)])), y = max(newexp[ ,ind_env])+0.15, labels = round(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env], digits = 1), col = env, cex = 0.8)
@@ -226,6 +230,14 @@ plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueEx
         points(rep(p, length(ind_env)) + runif(length(ind_env), min = -0.05, max = 0.05), newexp[p,ind_env], t = 'p', col = env, pch = 20, cex = 0.75)
       }
     }
+    
+    for(e in 1:length(uniqueExon)){
+      if(! e %in% testTuID){
+        ind <- rawexp[exonID, "tu"] == uniqueExon[e]
+        lines(c(min(which(rawexp[,"tu"] == uniqueExon[e])) - 0.5, max(which(rawexp[,"tu"] == uniqueExon[e])) + 0.5), c(median(unlist(newexp[exonID[ind],ind_env])), median(unlist(newexp[exonID[ind],ind_env]))), col = env, lwd = 2)
+      }
+    }
+    
     box()
   }
   axis(1, at = probes_dir, labels = row.names(rawexp)[probes_dir], mgp=c(2.25, 0.5, 0), cex.axis = 1, las = 2, tck = 0.02)
@@ -242,13 +254,14 @@ plotcExonExp <- function(chr, filename, ps_threshold){
   #cat("exons of right direction:", exonID, "\n")
   
   #uniqueExon <- all tu names of exon probes
-  uniqueExon <- unique(rawexp[exonID,"tu"])
+  uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
   #cat("tu names:", as.character(uniqueExon), "\n")
   
   ind_tu <- grep("tu", rawexp[ ,"tu"])
   nprobes <- nrow(rawexp)
 
-  png(filename = paste0("Data/53terminalAS/plot_53ps/", filename, "_spExp_allind_", ps_threshold, "_4s.png"), width = 960, height = 1728, bg = "white")
+  #png(filename = paste0("Data/53terminalAS/plot_53ps/", filename, "_ttest_", ps_threshold, "_4s.png"), width = 960, height = 1728, bg = "white")
+  png(filename = paste0("Data/53terminalAS/plot_53ps/", filename, "_wtest_", ps_threshold, "_4s.png"), width = 960, height = 1728, bg = "white")
   plotExpEnvSep(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, thr = ps_threshold)
   dev.off()
 }
@@ -257,7 +270,7 @@ plotcExonExp <- function(chr, filename, ps_threshold){
 #ps -> partly splicing
 ps_threshold = 5.03
 for(chr in 1:1){
-  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_allind.txt"), row.names=1, header=T)
+  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), row.names=1, header=T)
   
   #for all genes which have cassette exons in at least one env
   plotGenenames <- sort(unique(unlist(lapply(strsplit(rownames(which(psmatrix >= ps_threshold, arr.ind=T)), "_"), "[[", 1))))
@@ -291,7 +304,8 @@ getOne <- function(aa, cond = 1, cutoff=30){
 }
 
 for(chr in 1:5){
-  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_allind.txt"), row.names=1, header=T)
+  #psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), row.names=1, header=T)
+  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_wtest.txt"), row.names=1, header=T)
   
   posPerfectEg <- NULL
   for(env in 1:4){
