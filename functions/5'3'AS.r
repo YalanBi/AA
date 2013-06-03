@@ -22,6 +22,21 @@ probesDir <- function(exp_data = rawexp){
   return(direction_id)
 }
 
+#select expressed exon probes
+chooseExpExon <- function(exonID, newexp, ind_env, cutoff){
+  expExonID <- NULL
+  for(p in exonID){
+    #cat(p, mean(unlist(newexp[p, ind_env])), "\n")
+    
+    #cutoff <- cutoff used to check whether mean(each exon of right direction) is high enough to be regarded as expressed or not
+    #           then remove low expressed exons
+    if(mean(unlist(newexp[p, ind_env])) >= cutoff){
+      expExonID <- c(expExonID, p)
+    }
+  }
+  return(expExonID)
+}
+
 
 #5'/3' AS test
 #t.test; use = unlist -> use all individuals to do t.test, better than mean/median
@@ -59,7 +74,7 @@ for(chr in 1:5){
   
   #filename = "AT1G01010.txt"
   for(filename in genenames){
-    #cat(filename, "...\n")
+    #cat(filename, "starts...\n")
     rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
     #cat("rawexp loading succeed!\n")
     
@@ -89,6 +104,8 @@ for(chr in 1:5){
           #to find max difference between each probe in exp, to group them
           dff <- NULL
           for(n in 2:length(exonID[ind])){
+          
+            #*********************************************** should it be sum(abs(differences)) or abs(sum(differences))? ? ? ***********************************************#
             dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
             #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
           }
