@@ -52,7 +52,7 @@ countMainQTL <- function(chr = 1, expGeneList, threshold_qtl = 8.0, threshold_in
     #cat("exons of right direction:", exonID, "\n")
     
     #uniqueExon <- all tu names of exon probes
-    uniqueExon <- unique(rawexp[exonID, "tu"])
+    uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
     #cat("tu names:", as.character(uniqueExon), "\n")
     
     #to continue testing, or skip and report this gene
