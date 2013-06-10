@@ -106,7 +106,7 @@ ttestQTLGene <- function(chr, filename, toTest = "QTL", P = 3, verbose = FALSE){
   resRN <- NULL
   for(tu in uniqueExon){
     tuID <- exonID[rawexp[exonID, "tu"] == tu] #tuID <- ID of exon probes of current tu name
-    if(length(tuID) >= P){
+    if(length(tuID) >= P && length(exonID[-which(rawexp[exonID, "tu"] == tu)]) >= P){
       if(verbose) cat(tu, "at marker", m , t.test(testQTL[tuID, m], testQTL[exonID[-which(rawexp[exonID, "tu"] == tu)], m])$p.value, "\n")
       res <- rbind(res, -log10(t.test(testQTL[tuID, m], testQTL[exonID[-which(rawexp[exonID, "tu"] == tu)], m])$p.value))
       resRN <- c(resRN, paste0(filename, "_", tu))
