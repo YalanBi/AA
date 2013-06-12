@@ -38,13 +38,18 @@ genoCol <- function(x){
   x[which(x == 2)] <- "hotpink3"
   return(x)
 }
-dffCol <- function(x){
-  if(x >= 0) return("red")
-  else return("green")
+dffCol <- function(border = FALSE, x){
+  if(!border){
+    if(x >= 0) return("red")
+    else return("green")
+  } else{
+    if(x >= 0) return("red4")
+    else return("green4")
+  }
 }
 
 
-peakDetect <- function(data = qtl[p, ], cutoff = 4){
+peakDetect <- function(data = testQTL[p, ], cutoff = 4){
   #cat("cutoff =", cutoff, "\n")
   
   chrEdges <- c(1, 162, 263, 403, 527)
@@ -110,8 +115,8 @@ chr5 <- 31270811
 #lengthsy <- c(the max position of each chr separately(bp))
 lengthsy <- c(chr1, chr2, chr3, chr4, chr5)
 
-makePlot_eQTL <- function(chr, nprobes, ind_tu, rawexp, qtl = testQTL, cutoff){
-  plot(c(0.5, nprobes+0.5),c(0, 610), xaxt='n', xlab="", yaxt='n', ylab="eQTL", cex.axis=1, cex.lab=1.5, las=1, mgp=c(3,1,0), t="n", bg="white")
+makePlot_eQTL <- function(chr, nprobes, ind_tu, exonID, rawexp, qtl = testQTL, cutoff){
+  plot(c(0.5, nprobes+0.5), c(0, 610), xaxt='n', xlab="", yaxt='n', ylab="eQTL", cex.axis=1, cex.lab=1.5, las=1, mgp=c(3,1,0), t="n", bg="white")
   
   for(p in 1:nprobes){
     if(!p %in% ind_tu){
@@ -123,20 +128,22 @@ makePlot_eQTL <- function(chr, nprobes, ind_tu, rawexp, qtl = testQTL, cutoff){
   
   genepos <- median(rawexp[,"bp"])/lengthsy[chr]*(lengthsx[chr+1]-lengthsx[1]-25)+lengthsx[chr]+12.5
   abline(h = genepos, col="burlywood3", lty=3, lwd=2)
-  points(-0.5, genepos, pch=">", cex=3, col="burlywood3")
+  #points(-0.5, genepos, pch=">", cex=3, col="burlywood3")
   
-    for(p in 1:nprobes){
-    peakList <- peakDetect(data = unlist(qtl[p, ]), cutoff = cutoff)
-    
-    for(m in 1:716){
-      if(peakList[m] == 1){
-        rect((p-0.2),(msumlength[m]-1.75),(p+0.2),(msumlength[m]+1.75), col="orange", border="transparent")
-        #points(p, msumlength[m], pch=15, cex=1, col="orange")
+  for(p in 1:nprobes){
+    if(p %in% exonID){
+      peakList <- peakDetect(data = unlist(qtl[p, ]), cutoff = cutoff)
+      
+      for(m in 1:716){
+        if(peakList[m] == 1){
+          rect((p-0.2),(msumlength[m]-1.75),(p+0.2),(msumlength[m]+1.75), col="orange", border="transparent")
+          #points(p, msumlength[m], pch=15, cex=1, col="orange")
+        }
       }
-    }
-    for(m in 1:716){
-      if(peakList[m] == 2){
-        rect((p-0.5),(msumlength[m]-0.5),(p+0.5),(msumlength[m]+0.5), col="chocolate4", border="transparent")
+      for(m in 1:716){
+        if(peakList[m] == 2){
+          rect((p-0.5),(msumlength[m]-0.5),(p+0.5),(msumlength[m]+0.5), col="chocolate4", border="transparent")
+        }
       }
     }
   }
@@ -146,13 +153,15 @@ makePlot_eQTL <- function(chr, nprobes, ind_tu, rawexp, qtl = testQTL, cutoff){
   box();
 }
 
-
-plotExpEnvSep <- function(filename, toTest = "QTL", use = mean){
+#plot for ttestExp
+plotExpEnvSep <- function(filename, toTest = "QTL", GASmatrix, gas_thre, use = mean){
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   
   rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   newexp <- rawexp[ ,17:164]
   testQTL <- read.table(paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
+  
+  asTU <- unique(unlist(lapply(strsplit(grep(filename, rownames(GASmatrix), value=TRUE), "_"), "[[", 2)))
   
   probes_dir <- probesDir(rawexp)
   #cat(filename, "\nprobeDir:", probes_dir, "\n")
@@ -167,7 +176,9 @@ plotExpEnvSep <- function(filename, toTest = "QTL", use = mean){
   nprobes <- nrow(rawexp)
   
   m <- which.max(apply(testQTL, 2, sum))
-
+  geno1 <- which(geno[,m] == 1)
+  geno2 <- which(geno[,m] == 2)
+  
   dffList <- vector("list", 4)
   
   #par(mfrow = c(4, 1), pty = "m", oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2))
@@ -175,59 +186,100 @@ plotExpEnvSep <- function(filename, toTest = "QTL", use = mean){
     ind_env <- which(as.numeric(menvironment) == env)
     
     if(env == 1){
-      par(fig = c(0, 1, 17/16-0.1875*env, 19/16-0.1875*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2))
-    }else par(fig = c(0, 1, 17/16-0.1875*env, 19/16-0.1875*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2), new = TRUE)
+      par(fig = c(0, 1, 67/64-0.1875*env, 19/16-0.1875*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2))
+    }else par(fig = c(0, 1, 67/64-0.1875*env, 19/16-0.1875*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2), new = TRUE)
     plot(c(0.5, nprobes + 0.5), c(min(newexp) - 0.2, max(newexp) + 0.2), xaxt = 'n', xlab = "", ylab = levels(menvironment)[env], cex.axis = 1, cex.lab = 1.5, las = 1, mgp = c(2.25, 0.5, 0), tck = -0.017, t = "n")
     if(env == 1){
       title(main = filename, cex.main = 2.5, xlab = "", mgp = c(3, 0.5, 0), cex.lab = 1.5, outer = TRUE)
       title(ylab = "Expression Intensity", mgp = c(1, 0.5, 0), cex.lab = 1.5, outer = TRUE)
-      axis(3, at = mean(exonID[rawexp[exonID, "tu"] == asTU]), labels = asTU, mgp=c(2.25, 0.5, 0), tick = FALSE, line = 0)
     }
     
     for(p in 1:nprobes){
       #background for introns
-      if(!p %in% ind_tu) rect((p - 0.5), -3, (p + 0.5), max(newexp[ ,ind_env])* 2, col = grey(0.85), border = "transparent")
+      if(!p %in% ind_tu) rect((p - 0.5), -3, (p + 0.5), 13, col = grey(0.85), border = "transparent")
       if(p %in% probes_dir){
-        points(rep(p, length(ind_env)) + runif(length(ind_env), min = -0.05, max = 0.05), newexp[p,ind_env], t = 'p', col = genoCol(geno[,m]), pch = 20, cex = 0.75)
-        dffList[[env]] <- c(dffList[[env]], apply(newexp[p,ind_env[ind_env %in% which(geno[,m] == 1)]], 1, use)-apply(newexp[p,ind_env[ind_env %in% which(geno[,m] == 2)]], 1, use))
+        envGroup1 <- ind_env[ind_env %in% geno1]
+        envGroup2 <- ind_env[ind_env %in% geno2]
+        points(rep(p-0.05, length(envGroup1)), newexp[p,envGroup1], t = 'p', col = "skyblue3", pch = 20, cex = 0.75)
+        points(rep(p+0.05, length(envGroup2)), newexp[p,envGroup2], t = 'p', col = "hotpink3", pch = 20, cex = 0.75)
+        if(length(envGroup1) > 0 && length(envGroup2) > 0) dffList[[env]] <- c(dffList[[env]], apply(newexp[p,envGroup1], 1, use) - apply(newexp[p,envGroup2], 1, use))
+        #else dffList[[env]] <- c(dffList[[env]], apply(newexp[p,envGroup1], 1, use) - apply(newexp[p,envGroup2], 1, use))
+        points(p, apply(newexp[p,envGroup1], 1, use), col = "skyblue4", pch = '*', cex = 1.5)
+        points(p, apply(newexp[p,envGroup2], 1, use), col = "hotpink4", pch = '*', cex = 1.5)
       }
     }
     box()
     
-    
-    par(fig = c(0, 1, 1-0.1875*env, 17/16-0.1875*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2), new = TRUE)
-    plot(c(0.5, nprobes + 0.5), c(min(unlist(dffList)) - 0.05, max(unlist(dffList)) + 0.05), xaxt = 'n', xlab = "", ylab = "", cex.axis = 1, cex.lab = 1.5, col.lab = env, las = 1, mgp = c(2.25, 0.5, 0), tck = -0.017, t = "n")
-    
-    dff_cnt <- 1
-    for(p in 1:nprobes){
-      #background for introns
-      if(!p %in% ind_tu) rect((p - 0.5), -3, (p + 0.5), max(newexp[ ,ind_env])* 2, col = grey(0.85), border = "transparent")
-      if(p %in% probes_dir){
-        rect(p-0.5, 0, p+0.5, dffList[[env]][dff_cnt], col=dffCol(dffList[[env]][dff_cnt]), border="transparent")
-        dff_cnt <- dff_cnt + 1
-      }
+    for(tu in asTU){
+      if(env == 1) axis(3, at = mean(which(rawexp[ ,"tu"] == tu)), labels = tu, mgp=c(2.25, 0.5, 0), tick = FALSE, line = 0)
+      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][1] >= gas_thre) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)+0.1, labels="gt1 lower", col="skyblue3", cex = 0.8)
+      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][2] >= gas_thre) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp), labels="gt2 lower", col="hotpink3", cex = 0.8)
+      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][3] >= gas_thre) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)-0.1, labels="gts dff", col="magenta4", cex = 0.8)
+      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][1] == -1) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)-0.25, labels="only gt1", cex = 0.8)
+      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][2] == -2) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)-0.25, labels="only gt2", cex = 0.8)
     }
     
+    par(fig = c(0, 1, 1-0.1875*env, 67/64-0.1875*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2), new = TRUE)
+    if(length(dffList[[env]]) > 0){
+      plot(c(0.5, nprobes + 0.5), c(min(unlist(dffList)) - 0.05, max(unlist(dffList)) + 0.05), xaxt = 'n', xlab = "", ylab = "", cex.axis = 1, cex.lab = 1.5, col.lab = env, las = 1, mgp = c(2.25, 0.5, 0), tck = -0.017, t = "n")
+      
+      dff_cnt <- 1
+      for(p in 1:nprobes){
+        #background for introns
+        if(!p %in% ind_tu) rect((p - 0.5), -3, (p + 0.5), max(newexp[ ,ind_env])* 2, col = grey(0.85), border = "transparent")
+        if(p %in% probes_dir){
+          rect(p-0.5, 0, p+0.5, dffList[[env]][dff_cnt], col=dffCol(border = FALSE, dffList[[env]][dff_cnt]), border=dffCol(border = TRUE, dffList[[env]][dff_cnt]))
+          dff_cnt <- dff_cnt + 1
+        }
+      }
+    }
     box()
   }
   par(fig = c(0, 1, 0, 0.25), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2), new = TRUE)
-  makePlot_eQTL(chr, nprobes, ind_tu, rawexp, qtl = testQTL, cutoff = 8)
+  makePlot_eQTL(chr, nprobes, ind_tu, exonID, rawexp, qtl = testQTL, cutoff = 8)
   axis(1, at = probes_dir, labels = row.names(rawexp)[probes_dir], mgp=c(2.25, 0.5, 0), cex.axis = 1, las = 2, tck = 0.02)
 }
 
-
-GASmatrix <- NULL; gas_thre = -log10(0.05/644)
+#ttestExp
+toTest <- "QTL"
+GASmatrix <- NULL; gas_thre = -log10(0.05/(616*4))
 for(chr in 1:5){
-  GASmatrix <- rbind(GASmatrix, read.table(paste0("Data/countQTL/mainQTL_chr", chr, "_ttest.txt"), row.names=1, header=F))
-  
-  sigTU <- rownames(GASmatrix)[GASmatrix >= gas_thre]
-  plotGenenames <- unlist(lapply(strsplit(sigTU, "_"), "[[", 1))
-  #filename(AT1G01010)
-  for(filename in plotGenenames){
-    asTU <- unlist(strsplit(grep(filename, sigTU, value=TRUE), "_"))[2]
-    plotcExonExp(chr, filename, ce_threshold = 5.86)
+  GASmatrix <- rbind(GASmatrix, read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), row.names=1, header=F))
+}
+allGenenames <- unique(unlist(lapply(strsplit(rownames(GASmatrix), "_"), "[[", 1)))
+potentialGAS <- NULL
+for(filename in allGenenames){
+  for(tu in unique(unlist(lapply(strsplit(grep(filename, rownames(GASmatrix), value=T), "_"), "[[", 2)))){
+    for(env in 1:4){
+      if(any(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][1:2] >= gas_thre) && GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][3] >= gas_thre){
+        potentialGAS <- c(potentialGAS, filename)
+      }
+    }
   }
-  png(filename = paste0("Data/geneticsAS/plotGeneticsAS/", filename, "_QTL", threshold_qtl, "_Int", threshold_int, "_np", cutoffnProbe, "_4s.png"), width = 960, height = 1728, bg = "white")
+}
+plotGenenames <- unique(potentialGAS)
+#filename(AT1G01010)
+for(filename in plotGenenames){
+  png(filename = paste0("Data/countQTL/GASPlot/", filename, "_", toTest, "_4s.png"), width = 960, height = 1728, bg = "white")
+  plotExpEnvSep(filename, toTest = "QTL", GASmatrix, gas_thre, use = mean)
+  dev.off()
+}
+
+
+
+
+#ttestQTL/Int
+toTest <- "QTL"
+GASmatrix <- NULL; gas_thre = -log10(0.05/616)
+for(chr in 1:5){
+  GASmatrix <- rbind(GASmatrix, read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttest.txt"), row.names=1, header=F))
+}
+sigTU <- rownames(GASmatrix)[GASmatrix >= gas_thre]
+plotGenenames <- unlist(lapply(strsplit(sigTU, "_"), "[[", 1))
+#filename(AT1G01010)
+for(filename in plotGenenames){
+  asTU <- unlist(strsplit(grep(filename, sigTU, value=TRUE), "_"))[2]
+  png(filename = paste0("Data/countQTL/", filename, "_", toTest, "_4s.png"), width = 960, height = 1728, bg = "white")
   plotExpEnvSep(filename, toTest = "QTL", use = mean)
   dev.off()
 }
