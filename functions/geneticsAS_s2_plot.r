@@ -190,7 +190,7 @@ plotExpEnvSep <- function(filename, toTest = "QTL", GASmatrix, gas_thre, use = m
     }else par(fig = c(0, 1, 67/64-0.1875*env, 19/16-0.1875*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2), new = TRUE)
     plot(c(0.5, nprobes + 0.5), c(min(newexp) - 0.2, max(newexp) + 0.2), xaxt = 'n', xlab = "", ylab = levels(menvironment)[env], cex.axis = 1, cex.lab = 1.5, las = 1, mgp = c(2.25, 0.5, 0), tck = -0.017, t = "n")
     if(env == 1){
-      title(main = filename, cex.main = 2.5, xlab = "", mgp = c(3, 0.5, 0), cex.lab = 1.5, outer = TRUE)
+      title(main = paste0(filename, "_", toTest), cex.main = 2.5, xlab = "", mgp = c(3, 0.5, 0), cex.lab = 1.5, outer = TRUE)
       title(ylab = "Expression Intensity", mgp = c(1, 0.5, 0), cex.lab = 1.5, outer = TRUE)
     }
     
@@ -241,8 +241,8 @@ plotExpEnvSep <- function(filename, toTest = "QTL", GASmatrix, gas_thre, use = m
 }
 
 #ttestExp
-toTest <- "QTL"
-GASmatrix <- NULL; gas_thre = -log10(0.05/(616*4))
+toTest <- "QTL"#"Int"
+GASmatrix <- NULL; gas_thre = -log10(0.05/(616*4))#-log10(0.05/(40*4))
 for(chr in 1:5){
   GASmatrix <- rbind(GASmatrix, read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), row.names=1, header=F))
 }
@@ -261,7 +261,7 @@ plotGenenames <- unique(potentialGAS)
 #filename(AT1G01010)
 for(filename in plotGenenames){
   png(filename = paste0("Data/countQTL/GASPlot/", filename, "_", toTest, "_4s.png"), width = 960, height = 1728, bg = "white")
-  plotExpEnvSep(filename, toTest = "QTL", GASmatrix, gas_thre, use = mean)
+  plotExpEnvSep(filename, toTest = "QTL", GASmatrix, gas_thre, use = mean)#plotExpEnvSep(filename, toTest = "Int", GASmatrix, gas_thre, use = mean)
   dev.off()
 }
 
