@@ -20,8 +20,8 @@ load(file="Data/fullModeMapping/expGenes.Rdata")
 #  }
 # has N or more exons
 # end
-potentialQTLGene <- function(chr, filename, dirSelect = TRUE, exonSelect = TRUE, M = -1, use = median, P = -1, N = -1, toTest = "QTL", threTest = 5, Q = -1, S = -1, verbose = FALSE){
-  #chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
+expGeneTest <- function(filename, dirSelect = TRUE, exonSelect = TRUE, M = -1, use = median, P = -1, N = -1, verbose = FALSE){
+  chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   probeID <- 1:nrow(rawexp)
   
@@ -35,11 +35,14 @@ potentialQTLGene <- function(chr, filename, dirSelect = TRUE, exonSelect = TRUE,
     if(verbose)cat("after dirSelection, probes:", probeID, "\n")
   } else if(verbose)cat("no dirSelection\n")
   
-  if(exonSelect) probeID <- probeID[grepl("tu", rawexp[probeID, "tu"])]
+  if(exonSelect){
+    probeID <- probeID[grepl("tu", rawexp[probeID, "tu"])]
+    if(verbose)cat("after exonSelect, probes:", probeID, "\n")
+  } else if(verbose)cat("no exonSelect\n")
   
   if(M != -1){
     probeID <- probeID[apply(rawexp[probeID, 17:ncol(rawexp)], 1, use) >= M]
-    if(verbose)cat("after expTest, probes:", probeID, "\n")
+    if(verbose)cat("after expProbeTest, probes:", probeID, "\n")
   } else if(verbose)cat("no expTest\n")
   
   if(P != -1){
@@ -50,13 +53,25 @@ potentialQTLGene <- function(chr, filename, dirSelect = TRUE, exonSelect = TRUE,
       }
     }
     probeID <- probeID[index]
-    if(verbose)cat("after ntuTest, probes:", probeID, "\n")
+    if(verbose)cat("after expTuTest, probes:", probeID, ", nExpTu", length(unique(rawexp[probeID, "tu"])), "\n")
     if(length(probeID) == 0) return(FALSE);
-  } else if(verbose)cat("no ntuTest\n")
+  } else if(verbose)cat("no expTuTest\n")
+  
+  if(length(unique(rawexp[probeID, "tu"])) >= N) return(TRUE)
+  else return(FALSE)# Not enough exons
+}
+#expGeneTest(filename, M = 4, P = 3, N = 2)
 
+
+
+potentialQTLGene <- function(filename, N = -1, toTest = "QTL", threTest = 8, Q = -1, S = -1, verbose = FALSE){
+  chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
+  rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
+  
+  
   hasQTL <- 0;
   if(length(unique(rawexp[probeID, "tu"])) >= N){
-    if(verbose)cat("Starting QTL test with",length(unique(rawexp[probeID, "tu"])),"Exons\n");
+    if(verbose)cat("Starting QTL test with", length(unique(rawexp[probeID, "tu"])), "Exons\n");
     if(S != -1){
       testQTL <- read.table(paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
       index <- NULL
@@ -77,6 +92,10 @@ potentialQTLGene <- function(chr, filename, dirSelect = TRUE, exonSelect = TRUE,
   }
 }
 
+
+if(expGeneTest(filename, M = 4, P = 3, N = 2)){
+  
+}
 #************************************************************** t.test part **************************************************************#
 #direction selection
 probesDir <- function(rawexp, minExpression = -1){
