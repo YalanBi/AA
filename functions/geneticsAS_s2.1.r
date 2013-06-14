@@ -68,6 +68,16 @@ potentialQTLGene <- function(filename, N = -1, toTest = "QTL", threTest = 8, Q =
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   
+  if(unique(rawexp[,"strand"]) == "sense"){
+    probeID <- which(rawexp[, "direction"] == "reverse")
+  }
+  if(unique(rawexp[,"strand"]) == "complement"){
+    probeID <- which(rawexp[, "direction"] == "forward")
+  }
+  if(verbose)cat("after dirSelection, probes:", probeID, "\n")
+
+  probeID <- probeID[grepl("tu", rawexp[probeID, "tu"])]
+  if(verbose)cat("after exonSelect, probes:", probeID, "\n")
   
   hasQTL <- 0;
   if(length(unique(rawexp[probeID, "tu"])) >= N){
@@ -93,9 +103,6 @@ potentialQTLGene <- function(filename, N = -1, toTest = "QTL", threTest = 8, Q =
 }
 
 
-if(expGeneTest(filename, M = 4, P = 3, N = 2)){
-  
-}
 #************************************************************** t.test part **************************************************************#
 #direction selection
 probesDir <- function(rawexp, minExpression = -1){
@@ -112,58 +119,33 @@ probesDir <- function(rawexp, minExpression = -1){
   }else return(direction_id)
 }
 
-ttestQTLGene <- function(chr, filename, toTest = "QTL", P = 3, verbose = FALSE){
-  rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
-  testQTL <- read.table(paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
-  
-  m <- which.max(apply(testQTL, 2, sum))
-  if(verbose) cat(filename,"most sig marker is ", m, "\n")
-  
-  uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
-  probes_dir <- probesDir(rawexp, minExpression = -1)
-  exonID <- probes_dir[grepl("tu", rawexp[probes_dir, "tu"])]
-  
-  res <- NULL
-  resRN <- NULL
-  for(tu in uniqueExon){
-    tuID <- exonID[rawexp[exonID, "tu"] == tu] #tuID <- ID of exon probes of current tu name
-    if(length(tuID) >= P){# && length(exonID[-which(rawexp[exonID, "tu"] == tu)]) >= P
-      if(verbose) cat(tu, "at marker", m , t.test(testQTL[tuID, m], testQTL[exonID[-which(rawexp[exonID, "tu"] == tu)], m])$p.value, "\n")
-      res <- rbind(res, -log10(t.test(testQTL[tuID, m], testQTL[exonID[-which(rawexp[exonID, "tu"] == tu)], m])$p.value))
-      resRN <- c(resRN, paste0(filename, "_", tu))
-    }
-  }
-  rownames(res) <- resRN
-  return(res)
-}
-
 
 #ttest exp of one exon against the rest, env and geno separately
 menvironment <- read.table("Data/ann_env.txt", sep="\t")[,2]
 geno <- read.table("refined map/genotypes.txt",sep="\t", row.names=1, header=TRUE)
 
-ttestQTLGene <- function(chr, filename, toTest = "QTL", P = 3, verbose = FALSE){
+ttestQTLGene <- function(filename, toTest = "QTL", P = 3, verbose = FALSE){
+  chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   testQTL <- read.table(paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
   
-  m <- which.max(apply(testQTL, 2, sum))
-  if(verbose) cat(filename,"most sig marker is ", m, "\n")
-  
-  uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
   probes_dir <- probesDir(rawexp, minExpression = -1)
   exonID <- probes_dir[grepl("tu", rawexp[probes_dir, "tu"])]
-  
-  geno1 <- which(geno[,m] == 1)
-  geno2 <- which(geno[,m] == 2)
+  uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
   
   resMatrix <- NULL
   resRN <- NULL
   for(tu in uniqueExon){
     tuID <- exonID[rawexp[exonID, "tu"] == tu] #tuID <- ID of exon probes of current tu name
     if(length(tuID) >= P){# && length(exonID[-which(rawexp[exonID, "tu"] == tu)]) >= P
+      m <- which.max(apply(testQTL[tuID], 2, sum))
+      if(verbose) cat(filename, tu, "most sig marker is ", m, "\n")
+      geno1 <- which(geno[,m] == 1)
+      geno2 <- which(geno[,m] == 2)
+      
       res1vr <- NULL
       res2vr <- NULL
-      res1v2 <- NULL
+      #res1v2 <- NULL
       for(env in 1:4){
         ind_env <- which(as.numeric(menvironment) == env)
         envGroup1 <- ind_env[ind_env %in% geno1]
@@ -171,20 +153,20 @@ ttestQTLGene <- function(chr, filename, toTest = "QTL", P = 3, verbose = FALSE){
         if(length(envGroup1) != 0 && length(envGroup2) != 0){
           res1vr <- c(res1vr, -log10(t.test(rawexp[tuID, envGroup1 + 16], rawexp[exonID[-which(rawexp[exonID, "tu"] == tu)], envGroup1 + 16], alternative = "less")$p.value))
           res2vr <- c(res2vr, -log10(t.test(rawexp[tuID, envGroup2 + 16], rawexp[exonID[-which(rawexp[exonID, "tu"] == tu)], envGroup2 + 16], alternative = "less")$p.value))
-          res1v2 <- c(res1v2, -log10(t.test(rawexp[tuID, envGroup1 + 16], rawexp[tuID, envGroup2 + 16])$p.value))
+          #res1v2 <- c(res1v2, -log10(t.test(rawexp[tuID, envGroup1 + 16], rawexp[tuID, envGroup2 + 16])$p.value))
         }
         if(length(envGroup1) == 0){
           res1vr <- c(res1vr, -1)
-          res1v2 <- c(res1v2, -1)
+          #res1v2 <- c(res1v2, -1)
         }
         if(length(envGroup2) == 0){
           res2vr <- c(res2vr, -2)
-          res1v2 <- c(res1v2, -2)
+          #res1v2 <- c(res1v2, -2)
         }
       }
       #if(verbose) cat(tu, "at marker", m , t.test(testQTL[tuID, m], testQTL[exonID[-which(rawexp[exonID, "tu"] == tu)], m])$p.value, "\n")
-      resMatrix <- rbind(resMatrix, res1vr, res2vr, res1v2)
-      resRN <- c(resRN, paste0(filename, "_", tu, "_1vr"), paste0(filename, "_", tu, "_2vr"), paste0(filename, "_", tu, "_1v2"))
+      resMatrix <- rbind(resMatrix, res1vr, res2vr)#, res1v2
+      resRN <- c(resRN, paste0(filename, "_", tu, "_1vr"), paste0(filename, "_", tu, "_2vr"))#, paste0(filename, "_", tu, "_1v2")
     }
   }
   rownames(resMatrix) <- resRN
@@ -192,7 +174,6 @@ ttestQTLGene <- function(chr, filename, toTest = "QTL", P = 3, verbose = FALSE){
 }
 
 
-#************************************************************* running part *************************************************************#
 #QTL
 toTest = "QTL"; threTest = 8
 for(chr in 1:5){
@@ -200,15 +181,16 @@ for(chr in 1:5){
   QTLGene <- NULL
   resMatrix <- NULL
   for(filename in genenames){
-    if(potentialQTLGene(chr, filename, M = 4, P = 3, N = 2, toTest = "QTL", threTest = 8, Q = 1, S = 3)){
-      cat(filename,"\n")
-      QTLGene <- c(QTLGene, filename)
-      resMatrix <- rbind(resMatrix, ttestQTLGene(chr, filename, toTest = "QTL", P = 3))
+    if(expGeneTest(filename, M = 4, P = 3, N = 2) && potentialQTLGene(filename, N = 2, toTest = "QTL", threTest = 8, Q = 1, S = 3)){
+    #TRUE -> it's a portentialQTL/Int gene
+    cat(filename, "\n")
+    QTLGene <- c(QTLGene, filename)
+    resMatrix <- rbind(resMatrix, ttestQTLGene(filename, toTest = "QTL", P = 3))
     }
   }
   #change name when change parameters!!!
-  save(QTLGene, file=paste0("Data/countQTL/main", toTest, "_chr", chr, "_thre", threTest, ".Rdata"))
-  write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttest.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
+  save(QTLGene, file=paste0("Data/countQTL/main", toTest, "_chr", chr, "_fromALL_thre", threTest, ".Rdata"))
+  write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_fromALL_ttest.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
 }
 
 #Int
@@ -218,60 +200,14 @@ for(chr in 1:5){
   QTLGene <- NULL
   resMatrix <- NULL
   for(filename in genenames){
-    if(potentialQTLGene(chr, filename, M = 4, P = 3, N = 2, toTest = "Int", threTest = 11.6, Q = 1, S = 3)){
-      cat(filename,"\n")
-      QTLGene <- c(QTLGene, filename)
-      resMatrix <- rbind(resMatrix, ttestQTLGene(chr, filename, toTest = "Int", P = 3))
+    if(expGeneTest(filename, M = 4, P = 3, N = 2) && potentialQTLGene(filename, N = 2, toTest = "Int", threTest = 11.6, Q = 1, S = 3)){
+    #TRUE -> it's a portentialQTL/Int gene
+    cat(filename, "\n")
+    QTLGene <- c(QTLGene, filename)
+    resMatrix <- rbind(resMatrix, ttestQTLGene(filename, toTest = "Int", P = 3))
     }
   }
   #change name when change parameters!!!
-  save(QTLGene, file=paste0("Data/countQTL/main", toTest, "_chr", chr, "_thre", threTest, ".Rdata"))
-  write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttest.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
-}
-
-
-#Can be separately running: first get QTLGene list, then run through within the list
-#Int
-for(chr in 1:5){
-  QTLGene <- NULL
-  genenames <- expGeneList[[chr]]
-  for(filename in genenames){
-    if(potentialQTLGene(chr, gsub(".txt","", filename), M = 4, P = 3, N = 2, toTest = "Int", threTest = 11.6, Q = 1, S = 3)){
-      cat(filename,"\n")
-      QTLGene <- c(QTLGene, gsub(".txt","", filename))
-    }
-  }
-  #change name when change parameters!!!
-  save(QTLGene, file=paste0("Data/countQTL/main", toTest, "_chr", chr, "_thre", threTest, ".Rdata"))
-}
-
-
-#Int
-toTest = "Int"; threTest = 11.6
-for(chr in 1:5){
-  resMatrix <- NULL
-  load(file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_thre", threTest, ".Rdata"))
-  
-  for(filename in QTLGene){
-    cat(filename, "finished!\n")
-    resMatrix <- rbind(resMatrix, ttestQTLGene(chr, filename, toTest = "Int", P = 3))
-  }
-  #resMatrix
-  write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
-}
-
-
-
-#QTL---ttest exp
-toTest = "QTL"; threTest = 8
-for(chr in 1:5){
-  resMatrix <- NULL
-  load(file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_thre", threTest, ".Rdata"))
-  
-  for(filename in QTLGene){
-    cat(filename, "finished!\n")
-    resMatrix <- rbind(resMatrix, ttestQTLGene(chr, filename, toTest = "QTL", P = 3))
-  }
-  #resMatrix
-  write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
+  save(QTLGene, file=paste0("Data/countQTL/main", toTest, "_chr", chr, "_fromALL_thre", threTest, ".Rdata"))
+  write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_fromALL_ttest.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
 }
