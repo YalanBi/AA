@@ -1,0 +1,6 @@
+chr1: 7734 genes; 6825 genes having SNPs;
+chr2: 5022 genes; 4283 genes having SNPs;
+chr3: 6321 genes; 5641 genes having SNPs;
+chr4: 4797 genes; 4327 genes having SNPs;
+chr5: 6968 genes; 6349 genes having SNPs;
+
