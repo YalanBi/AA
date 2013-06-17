@@ -154,15 +154,15 @@ makePlot_eQTL <- function(chr, nprobes, ind_tu, exonID, rawexp, qtl = testQTL, c
 }
 
 
-plotExpByGtEnvSep <- function(rawexp, m, ind_env, use = median, verbose = FALSE){
+plotExpByGtEnvSep <- function(rawexp, m, ind = ind_env, use = median, verbose = FALSE){
   newexp <- rawexp[ ,17:164]
   probes_dir <- probesDir(rawexp)
   ind_tu <- grep("tu", rawexp[ ,"tu"])
   
   geno1 <- which(geno[,m] == 1)
   geno2 <- which(geno[,m] == 2)
-  envGroup1 <- ind_env[ind_env %in% geno1]
-  envGroup2 <- ind_env[ind_env %in% geno2]
+  envGroup1 <- ind[ind %in% geno1]
+  envGroup2 <- ind[ind %in% geno2]
   
   if(verbose) cat(use, "plotExp\n")
   for(p in 1:nrow(rawexp)){
@@ -172,8 +172,8 @@ plotExpByGtEnvSep <- function(rawexp, m, ind_env, use = median, verbose = FALSE)
       points(rep(p-0.05, length(envGroup1)), newexp[p,envGroup1], t = 'p', col = "skyblue3", pch = 20, cex = 0.75)
       points(rep(p+0.05, length(envGroup2)), newexp[p,envGroup2], t = 'p', col = "hotpink3", pch = 20, cex = 0.75)
       
-      points(p, apply(newexp[p,envGroup1], 1, use), col = "skyblue4", pch = '*', cex = 1.5)
-      points(p, apply(newexp[p,envGroup2], 1, use), col = "hotpink4", pch = '*', cex = 1.5)
+      points(p, apply(as.matrix(newexp[p,envGroup1]), 1, use), col = "skyblue4", pch = '*', cex = 1.5)
+      points(p, apply(as.matrix(newexp[p,envGroup2]), 1, use), col = "hotpink4", pch = '*', cex = 1.5)
     }
   }
   box()
@@ -183,6 +183,7 @@ dffBtwGt <- function(rawexp, m, ind = ind_env, use = median, verbose = FALSE){
   newexp <- rawexp[ ,17:164]
   probes_dir <- probesDir(rawexp)
   
+  if(verbose) cat("marker is", m, "\n")
   geno1 <- which(geno[,m] == 1)
   geno2 <- which(geno[,m] == 2)
   envGroup1 <- ind[ind %in% geno1]
@@ -193,7 +194,8 @@ dffBtwGt <- function(rawexp, m, ind = ind_env, use = median, verbose = FALSE){
   if(length(envGroup1) > 0 && length(envGroup2) > 0){
     for(p in 1:nrow(rawexp)){
       if(p %in% probes_dir){
-        dff <- c(dff, apply(newexp[p,envGroup1], 1, use) - apply(newexp[p,envGroup2], 1, use))
+        #in case of envGroup having only 1 RIL, use as.matrix()
+        dff <- c(dff, apply(as.matrix(newexp[p,envGroup1]), 1, use) - apply(as.matrix(newexp[p,envGroup2]), 1, use))
       }
     }
     return(dff)
@@ -207,7 +209,7 @@ plotExpDffBtwGtEnvSep <- function(rawexp, dff = dffList[[env]]){
   dff_cnt <- 1
   for(p in 1:nrow(rawexp)){
     #background for introns
-    if(!p %in% ind_tu) rect((p - 0.5), -3, (p + 0.5), 13, col = grey(0.85), border = "transparent")
+    if(!p %in% ind_tu) rect((p - 0.5), -13, (p + 0.5), 13, col = grey(0.85), border = "transparent")
     if(p %in% probes_dir){
       rect(p-0.5, 0, p+0.5, dff[dff_cnt], col=dffCol(border = FALSE, dff[dff_cnt]), border=dffCol(border = TRUE, dff[dff_cnt]))
       dff_cnt <- dff_cnt + 1
@@ -217,21 +219,12 @@ plotExpDffBtwGtEnvSep <- function(rawexp, dff = dffList[[env]]){
 }
 
 
-
-    for(tu in asTU){
-      if(env == 1) axis(3, at = mean(which(rawexp[ ,"tu"] == tu)), labels = tu, mgp=c(2.25, 0.5, 0), tick = FALSE, line = 0)
-      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][1] >= gas_thre) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)+0.1, labels="gt1 lower", col="skyblue3", cex = 0.8)
-      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][2] >= gas_thre) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp), labels="gt2 lower", col="hotpink3", cex = 0.8)
-      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][1] == -1) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)-0.25, labels="only gt1", cex = 0.8)
-      if(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env][2] == -2) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)-0.25, labels="only gt2", cex = 0.8)
-    }
-
-
-plotExpEnvSep <- function(filename, toTest, m, ...){
+plotExpEnvSep <- function(filename, toTest, m, tuShowGAS, GASchr, ...){
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   
   rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   testQTL <- read.table(paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
+  newexp <- rawexp[ ,17:164]
   
   probes_dir <- probesDir(rawexp)
   #cat(filename, "\nprobeDir:", probes_dir, "\n")
@@ -261,6 +254,14 @@ plotExpEnvSep <- function(filename, toTest, m, ...){
     }
     plotExpByGtEnvSep(rawexp, m, ind_env, ...)
     
+    for(tu in tuShowGAS){
+      if(env == 1) axis(3, at = mean(which(rawexp[ ,"tu"] == tu)), labels = tu, mgp=c(2.25, 0.5, 0), tick = FALSE, line = 0)
+      if(GASchr[grep(paste0(filename, "_", tu), rownames(GASchr), value=T), env][1] >= gas_thre) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)+0.1, labels="gt1 lower", col="skyblue3", cex = 0.8)
+      if(GASchr[grep(paste0(filename, "_", tu), rownames(GASchr), value=T), env][2] >= gas_thre) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp), labels="gt2 lower", col="hotpink3", cex = 0.8)
+      if(GASchr[grep(paste0(filename, "_", tu), rownames(GASchr), value=T), env][1] == -1) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)-0.25, labels="only gt1", cex = 0.8)
+      if(GASchr[grep(paste0(filename, "_", tu), rownames(GASchr), value=T), env][2] == -2) text(x = mean(which(rawexp[ ,"tu"] == tu)), y = max(newexp)-0.25, labels="only gt2", cex = 0.8)
+    }
+    
     par(fig = c(0, 1, 1-0.1875*env, 67/64-0.1875*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2), new = TRUE)
     if(length(dffList[[env]]) > 0){
       plot(c(0.5, nrow(rawexp) + 0.5), c(min(unlist(dffList)) - 0.05, max(unlist(dffList)) + 0.05), xaxt = 'n', xlab = "", ylab = "", cex.axis = 1, cex.lab = 1.5, col.lab = env, las = 1, mgp = c(2.25, 0.5, 0), tck = -0.017, t = "n")
@@ -272,58 +273,76 @@ plotExpEnvSep <- function(filename, toTest, m, ...){
   makePlot_eQTL(chr, nprobes=nrow(rawexp), ind_tu, exonID, rawexp, qtl = testQTL, cutoff = 8)
   axis(1, at = probes_dir, labels = row.names(rawexp)[probes_dir], mgp=c(2.25, 0.5, 0), cex.axis = 1, las = 2, tck = 0.02)
 }
-plotExpEnvSep("AT1G01800", toTest="QTL", m=2, use="median", verbose=T)
-
+#plotExpEnvSep("AT1G01800", toTest="QTL", m=2, intrstTUs, GASchr, use="median", verbose=T)
 
 
 #ttestExp
 toTest <- "QTL"#"Int"
 GASmatrix <- NULL; gas_thre = -log10(0.05/(616*4))#-log10(0.05/(39*4))
 for(chr in 1:5){
-  GASmatrix <- rbind(GASmatrix, read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), row.names=1, header=F))
+  #change names!! ********************************************************************** _ttestExp vs _wilcoxExp
+  #GASmatrix <- rbind(GASmatrix, read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), row.names=1, header=F))
+  GASmatrix <- rbind(GASmatrix, read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_wilcoxExp.txt"), row.names=1, header=F))
 }
 allGenenames <- unique(unlist(lapply(strsplit(rownames(GASmatrix), "_"), "[[", 1)))
 potentialGAS <- NULL
 for(filename in allGenenames){
   for(tu in unique(unlist(lapply(strsplit(grep(filename, rownames(GASmatrix), value=T), "_"), "[[", 2)))){
     for(env in 1:4){
-      if(any(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env] >= gas_thre) && any(GASmatrix[grep(paste0(filename, "_", tu), rownames(GASmatrix), value=T), env] <= gas_thre)){
+      if(any(GASmatrix[grep(paste0(filename, "_", tu, "_"), rownames(GASmatrix), value=T), env] >= gas_thre) && any(GASmatrix[grep(paste0(filename, "_", tu, "_"), rownames(GASmatrix), value=T), env] <= gas_thre)){
         potentialGAS <- c(potentialGAS, filename)
       }
     }
   }
 }
 plotGenenames <- unique(potentialGAS)
+
+#plot for ttestExp
 #filename(AT1G01010)
 for(filename in plotGenenames){
-  png(filename = paste0("Data/countQTL/GASPlot/", filename, "_", toTest, "_4s.png"), width = 960, height = 1728, bg = "white")
-  plotExpEnvSep(filename, toTest = "QTL", GASmatrix, gas_thre, use = mean)#plotExpEnvSep(filename, toTest = "Int", GASmatrix, gas_thre, use = mean)
-  dev.off()
-}
-#plot for ttestExp
-(filename, toTest = "QTL"){
+  cat(filename, "starts...\n")
+  
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
-  GASmatrix <- read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), row.names=1, header=F)
+  
+  #change names!! ************************************************** _ttestExp vs _wilcoxExp
+  #GASchr <- read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), row.names=1, header=F)
+  GASchr <- read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_wilcoxExp.txt"), row.names=1, header=F)
+  
   rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   testQTL <- read.table(paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
   
   probes_dir <- probesDir(rawexp)
   exonID <- probes_dir[grepl("tu", rawexp[probes_dir,"tu"])]
-  
   asTU <- unique(unlist(lapply(strsplit(grep(filename, rownames(GASmatrix), value=TRUE), "_"), "[[", 2)))
   
+  intrstTUs <- NULL
   mlist <- NULL
   for(tu in asTU){
-    tuID <- exonID[rawexp[exonID, "tu"] == tu]
-    mlist <- c(mlist, which.max(apply(testQTL[tuID,], 2, sum)))
-    cat(tu, "m", which.max(apply(testQTL, 2, sum)), "\n")
+    interestingTU <- FALSE
+    for(env in 1:4){
+      if(any(GASmatrix[grep(paste0(filename, "_", tu, "_"), rownames(GASmatrix), value=T), env] >= gas_thre) && any(GASmatrix[grep(paste0(filename, "_", tu, "_"), rownames(GASmatrix), value=T), env] <= gas_thre)){
+        interestingTU <- TRUE
+      }
+    }
+    if(interestingTU){
+      intrstTUs <- c(intrstTUs, tu)
+      
+      tuID <- exonID[rawexp[exonID, "tu"] == tu]
+      mlist <- c(mlist, which.max(apply(testQTL[tuID,], 2, sum)))
+      cat(tu, "is an interestingTU, at m", which.max(apply(testQTL[tuID,], 2, sum)), "\n")
+    }# else cat(tu, "is not interesting\n")
   }
-  cat("whole gene m", which.max(apply(testQTL, 2, sum)), "\n")
+  #cat("whole gene m", which.max(apply(testQTL, 2, sum)), "\n")
   for(nplot in 1:length(unique(mlist))){
     m <- unique(mlist)[nplot]
     geno1 <- which(geno[,m] == 1)
     geno2 <- which(geno[,m] == 2)
-    plotExpEnvSep(filename, toTest="QTL", m, use="median")
+    tuShowGAS <- intrstTUs[which(mlist %in% m)]
+    
+    #change names!! tt vs wt
+    #png(filename = paste0("Data/countQTL/GASPlot/", filename, "_", toTest, "_", round(gas_thre, digits=2), "_m", m, "_tt.png"), width = 960, height = 1728, bg = "white")
+    png(filename = paste0("Data/countQTL/GASPlot/", filename, "_", toTest, "_", round(gas_thre, digits=2), "_m", m, "_wt.png"), width = 960, height = 1728, bg = "white")
+    plotExpEnvSep(filename, toTest, m, tuShowGAS, GASchr, use="median", verbose = TRUE)#plotExpEnvSep(filename, toTest = "Int", GASmatrix, gas_thre, use = mean)
+    dev.off()
   }
 }
-
