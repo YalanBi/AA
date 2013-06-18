@@ -30,7 +30,7 @@ getQTLGenes <- function(chromosome = 1, empty = TRUE){  #TODO: Per chromosome we
   for(filename in dir(location)[grepl("_QTL",dir(location))]){
     qtl_data <- read.table(paste(location, filename, sep=""))
     fname <- gsub("_QTL.txt", ".txt", filename)
-    exp_data <- read.table(paste(location, fname, sep=""),header=T,row.names=1)
+    exp_data <- read.table(paste(location, fname, sep=""), header=T, row.names=1)
     class <- res[[filename]]
     if(length(which(class$goodP %in% class$introP)) > 0){
       good <- class$goodP[- which(class$goodP %in% class$introP)]
