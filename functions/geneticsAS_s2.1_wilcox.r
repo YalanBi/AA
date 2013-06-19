@@ -175,6 +175,25 @@ wilcoxtestQTLGene <- function(filename, toTest = "QTL", P = 3, verbose = FALSE){
 
 
 #QTL
+#get the list of QTLGene
+toTest = "QTL"; threTest = 8
+for(chr in 1:5){
+  genenames <- gsub(".txt", "", expGeneList[[chr]])
+  QTLGene <- NULL
+  resMatrix <- NULL
+  for(filename in genenames){
+    if(expGeneTest(filename, M = 4, P = 3, N = 2) && potentialQTLGene(filename, N = 2, toTest = "QTL", threTest = 8, Q = 1, S = 3)){
+    #TRUE -> it's a portentialQTL/Int gene
+    cat(filename, "\n")
+    QTLGene <- c(QTLGene, filename)
+    resMatrix <- rbind(resMatrix, ttestQTLGene(filename, toTest = "QTL", P = 3))
+    }
+  }
+  #change name when change parameters!!!
+  save(QTLGene, file=paste0("Data/countQTL/main", toTest, "_chr", chr, "_fromALL_thre", threTest, ".Rdata"))
+  write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_fromALL_ttest.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
+}
+
 toTest = "QTL"; threTest = 8
 for(chr in 1:5){
   resMatrix <- NULL
@@ -188,7 +207,27 @@ for(chr in 1:5){
   write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_wilcoxExp.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
 }
 
+
 #Int
+#get the list of QTLGene
+toTest = "Int"; threTest = 11.6
+for(chr in 1:5){
+  genenames <- gsub(".txt", "", expGeneList[[chr]])
+  QTLGene <- NULL
+  resMatrix <- NULL
+  for(filename in genenames){
+    if(expGeneTest(filename, M = 4, P = 3, N = 2) && potentialQTLGene(filename, N = 2, toTest = "Int", threTest = 11.6, Q = 1, S = 3)){
+    #TRUE -> it's a portentialQTL/Int gene
+    cat(filename, "\n")
+    QTLGene <- c(QTLGene, filename)
+    resMatrix <- rbind(resMatrix, ttestQTLGene(filename, toTest = "Int", P = 3))
+    }
+  }
+  #change name when change parameters!!!
+  save(QTLGene, file=paste0("Data/countQTL/main", toTest, "_chr", chr, "_fromALL_thre", threTest, ".Rdata"))
+  write.table(resMatrix, file = paste0("Data/countQTL/main", toTest, "_chr", chr, "_fromALL_ttest.txt"), sep = " ", row.names = TRUE, col.names = FALSE)
+}
+
 toTest = "Int"; threTest = 11.6
 for(chr in 1:5){
   resMatrix <- NULL
