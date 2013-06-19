@@ -1,15 +1,20 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 29-05-2013
+# last modified: 19-06-2013
 # first written: 21-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
-#*************************************************************** basic part ***************************************************************#
+
+#********************************************** This is used to find alternative splicing at 5' or 3' **********************************************#
+
+
 setwd("D:/Arabidopsis Arrays")
-#load environment file
+
 menvironment <- read.table("Data/ann_env.txt", sep="\t")[ ,2]
 
+#load exp genes
+load(file="Data/ExpGenes/expGenes_simple.Rdata")
 
 #direction selection
 probesDir <- function(exp_data = rawexp){
@@ -22,44 +27,113 @@ probesDir <- function(exp_data = rawexp){
   return(direction_id)
 }
 
-#select expressed exon probes
-chooseExpExon <- function(exonID, newexp, ind_env, cutoff){
-  expExonID <- NULL
-  for(p in exonID){
-    #cat(p, mean(unlist(newexp[p, ind_env])), "\n")
-    
-    #cutoff <- cutoff used to check whether mean(each exon of right direction) is high enough to be regarded as expressed or not
-    #           then remove low expressed exons
-    if(mean(unlist(newexp[p, ind_env])) >= cutoff){
-      expExonID <- c(expExonID, p)
-    }
+#to find max difference between each probe in exp, for grouping
+findMAXdff <- function(toGroup = ind, exp_data = rawexp[ ,17:164], verbose = FALSE){
+  dff <- NULL
+  for(n in 2:length(toGroup)){
+    dff <- c(dff, abs(sum(exp_data[toGroup[n], ] - exp_data[toGroup[n-1], ])))
+    if(verbose) cat("difference between p", toGroup[n], "and p", toGroup[n-1], "is", sum(exp_data[toGroup[n], ]) - sum(exp_data[toGroup[n-1], ]), "\n")
   }
-  return(expExonID)
+  if(verbose) cat("so dff is:", dff, "and max dff is between p", toGroup[which.max(dff)], "and p", toGroup[which.max(dff)+1], "-", max(dff), "\n")
+  
+  return(which.max(dff))
 }
-
+#findMAXdff(toGroup = ind, exp_data = rawexp[ ,17:164], verbose = T)
 
 #5'/3' AS test
-#t.test; use = unlist -> use all individuals to do t.test, better than mean/median
-testASinExon <- function(expdata = rawexp[ ,ind_env + 16], part1, part2, use){
-  part1Probes <- apply(expdata[part1, ], 2, use)
-  #cat("We are part1Probes:", part1, "\n")
-  part2Probes <- apply(expdata[part2, ], 2, use)
-  #cat("We are part2Probes:", part2, "\n")
-  return(-log10(t.test(part1Probes, part2Probes) $ p.value))
+#annotation: useForTest = unlist -> use all individuals to do test, better than mean/median
+#            whichTest <- wilcox.test/ t.test; one-side!!!
+testAS <- function(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, useForTest = unlist, whichTest = wilcox.test, alternative = "less", verbose = FALSE){
+  testPart <- apply(exp_data[testProbes, ind], 2, useForTest)
+  if(verbose) cat("We are testProbes:", testProbes, "\n")
+  restPart <- apply(exp_data[restProbes, ind], 2, useForTest)
+  if(verbose) cat("We are restProbes:", restProbes, "\n")
+  return(-log10(whichTest(testPart, restPart, alternative) $ p.value))
 }
-#wilcox.test; use = unlist -> use all individuals to do t.test, better than mean/median
-testASinExon <- function(expdata = rawexp[ ,ind_env + 16], part1, part2, use){
-  part1Probes <- apply(expdata[part1, ], 2, use)
-  #cat("We are part1Probes:", part1, "\n")
-  part2Probes <- apply(expdata[part2, ], 2, use)
-  #cat("We are part2Probes:", part2, "\n")
-  return(-log10(wilcox.test(part1Probes, part2Probes) $ p.value))
+#testAS(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, useForTest = unlist, whichTest = wilcox.test, alternative = "less", verbose = TRUE)
+
+#simple: slimlar with expGeneTestSimple
+expExonTestSimple <- function(ind, exp_data = rawexp[ ,17:164], use = median, expThre = 5, verbose = FALSE){
+  if(length(ind) > 0){
+    expDegree <- use(apply(exp_data[ind, ], 1, unlist))
+    if(expDegree >= expThre){
+      if(verbose) cat("this exon has p", ind, "and exp degree is", expDegree, ", higher than", expThre, "!\n")
+      return(TRUE)
+    } else return(FALSE)
+  } else return(FALSE)
 }
+#expExonTestSimple(ind, exp_data = rawexp[ ,17:164], use = median, expThre = 5, verbose = TRUE)
 
-
-#*************************************************************** load part ***************************************************************#
-#load exp genes
-load(file="Data/fullModeMapping/expGenes.Rdata")
+splicingTest <- function(filename, goal, verbose = FALSE, ...){
+  chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
+  rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
+  probes_dir <- probesDir(rawexp)
+  #if(verbose) cat("We have rightDir probes:", probes_dir, "\n")
+  exonID <- probes_dir[grepl("tu", rawexp[probes_dir,"tu"])]
+  #if(verbose) cat("We have exon probes:", exonID, "\n")
+  uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
+  #if(verbose) cat("We have exons:", uniqueExon, "\n")
+  
+  #for 5'/3' AS, at least 2 exons in a gene!!!
+  if(length(uniqueExon) >= 2){
+    if(verbose) cat(filename, "have", length(uniqueExon), "exons, >= 2!\n")
+    
+    if(goal == "skippingExon"){
+      P <- 3
+      exonTestRange <- uniqueExon
+    }
+    if(goal == "35AS"){
+      P <- 6
+      exonTestRange <- uniqueExon[c(1, length(uniqueExon))]
+    }
+    if(verbose) cat(goal, "test, among:", exonTestRange, "\n")
+    
+    resmatrix <- NULL
+    rownameList <- NULL
+    
+    for(testExon in exonTestRange){
+      ind <- exonID[rawexp[exonID, "tu"] == testExon]
+      #if(verbose) cat(testExon, "has probes", ind, "\n")
+      
+      #at least 6 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
+      if(length(ind) >= P && expExonTestSimple(ind, exp_data = rawexp[ ,17:164], use = median, expThre = 5, verbose)){
+        if(verbose) cat("\t***I'm", testExon, ", has", length(ind), "good probes, separate me and check if i'm possible for later test!\n")
+        
+        if(goal == "skippingExon"){
+          #to find max difference between each probe in exp, to group them
+          testProbes <- ind
+          if(verbose) cat("I'm testProbes, I have p", testProbes, "\n")
+          restProbes <- exonID[!exonID %in% ind]
+          if(verbose) cat("I'm restProbes, I have p", restProbes, "\n")
+        }
+        if(goal == "35AS"){
+          separatePoint <- findMAXdff(toGroup = ind, exp_data = rawexp[ ,17:164], verbose)
+          testProbes <- ind[1:separatePoint]
+          #if(verbose) cat("I'm testpart, I have p", testProbes, "\n")
+          restProbes <- ind[-(1:separatePoint)]
+          #if(verbose) cat("I'm restpart, I have p", restProbes, "\n")
+        }
+        
+        #>= 3 probes left in each group, remember the gene name and do t.test
+        if(length(testProbes) >= 3 && length(restProbes) >= 3){
+          separateProbe <- max(testProbes)
+          if(verbose) cat(" =>separate at p", separateProbe, ", have >= 3 good probes in each group, ready for test!\n")
+          rownameList <- c(rownameList, filename)
+          res <- separateProbe
+          for(env in 1:4){
+            ind_env <- which(as.numeric(menvironment) == env)
+            res <- c(res, testAS(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, verbose, ...))
+            #if(verbose) cat("env", env, ":", testAS(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, ...), "\n")
+          }
+          resmatrix <- rbind(resmatrix, res)
+        } else if(verbose) cat(" =>after grouping don't have enough probes in each part T^T\n")
+      } else if(verbose) cat("\t***I'm", testExon, ", not enough probes/not expressed T^T\n")
+    }
+    rownames(resmatrix) <- rownameList
+    return(resmatrix)
+  } else if(verbose) cat("we don't have enough exons T^T\n")
+}
+#splicingTest(filename, goal = "35AS", useForTest = unlist, whichTest = wilcox.test, alternative = "less", verbose = TRUE)
 
 
 #*************************************************************** test part ***************************************************************#
@@ -70,79 +144,27 @@ for(chr in 1:5){
   
   genenames <- expGeneList[[chr]]
   resmatrix <- NULL
-  rownameList <- NULL
-  
-  #filename = "AT1G01010.txt"
+  #filename = "AT1G01010"
   for(filename in genenames){
-    #cat(filename, "starts...\n")
-    rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
-    #cat("rawexp loading succeed!\n")
-    
-    #get probes' and exons' ID
-    probes_dir <- probesDir(rawexp)
-    #cat("probes of right direction:", probes_dir, "\n")
-    exonID <- probes_dir[grepl("tu", rawexp[probes_dir,"tu"])]
-    #cat("exons of right direction:", exonID, "\n")
-    
-    #uniqueExon <- all tu names of exon probes
-    uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
-    #cat(" =>tu names:", as.character(uniqueExon), "\n")
-    
-    #for 5'/3' AS, at least 2 exons in a gene!!!
-    if(length(uniqueExon) >= 2){
-      #cat(" we have", length(uniqueExon), "exons, >= 2!\n")
-      
-      for(testExon in uniqueExon[c(1, length(uniqueExon))]){
-        #ind <- judge which probe in exonID is of 1st exon name (T/F)
-        ind <- rawexp[exonID, "tu"] == testExon
-        #cat("", as.character(testExon), "has probes", exonID[ind], "\n")
-        
-        #at least 6 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
-        if(length(which(ind)) >= 6){
-          #cat("\t***I'm", as.character(testExon), ", has >= 6 good probes, separate me to check whether t.test or not!\n")
-          
-          #to find max difference between each probe in exp, to group them
-          dff <- NULL
-          for(n in 2:length(exonID[ind])){
-          
-            #*********************************************** should it be sum(abs(differences)) or abs(sum(differences))? ? ? ***********************************************#
-            dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
-            #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
-          }
-          #cat(" so dff is:", dff, "\n")
-          
-          #find the max difference and separate into 2 parts
-          #cat("  max dff is between p", exonID[ind][which.max(dff)], "and p", exonID[ind][which.max(dff)+1], ", is", max(dff), "\n")
-          part1 <- exonID[ind][1:which.max(dff)]
-          #cat("  I'm part1, I have", part1, "\n")
-          part2 <- exonID[ind][-(1:which.max(dff))]
-          #cat("  I'm part2, I have", part2, "\n")
-          
-          #>= 3 probes left in each group, remember the gene name and do t.test
-          if(length(part1) >= 3 && length(part2) >= 3){
-            cat(" =>I'm", filename, testExon, ", I have >= 3 good probes in each group, t.test me and remember my gene_tu name!\n")
-            rownameList <- c(rownameList, paste0(gsub(".txt", "", filename), "_", match(testExon, uniqueExon)))
-            
-            res <- NULL
-            for(env in 1:4){
-              ind_env <- which(as.numeric(menvironment) == env)
-              #cat("Now is env", env, "\n")
-              res <- c(res, testASinExon(expdata = rawexp[ ,ind_env + 16], part1, part2, use = unlist))
-            }
-            resmatrix <- rbind(resmatrix, res)
-          } #else cat(" =>I'm", testExon, ", but after grouping don't have enough probes in each part T^T\n")
-        } #else cat("\t***I'm", as.character(testExon), "but not enough probes T^T\n")
-      }
-    } #else cat("we don't have enough exons T^T\n")
+    res <- splicingTest(filename, goal = "35AS", useForTest = unlist, whichTest = wilcox.test, alternative = "less")
+    if(!is.null(res)){
+      resmatrix <- rbind(resmatrix, res)
+      cat(filename, "is tested\n")
+    }
   }
-  rownames(resmatrix) <- rownameList
-  colnames(resmatrix) <- c("6H", "Dry_AR", "Dry_Fresh", "RP")
-  #write.table(resmatrix, file=paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), sep="\t") #********** change!!! **********#
-  write.table(resmatrix, file=paste0("Data/53terminalAS/53terminalAS_chr", chr, "_wtest.txt"), sep="\t") #********** change!!! **********#
+  colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
+  
+  write.table(resmatrix, file=paste0("Data/53terminalAS/53AS_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
   
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
 }
+
+
+
+
+
+
 
 
 #*************************************************************** count part ***************************************************************#
