@@ -1,9 +1,14 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 17-06-2013
+# last modified: 20-06-2013
 # first written: 22-03-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
+
+#*********************************************** this is the final version for full model mapping ^_^ **********************************************#
+#******************************************************* for AS, eQTL and Int are necessary! *******************************************************#
+#main idea: y ~ E + G + E:G
+#           for eQTL, can have the direction of effects at the same time!
 
 setwd("D:/Arabidopsis Arrays")
 geno <- read.table("refined map/genotypes.txt",sep="\t", row.names=1, header=TRUE)
@@ -22,6 +27,8 @@ map.fast <- function(geno, pheno, menvironment){
 }
 
 
+#use this one, if dont need direction of eQTL, like full model mapping at probe level
+#      return(list(-log10(result$env), -log10(result$qtl), -log10(result$int)))
 fullModelMapping <- function(filename, geno, menvironment, P = -1, verbose = FALSE){
   st <- proc.time()
 
@@ -62,16 +69,21 @@ fullModelMapping <- function(filename, geno, menvironment, P = -1, verbose = FAL
 }
 
 
+#for only expressed genes
+load(file="Data/ExpGenes/expGenes_final.Rdata")
 for(chr in 1:5){
   st <- proc.time()
-  genenames <- gsub(".txt", "", dir(paste0("Data/Raw/chr", chr, "_norm_hf_cor/"))[!grepl("SNP", dir(paste0("Data/Raw/chr", chr, "_norm_hf_cor/")))])
+  genenames <- expGeneList[[chr]]
+  
   #filename = "AT1G01010"
   for(filename in genenames){
     if(!file.exists(paste0("Data/FullModel/chr", chr, "_norm_hf_cor_FM/", filename, "_FM_QTL.txt"))){
-      fullModelMapping(filename, geno, menvironment, P = 4)
+      fullModelMapping(filename, geno, menvironment, P = 4, verbose = TRUE)
     } else cat("Skipping", filename, ", because it exists\n")
   }
   et <- proc.time()
   cat("chr", chr, "is done with QTL mapping, after:", (et-st)[3], "secs\n")
 }
 
+#if mapping all genes, use this one, but remember to remove _QTL, _Int and .png
+#  genenames <- gsub(".txt", "", dir(paste0("Data/Raw/chr", chr, "_norm_hf_cor/"))[!grepl("SNP", dir(paste0("Data/Raw/chr", chr, "_norm_hf_cor/")))])
