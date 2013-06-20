@@ -52,18 +52,6 @@ testAS <- function(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = in
 }
 #testAS(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, useForTest = unlist, whichTest = wilcox.test, alternative = "less", verbose = TRUE)
 
-#simple: slimlar with expGeneTestSimple
-expExonTestSimple <- function(ind, exp_data = rawexp[ ,17:164], use = median, expThre = 5, verbose = FALSE){
-  if(length(ind) > 0){
-    expDegree <- use(apply(exp_data[ind, ], 1, unlist))
-    if(expDegree >= expThre){
-      if(verbose) cat("this exon has p", ind, "and exp degree is", expDegree, ", higher than", expThre, "!\n")
-      return(TRUE)
-    } else return(FALSE)
-  } else return(FALSE)
-}
-#expExonTestSimple(ind, exp_data = rawexp[ ,17:164], use = median, expThre = 5, verbose = TRUE)
-
 splicingTest <- function(filename, goal, verbose = FALSE, ...){
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
@@ -96,7 +84,7 @@ splicingTest <- function(filename, goal, verbose = FALSE, ...){
       #if(verbose) cat(testExon, "has probes", ind, "\n")
       
       #at least 6 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
-      if(length(ind) >= P && expExonTestSimple(ind, exp_data = rawexp[ ,17:164], use = median, expThre = 5, verbose)){
+      if(length(ind) >= P){
         if(verbose) cat("\t***I'm", testExon, ", has", length(ind), "good probes, separate me and check if i'm possible for later test!\n")
         
         if(goal == "skippingExon"){
@@ -127,7 +115,7 @@ splicingTest <- function(filename, goal, verbose = FALSE, ...){
           }
           resmatrix <- rbind(resmatrix, res)
         } else if(verbose) cat(" =>after grouping don't have enough probes in each part T^T\n")
-      } else if(verbose) cat("\t***I'm", testExon, ", not enough probes/not expressed T^T\n")
+      } else if(verbose) cat("\t***I'm", testExon, ", not enough probes T^T\n")
     }
     rownames(resmatrix) <- rownameList
     return(resmatrix)
@@ -146,7 +134,7 @@ for(chr in 1:5){
   resmatrix <- NULL
   #filename = "AT1G01010"
   for(filename in genenames){
-    res <- splicingTest(filename, goal = "35AS", useForTest = unlist, whichTest = wilcox.test, alternative = "less")
+    res <- splicingTest(filename, goal = "35AS", useForTest = unlist, whichTest = wilcox.test, alternative = "greater")
     if(!is.null(res)){
       resmatrix <- rbind(resmatrix, res)
       cat(filename, "is tested\n")
@@ -154,17 +142,35 @@ for(chr in 1:5){
   }
   colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
   
-  write.table(resmatrix, file=paste0("Data/53terminalAS/53AS_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
+  write.table(resmatrix, file=paste0("Data/53terminalAS/53AS_chr", chr, "_wt_greater.txt"), sep="\t") #********** change!!! **********#
   
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
+}
+
+ASres <- NULL
+for(chr in 1:5){
+  ASres <- rbind(ASres, read.table(paste0("Data/53terminalAS/53AS_chr", chr, "_wt_greater.txt"), row.names=1, header=T))
+  for(e in 1:nrow(ASres)){
+    
+  }
 }
 
 
 
 
 
-
+#simple: slimlar with expGeneTestSimple
+expExonTestSimple <- function(ind, exp_data = rawexp[ ,17:164], use = median, expThre = 5, verbose = FALSE){
+  if(length(ind) > 0){
+    expDegree <- use(apply(exp_data[ind, ], 1, unlist))
+    if(expDegree >= expThre){
+      if(verbose) cat("this exon has p", ind, "and exp degree is", expDegree, ", higher than", expThre, "!\n")
+      return(TRUE)
+    } else return(FALSE)
+  } else return(FALSE)
+}
+#expExonTestSimple(ind, exp_data = rawexp[ ,17:164], use = median, expThre = 5, verbose = TRUE)
 
 
 #*************************************************************** count part ***************************************************************#
