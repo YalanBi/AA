@@ -24,7 +24,7 @@ probesDir <- function(exp_data = rawexp){
   return(direction_id)
 }
 
-plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, thr = ps_threshold){
+plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, testInd, thr = ps_threshold){
   #par(mfrow = c(4, 1), pty = "m", oma = c(5, 3, 5, 0.5))
   
   #which tu is in rownames(test result matrix)
@@ -39,23 +39,11 @@ plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueEx
     if(env == 1){
       title(main = paste0(filename, "_5'AS"), cex.main = 2.5, xlab = "Probes", mgp = c(3, 0.5, 0), cex.lab = 1.5, outer = TRUE)
       title(ylab = "Expression Intensity", mgp = c(1, 0.5, 0), cex.lab = 1.5, outer = TRUE)
+      
       axis(3, at = mean(which(rawexp[ ,"tu"] == tu)), labels = tu, mgp=c(2.25, 0.5, 0), tick = FALSE, line = 0)
     }
     
-    #nc <- to choose 1st/2nd row, if 5' and 3' exist at the same time
-    nc <- 1
     if(any(testTuID == 1)){
-      #ind <- judge which probe in exonID is of 1st exon name (T/F)
-      ind <- rawexp[exonID, "tu"] == uniqueExon[1]
-      #cat("", as.character(uniqueExon[1]), "has probes", exonID[ind], "\n")
-      
-      #to find max difference between each probe in exp, to group them
-      dff <- NULL
-      for(n in 2:length(exonID[ind])){
-        dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
-        #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
-      }
-      #cat(" so dff is:", dff, "\n")
       
       rect(0.5, -3, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, 20, density = 15, angle = 30, col = "azure2", border = "azure3")
       rect((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, -3, max(which(rawexp[, "tu"] == uniqueExon[1])) + 0.5, 20, density = 15, angle = 150, col = "azure2", border = "azure3")
@@ -66,32 +54,6 @@ plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueEx
       
       if(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env] >= thr){
         text(x = median(which(rawexp[ ,"tu"] == uniqueExon[1])), y = max(newexp[ ,ind_env])+0.15, labels = round(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env], digits = 1), col = env, cex = 0.8)
-      }
-      
-      nc <- 2
-    }
-    if(any(testTuID != 1)){
-      #ind <- judge which probe in exonID is of 1st exon name (T/F)
-      ind <- rawexp[exonID, "tu"] == uniqueExon[length(uniqueExon)]
-      #cat("", as.character(uniqueExon[1]), "has probes", exonID[ind], "\n")
-      
-      #to find max difference between each probe in exp, to group them
-      dff <- NULL
-      for(n in 2:length(exonID[ind])){
-        dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
-        #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
-      }
-      #cat(" so dff is:", dff, "\n")
-      
-      rect(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.5, -3, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, 20, density = 15, angle = 30, col = "azure2", border = "azure3")
-      rect((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, -3, nprobes + 0.5, 20, density = 15, angle = 150, col = "azure2", border = "azure3")
-      
-      #use mean/median to show exp level in first/last exon
-      lines(c(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.5, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5), c(median(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env])), median(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env]))), col = env, lwd = 2)
-      lines(c((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, nprobes + 0.5), c(median(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env])), median(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env]))), col = env, lwd = 2)
-      
-      if(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env] >= thr){
-        text(x = median(which(rawexp[ ,"tu"] == uniqueExon[length(uniqueExon)])), y = max(newexp[ ,ind_env])+0.15, labels = round(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env], digits = 1), col = env, cex = 0.8)
       }
     }
     
@@ -119,7 +81,7 @@ plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueEx
 
 
 plotcExonExp <- function(chr, filename, ps_threshold){
-  rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
+  rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   newexp <- rawexp[ ,17:164]
   
   probes_dir <- probesDir(rawexp)
@@ -133,8 +95,14 @@ plotcExonExp <- function(chr, filename, ps_threshold){
   
   ind_tu <- grep("tu", rawexp[ ,"tu"])
   nprobes <- nrow(rawexp)
-
-  #png(filename = paste0("Data/53terminalAS/plot_53ps/", filename, "_ttest_", ps_threshold, "_4s.png"), width = 960, height = 1728, bg = "white")
+  
+  testInd <- grep(uniqueExon[1], rawexp[exonID,"tu"])
+  dff <- NULL
+  for(n in 2:length(ind)){
+    dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
+    #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
+  }
+  
   png(filename = paste0("Data/53terminalAS/plot_53ps/", filename, "_wtest_", ps_threshold, "_4s.png"), width = 960, height = 1728, bg = "white")
   plotExpEnvSep(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, thr = ps_threshold)
   dev.off()

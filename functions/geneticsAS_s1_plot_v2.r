@@ -222,8 +222,8 @@ plotExpDffBtwGtEnvSep <- function(rawexp, dff = dffList[[env]]){
 plotExpEnvSep <- function(filename, toTest, m, tuShowGAS, GASchr, ...){
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   
-  rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
-  testQTL <- read.table(paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
+  rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
+  testQTL <- read.table(paste0("Data/FullModel/chr", chr, "_norm_hf_cor_FM/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
   newexp <- rawexp[ ,17:164]
   
   probes_dir <- probesDir(rawexp)
@@ -305,7 +305,7 @@ for(filename in plotGenenames){
   #GASchr <- read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_ttestExp.txt"), row.names=1, header=F)
   GASchr <- read.table(paste0("Data/countQTL/main", toTest, "_chr", chr, "_wilcoxExp.txt"), row.names=1, header=F)
   
-  rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
+  rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   testQTL <- read.table(paste0("Data/fullModeMapping/chr", chr, "_norm_hf_cor/", filename, "_FM_", toTest, ".txt"), row.names=1, header=T)
   
   probes_dir <- probesDir(rawexp)
