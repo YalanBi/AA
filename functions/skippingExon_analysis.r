@@ -1,23 +1,23 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 28-06-2013
+# last modified: 01-07-2013
 # first written: 28-06-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
 #********************************************* this is the final version for analyzing results of testing skipping exons ^_^ *********************************************#
-setwd("D:/Arabidopsis Arrays")
 
+setwd("D:/Arabidopsis Arrays")
 
 #calculate the threshold for skipping exons
 seMatrix <- NULL
 for(chr in 1:5){
   seMatrix <- rbind(seMatrix, read.table(paste0("Data/skippingExon/SE_chr", chr, "_wt_less.txt"), row.names=NULL))
 }
+#Bonferroni correction
 -log10(0.05/nrow(seMatrix)/4)# = 6.31; 25508 exons were tested * 4 Env; => seThre=6.31
 rm(seMatrix)
-
 
 #calculate the numbers of sig exons and genes
 seThre=6.31
