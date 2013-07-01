@@ -1,12 +1,13 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 28-06-2013
+# last modified: 01-07-2013
 # first written: 02-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
 #******************************************************** this is the final version for testing cassette exons ^_^ *******************************************************#
+
 setwd("D:/Arabidopsis Arrays")
 #load environment file
 menvironment <- read.table("Data/ann_env.txt", sep="\t")[ ,2]
@@ -59,11 +60,11 @@ splicingTestSE <- function(filename, goal="cassetteExon", verbose=FALSE, ...){
     if(goal == "cassetteExon") testExonRange <- uniqueExon[-c(1, length(uniqueExon))]
     if(goal == "skipping53Exon") testExonRange <- uniqueExon[c(1, length(uniqueExon))]
     
-    for(testExon in uniqueExon){
+    for(testExon in testExonRange){
       ind <- exonID[rawexp[exonID, "tu"] == testExon]
       #if(verbose) cat(testExon, "has probes", ind, "\n")
       
-      #at least 6 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
+      #at least 3 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
       if(length(ind) >= 3){
         if(verbose) cat("\t***I'm", testExon, ", has", length(ind), "good probes, test me for skipping exon!\n")
         
