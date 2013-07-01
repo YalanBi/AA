@@ -19,9 +19,9 @@ map.fast <- function(geno, pheno, menvironment){
   res <- NULL
   models    <- aov(as.matrix(pheno) ~ as.factor(menvironment) + as.numeric(geno) + as.factor(menvironment):as.numeric(geno))
   modelinfo <- summary(models)
-  res$env   <- unlist(lapply(modelinfo, "[", 1, 5), use.names = T)
-  res$qtl   <- unlist(lapply(modelinfo, "[", 2, 5), use.names = T)
-  res$int   <- unlist(lapply(modelinfo, "[", 3, 5), use.names = T)
+  res$env   <- unlist(lapply(modelinfo, "[", 1, 5), use.names=TRUE)
+  res$qtl   <- unlist(lapply(modelinfo, "[", 2, 5), use.names=TRUE)
+  res$int   <- unlist(lapply(modelinfo, "[", 3, 5), use.names=TRUE)
   res$eff   <- unlist(models$coefficients[5, ])
   res
 }
@@ -29,7 +29,7 @@ map.fast <- function(geno, pheno, menvironment){
 
 #use this one, if dont need direction of eQTL, like full model mapping at probe level
 #      return(list(-log10(result$env), -log10(result$qtl), -log10(result$int)))
-fullModelMapping <- function(filename, geno, menvironment, P = -1, verbose = FALSE){
+fullModelMapping_probeLevel <- function(filename, geno, menvironment, P = -1, verbose = FALSE){
   st <- proc.time()
 
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
@@ -78,7 +78,7 @@ for(chr in 1:5){
   #filename = "AT1G01010"
   for(filename in genenames){
     if(!file.exists(paste0("Data/FullModel/chr", chr, "_norm_hf_cor_FM/", filename, "_FM_QTL.txt"))){
-      fullModelMapping(filename, geno, menvironment, P = 4, verbose = TRUE)
+      fullModelMapping_probeLevel(filename, geno, menvironment, P = 4, verbose = TRUE)
     } else cat("Skipping", filename, ", because it exists\n")
   }
   et <- proc.time()
