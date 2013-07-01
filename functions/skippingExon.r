@@ -8,6 +8,7 @@
 
 #******************************************************** this is the final version for testing skipping exons ^_^ *******************************************************#
 #****************************************************** skipping exon: cassette exons + the first/last spliced exon ******************************************************#
+
 setwd("D:/Arabidopsis Arrays")
 #load environment file
 menvironment <- read.table("Data/ann_env.txt", sep="\t")[ ,2]
@@ -41,7 +42,7 @@ testDffBtwParts <- function(exp_data=rawexp[ ,17:164], testProbes, restProbes, i
 #annotation: "goal" could be "skippingExon", "cassetteExon" and "skipping53Exon"
 splicingTestSE <- function(filename, goal="skippingExon", verbose=FALSE, ...){
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
-  rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
+  rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=TRUE)
   probes_dir <- probesDir(rawexp)
   #if(verbose) cat("We have rightDir probes:", probes_dir, "\n")
   exonID <- probes_dir[grepl("tu", rawexp[probes_dir,"tu"])]
@@ -60,11 +61,11 @@ splicingTestSE <- function(filename, goal="skippingExon", verbose=FALSE, ...){
     if(goal == "cassetteExon") testExonRange <- uniqueExon[-c(1, length(uniqueExon))]
     if(goal == "skipping53Exon") testExonRange <- uniqueExon[c(1, length(uniqueExon))]
     
-    for(testExon in uniqueExon){
+    for(testExon in testExonRange){
       ind <- exonID[rawexp[exonID, "tu"] == testExon]
       #if(verbose) cat(testExon, "has probes", ind, "\n")
       
-      #at least 6 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
+      #at least 3 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
       if(length(ind) >= 3){
         if(verbose) cat("\t***I'm", testExon, ", has", length(ind), "good probes, test me for skipping exon!\n")
         
