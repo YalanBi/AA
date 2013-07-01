@@ -1,13 +1,13 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 18-06-2013
+# last modified: 24-06-2013
 # first written: 18-06-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
-#******************************************** this is the final version, based on results from this --- ********************************************#
-#****************************************************** --- continue all following analysis!! ******************************************************#
+#****************************************************** this is the final version for getting expressed genes! ^_^ *******************************************************#
+#***************************************************** based on results from this, continue all following analysis!! *****************************************************#
 #main idea: find expressed genes, of which the median of all exon RILs is higher than threshold(expThre = 5) in any environment!
 
 setwd("D:/Arabidopsis Arrays")
@@ -24,14 +24,15 @@ probesDir <- function(exp_data = rawexp){
   return(direction_id)
 }
 
-expGeneTestSimple <- function(filename, use = median, expThre = 5, verbose = FALSE){
+expGeneTest <- function(filename, P=1, use=median, expThre=5, verbose=FALSE){
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
   probes_dir <- probesDir(rawexp)
   exonID <- probes_dir[grepl("tu", rawexp[probes_dir, "tu"])]
   
   #there are some gene having only one probe and it is of wrong direction, which means there's no exon probe of right direction
-  if(length(exonID) > 0){
+  #we require there are at least P exon probes of right direction left in this gene
+  if(length(exonID) >= P){
     #continue <- TRUE
     for(env in 1:4){
       ind_env <- which(as.numeric(menvironment) == env)
@@ -42,9 +43,9 @@ expGeneTestSimple <- function(filename, use = median, expThre = 5, verbose = FAL
       } else if(verbose) cat("not expressed in env", env, "\n")
     }
     if(env == 4) return(FALSE)
-  } else return(FALSE) #cause no exon probe left
+  } else return(FALSE) #cause no enough exon probe left
 }
-#expGenes <- expGeneTestSimple(filename, use = median, expThre = 5, verbose = TRUE)
+#expGenes <- expGeneTest(filename, P=1, use = median, expThre = 5, verbose = TRUE)
 
 #if necessary, save the results into a file
 expGeneList <- vector("list", 5)
@@ -57,14 +58,14 @@ for(chr in 1:5){
   #filename "AT1G01010"
   for(filename in genenames){
     cat(filename, "testing now\n")
-    if(expGeneTestSimple(filename, use = median, expThre = 5)){
+    if(expGeneTest(filename, P=3, use = median, expThre = 5)){ #************************* change p=? *************************#
       expGeneList[[chr]] <- c(expGeneList[[chr]], filename)
     }
   }
   et <- proc.time()[3]
   cat("find", length(expGeneList[[chr]]), "expressed genes on chr", chr, "and finished in", et-st, "s\n")
 }
-save(expGeneList,  file="Data/ExpGenes/expGenes_simple.Rdata")
+save(expGeneList,  file="Data/ExpGenes/expGenes_3exonprobes.Rdata") #************************* change p=? *************************#
 
 
 
