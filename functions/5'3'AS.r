@@ -76,9 +76,6 @@ splicingTest35 <- function(filename, goal="5'AS", verbose=FALSE, ...){
   if(length(uniqueExon) >= 2){
     if(verbose) cat(filename, "have", length(uniqueExon), "exons, >= 2!\n")
     
-    resmatrix <- NULL
-    rownameList <- NULL
-    
     if(goal == "5'AS") testExon <- uniqueExon[1]
     if(goal == "3'AS") testExon <- uniqueExon[length(uniqueExon)]
     
@@ -105,22 +102,18 @@ splicingTest35 <- function(filename, goal="5'AS", verbose=FALSE, ...){
       #>= 3 probes left in each group, remember the gene name and do t.test
       if(length(testProbes) >= 3 && length(restProbes) >= 3){
         if(verbose) cat(" =>separate between p", ind[sepPoint], "and p", ind[sepPoint+1], ", each group has >= 3 good probes, ready for test!\n")
-        rownameList <- c(rownameList, filename)
         
-        #min(ind[sepPoint], ind[sepPoint+1]) <- the probe just before the gap, for making plot.
-        #NOTE: in 5'AS, it is the last probe of higher part in the first exon; in3'AS, it is the last probe of the lower part in the last exon
+        #NOTE: min(ind[sepPoint], ind[sepPoint+1]) <- the probe just before the gap, for making plot.
+        #      in 5'AS, it is the last probe of higher part in the first exon; in3'AS, it is the last probe of the lower part in the last exon
         res <- min(ind[sepPoint], ind[sepPoint+1])
         for(env in 1:4){
           ind_env <- which(as.numeric(menvironment) == env)
           res <- c(res, testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind=ind_env, verbose, ...))
           #if(verbose) cat("env", env, ":", testDffBtwParts(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, ...), "\n")
         }
-        resmatrix <- rbind(resmatrix, res)
+        return(res)
       } else if(verbose) cat(" =>after grouping don't have enough probes in each part T^T\n")
     } else if(verbose) cat("\t***I'm", testExon, ", not enough probes T^T\n")
-    
-    rownames(resmatrix) <- rownameList
-    return(resmatrix)
   } else if(verbose) cat("we don't have enough exons T^T\n")
 }
 #splicingTest35(filename, goal="5'AS", useForTest=unlist, whichTest=wilcox.test, alternative="less", verbose=TRUE)
@@ -133,18 +126,21 @@ for(chr in 1:5){
   
   genenames <- expGeneList[[chr]]
   resmatrix <- NULL
+  rownameList <- NULL
   #filename = "AT1G01010"
   for(filename in genenames){
     res <- splicingTest35(filename, goal="5'AS", useForTest=unlist, whichTest=wilcox.test, alternative="less")
     if(!is.null(res)){
       resmatrix <- rbind(resmatrix, res)
+      rownameList <- c(rownameList, filename)
       cat(filename, "is tested\n")
     }
   }
-  colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
-  
-  write.table(resmatrix, file=paste0("Data/53terminalAS/5AS_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
-  
+  if(!is.null(resmatrix)){
+    rownames(resmatrix) <- rownameList
+    colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
+    write.table(resmatrix, file=paste0("Data/53terminalAS/5AS_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
+  } else cat("\tNO TEST!\n")
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
 }
@@ -156,18 +152,21 @@ for(chr in 1:5){
   
   genenames <- expGeneList[[chr]]
   resmatrix <- NULL
+  rownameList <- NULL
   #filename = "AT1G01010"
   for(filename in genenames){
     res <- splicingTest35(filename, goal="3'AS", useForTest=unlist, whichTest=wilcox.test, alternative="less")
     if(!is.null(res)){
       resmatrix <- rbind(resmatrix, res)
+      rownameList <- c(rownameList, filename)
       cat(filename, "is tested\n")
     }
   }
-  colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
-  
-  write.table(resmatrix, file=paste0("Data/53terminalAS/3AS_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
-  
+  if(!is.null(resmatrix)){
+    rownames(resmatrix) <- rownameList
+    colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
+    write.table(resmatrix, file=paste0("Data/53terminalAS/3AS_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
+  } else cat("\tNO TEST!\n")
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
 }
