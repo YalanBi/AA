@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 28-06-2013
+# last modified: 02-07-2013
 # first written: 21-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -50,7 +50,7 @@ splicingTestSE <- function(filename, goal="skippingExon", verbose=FALSE, ...){
   uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
   #if(verbose) cat("We have exons:", uniqueExon, "\n")
   
-  #for 5'/3' AS, at least 2 exons in a gene!!!
+  #for skipping exons, at least 2 exons in a gene!!!
   if(length(uniqueExon) >= 2){
     if(verbose) cat(filename, "have", length(uniqueExon), "exons, >= 2!\n")
     
@@ -65,28 +65,25 @@ splicingTestSE <- function(filename, goal="skippingExon", verbose=FALSE, ...){
       ind <- exonID[rawexp[exonID, "tu"] == testExon]
       #if(verbose) cat(testExon, "has probes", ind, "\n")
       
+      testProbes <- ind
+      #if(verbose) cat("I'm testpart, I have p", testProbes, "\n")
+      restProbes <- exonID[!exonID %in% ind]
+      #if(verbose) cat("I'm restpart, I have p", restProbes, "\n")
+      
       #at least 3 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
-      if(length(ind) >= 3){
-        if(verbose) cat("\t***I'm", testExon, ", has", length(ind), "good probes, test me for skipping exon!\n")
-        
-        testProbes <- ind
-        #if(verbose) cat("I'm testpart, I have p", testProbes, "\n")
-        restProbes <- exonID[!exonID %in% ind]
-        #if(verbose) cat("I'm restpart, I have p", restProbes, "\n")
+      if(length(testProbes) >= 3 && length(restProbes) >= 3){
+        if(verbose) cat("\t***I'm", testExon, "sepProbe is p", max(ind), ", have >= 3 good probes in each group, ready for test!\n")
         
         #>= 3 probes left in each group, remember the gene name and do t.test
-        if(length(testProbes) >= 3 && length(restProbes) >= 3){
-          if(verbose) cat(" =>separate at p", max(ind), ", have >= 3 good probes in each group, ready for test!\n")
-          rownameList <- c(rownameList, filename)
-          res <- max(ind)
-          for(env in 1:4){
-            ind_env <- which(as.numeric(menvironment) == env)
-            res <- c(res, testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind=ind_env, verbose, ...))
-            #if(verbose) cat("env", env, ":", testDffBtwParts(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, ...), "\n")
-          }
-          resmatrix <- rbind(resmatrix, res)
-        } else if(verbose) cat(" =>after grouping don't have enough probes in each part T^T\n")
-      } else if(verbose) cat("\t***I'm", testExon, ", not enough probes T^T\n")
+        rownameList <- c(rownameList, filename)
+        res <- max(ind)
+        for(env in 1:4){
+          ind_env <- which(as.numeric(menvironment) == env)
+          res <- c(res, testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind=ind_env, verbose, ...))
+          #if(verbose) cat("env", env, ":", testDffBtwParts(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, ...), "\n")
+        }
+        resmatrix <- rbind(resmatrix, res)
+      } else if(verbose) cat("\t***I'm", testExon, ", not enough probes in each part for test T^T\n")
     }
     rownames(resmatrix) <- rownameList
     return(resmatrix)
@@ -110,10 +107,10 @@ for(chr in 1:5){
       cat(filename, "is tested\n")
     }
   }
+  if(!is.null(resmatrix)){
   colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
-  
   write.table(resmatrix, file=paste0("Data/skippingExon/SE_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
-  
+  } else cat("\tNO TEST!\n")
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
 }
