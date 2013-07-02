@@ -50,7 +50,7 @@ splicingTestRI <- function(filename, verbose=FALSE, ...){
   uniqueIntron <- unique(grep("intron", rawexp[ ,"tu"], value=TRUE))
   #if(verbose) cat("We have introns:", uniqueIntron, "\n")
   
-  #for testing intron retention, at least 1 exon and 1 intron in a gene!!!
+  #for testing intron retention, at least 3 exon probes and 1 intron in a gene!!!
   if(length(exonID) >= 3 && length(uniqueIntron) >= 1){
     if(verbose) cat(filename, "have", length(exonID), "exon probes of right direction and", length(uniqueIntron), "introns!\n")
     
@@ -102,7 +102,6 @@ for(chr in 1:5){
     colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
     write.table(resmatrix, file=paste0("Data/intronRetention/RI_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
   } else cat("\tNO TEST!\n")
-  
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
 }
