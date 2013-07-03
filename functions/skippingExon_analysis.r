@@ -13,7 +13,7 @@ setwd("D:/Arabidopsis Arrays")
 #calculate the threshold for skipping exons
 seMatrix <- NULL
 for(chr in 1:5){
-  seMatrix <- rbind(seMatrix, read.table(paste0("Data/skippingExon/SE_chr", chr, "_wt_less.txt"), row.names=NULL))
+  seMatrix <- rbind(seMatrix, read.table(paste0("Data/AS/SE_chr", chr, "_wt_less.txt"), row.names=NULL))
 }
 #Bonferroni correction
 -log10(0.05/nrow(seMatrix)/4)# = 6.31; 25508 exons were tested * 4 Env; => seThre=6.31
@@ -24,7 +24,7 @@ seThre=6.31
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to seThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to seThre in each env and across envs from chr1-chr5
 for(chr in 1:5){
-  sechr <- read.table(paste0("Data/skippingExon/SE_chr", chr, "_wt_less.txt"), row.names=NULL)
+  sechr <- read.table(paste0("Data/AS/SE_chr", chr, "_wt_less.txt"), row.names=NULL)
   seGeneList <- list()
   
   nTU <- NULL #number of exons that -log10(P) are higher than or equal to seThre in each env
@@ -49,7 +49,7 @@ for(chr in 1:5){
   
   matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
   matrixGENE <- rbind(matrixGENE, c(nGENE, length(seGeneList$mixEnv)))
-  save(seGeneList, file = paste0("Data/skippingExon/SE_chr", chr, "_genenameList.Rdata"))
+  save(seGeneList, file = paste0("Data/AS/SE_chr", chr, "_genenameList.Rdata"))
 }
 rownames(matrixTU) <- paste0("chr", 1:5)
 colnames(matrixTU) <- c(paste0("Env", 1:4), "mixEnv")
