@@ -78,11 +78,11 @@ splicingTestSE_AS <- function(filename, goal="skippingExon", toTest="QTL", threT
       #if(verbose) cat("I'm restpart, I have p", restProbes, "\n")
       
       #at least 3 probes in each group, try to avoid this case---one is highly expressed, the other is lowly expressed...
-      if(length(testProbes) >= 3 && length(restProbes) >= 3 && any(apply(testQTL[testProbes, ] > threTest, 2, sum) >= 3)){
+      if(length(testProbes) >= 3 && length(restProbes) >= 3 && any(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)){
         if(verbose) cat("\t***I'm", testExon, "sepProbe is p", max(testProbes), ", have >= 3 good probes in each group, and I have sig", toTest, ", ready for test!\n")
         
-        m <- which(apply(testQTL[testProbes, ] > threTest, 2, sum) >= 3)[which.max(apply(as.matrix(testQTL[testProbes, which(apply(testQTL[testProbes, ] > threTest, 2, sum) >= 3)]), 2, sum))]
-        if(verbose) cat(filename, testExon, "the most sig marker is", m, "among possible ones", which(apply(testQTL[testProbes, ] > threTest, 2, sum) >= 3), "\n")
+        m <- which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)[which.max(apply(as.matrix(testQTL[testProbes, which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)]), 2, sum))]
+        if(verbose) cat(filename, testExon, "the most sig marker is", m, "among possible ones", which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3), "\n")
         geno1 <- which(geno[ ,m] == 1)
         geno2 <- which(geno[ ,m] == 2)
         

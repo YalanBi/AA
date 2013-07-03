@@ -111,7 +111,7 @@ for(chr in 1:5){
   }
   colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
   
-  write.table(resmatrix, file=paste0("Data/skippingExon/SE_chr", chr, "_ceOnly_wt_less.txt"), sep="\t") #********** change!!! **********#
+  write.table(resmatrix, file=paste0("Data/AS/SE_chr", chr, "_ceOnly_wt_less.txt"), sep="\t") #********** change!!! **********#
   
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
