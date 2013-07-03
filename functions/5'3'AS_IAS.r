@@ -1,12 +1,12 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 01-07-2013
+# last modified: 02-07-2013
 # first written: 21-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
-#******************************************************** this is the final version for testing AS at 5/3 site ^_^ *******************************************************#
+#******************************************** this is the final version for testing INTERACTION regulated AS at 5/3 site! ^_^ ********************************************#
 #main idea:
 #minimum of 6 probes in this exon
 #Test how to split (using highest difference between two groups)
@@ -18,6 +18,8 @@
 setwd("D:/Arabidopsis Arrays")
 #load environment file
 menvironment <- read.table("Data/ann_env.txt", sep="\t")[ ,2]
+#load genotype file
+geno <- read.table("refined map/genotypes.txt",sep="\t", row.names=1, header=TRUE)
 #load exp genes
 load(file="Data/ExpGenes/expGenes_final.Rdata")
 
@@ -61,7 +63,8 @@ testDffBtwParts <- function(exp_data=rawexp[ ,17:164], testProbes, restProbes, i
 
 #3'/5' AS test
 #annotation: "goal" could be "5'AS" and "3'AS"
-splicingTest35 <- function(filename, goal="5'AS", verbose=FALSE, ...){
+#            "toTest" could be "QTL" and "Int"
+splicingTest35_AS <- function(filename, goal="5'AS", toTest="QTL", threTest=8, verbose=FALSE, ...){
   if(verbose) cat("now is testing", goal, "!\n")
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=TRUE)
@@ -99,27 +102,41 @@ splicingTest35 <- function(filename, goal="5'AS", verbose=FALSE, ...){
         return()
       }
       
-      #>= 3 probes left in each group, remember the gene name and do t.test
-      if(length(testProbes) >= 3 && length(restProbes) >= 3){
-        if(verbose) cat(" =>separate between p", ind[sepPoint], "and p", ind[sepPoint+1], ", each group has >= 3 good probes, ready for test!\n")
+      testQTL <- read.table(paste0("Data/FullModel/chr", chr, "_norm_hf_cor_FM/", filename, "_FM_", toTest, ".txt"), row.names=1, header=TRUE)
+      
+      #>= 3 probes left in each group and have sig eQTL on testExon, remember the gene name and do t.test
+      if(length(testProbes) >= 3 && length(restProbes) >= 3 && any(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)){
+        if(verbose) cat(" =>separate between p", ind[sepPoint], "and p", ind[sepPoint+1], ", each group has >= 3 good probes, and I have sig", toTest, ", ready for test!\n")
+        
+        m <- which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)[which.max(apply(as.matrix(testQTL[testProbes, which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)]), 2, sum))]
+        if(verbose) cat(filename, testExon, "the most sig marker is", m, "among possible ones", which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3), "\n")
+        geno1 <- which(geno[ ,m] == 1)
+        geno2 <- which(geno[ ,m] == 2)
         
         #NOTE: min(ind[sepPoint], ind[sepPoint+1]) <- the probe just before the gap, for making plot.
         #      in 5'AS, it is the last probe of higher part in the first exon; in3'AS, it is the last probe of the lower part in the last exon
-        res <- min(ind[sepPoint], ind[sepPoint+1])
+        res <- c(min(ind[sepPoint], ind[sepPoint+1]), as.numeric(m))
         for(env in 1:4){
           ind_env <- which(as.numeric(menvironment) == env)
-          res <- c(res, testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind=ind_env, verbose, ...))
-          #if(verbose) cat("env", env, ":", testDffBtwParts(exp_data = rawexp[ ,17:164], testProbes, restProbes, ind = ind_env, ...), "\n")
+          envGroup1 <- ind_env[ind_env %in% geno1]
+          envGroup2 <- ind_env[ind_env %in% geno2]
+          if(length(envGroup1) > 0 && length(envGroup2) > 0){
+            res <- c(res, testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind=envGroup1, verbose, ...), testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind=envGroup2, verbose, ...))
+            #if(verbose) cat("env", env, ": gt1 -", testDffBtwParts(exp_data = rawexp[ ,17:164], ind = envGroup1, ...), "; gt2 -", testDffBtwParts(exp_data = rawexp[ ,17:164], ind = envGroup2, ...),"\n")
+          } else{
+            if(verbose) cat("in env", env, ", one genotype have no RILs\n")
+            res <- c(res, -1, -1)
+          }
         }
         return(res)
-      } else if(verbose) cat(" =>after grouping don't have enough probes in each part T^T\n")
+      } else if(verbose) cat(" =>after grouping don't have enough probes in each part, or have no sig QTL on me T^T\n")
     } else if(verbose) cat("\t***I'm", testExon, ", not enough probes T^T\n")
   } else if(verbose) cat("we don't have enough exons T^T\n")
 }
-#splicingTest35(filename, goal="5'AS", useForTest=unlist, whichTest=wilcox.test, alternative="less", verbose=TRUE)
+#splicingTest35_AS(filename, goal="5'AS", toTest="QTL", threTest=8, useForTest=unlist, whichTest=wilcox.test, alternative="less", verbose=TRUE)
 
 
-#test 5'AS for chr 1-5
+#test 5'IAS for chr 1-5
 for(chr in 1:5){
   st <- proc.time()[3]
   cat("chr", chr, "starts...\n")
@@ -129,7 +146,7 @@ for(chr in 1:5){
   rownameList <- NULL
   #filename = "AT1G01010"
   for(filename in genenames){
-    res <- splicingTest35(filename, goal="5'AS", useForTest=unlist, whichTest=wilcox.test, alternative="less")
+    res <- splicingTest35_AS(filename, goal="5'AS", toTest="Int", threTest=11.6, useForTest=unlist, whichTest=wilcox.test, alternative="less")
     if(!is.null(res)){
       resmatrix <- rbind(resmatrix, res)
       rownameList <- c(rownameList, filename)
@@ -138,14 +155,14 @@ for(chr in 1:5){
   }
   if(!is.null(resmatrix)){
     rownames(resmatrix) <- rownameList
-    colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
-    write.table(resmatrix, file=paste0("Data/AS/5AS_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
+    colnames(resmatrix) <- c("sepProbe", "sigMarker", "6H/gt1", "6H/gt2", "Dry_AR/gt1", "Dry_AR/gt2", "Dry_Fresh/gt1", "Dry_Fresh/gt2", "RP/gt1", "RP/gt2")
+    write.table(resmatrix, file=paste0("Data/geneticsAS/5'AS_chr", chr, "_IAS_wt_less.txt"), sep="\t") #********** change!!! **********#
   } else cat("\tNO TEST!\n")
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
 }
 
-#test 3'AS for chr 1-5
+#test 3'IAS for chr 1-5
 for(chr in 1:5){
   st <- proc.time()[3]
   cat("chr", chr, "starts...\n")
@@ -155,7 +172,7 @@ for(chr in 1:5){
   rownameList <- NULL
   #filename = "AT1G01010"
   for(filename in genenames){
-    res <- splicingTest35(filename, goal="3'AS", useForTest=unlist, whichTest=wilcox.test, alternative="less")
+    res <- splicingTest35_AS(filename, goal="3'AS", toTest="Int", threTest=11.6, useForTest=unlist, whichTest=wilcox.test, alternative="less")
     if(!is.null(res)){
       resmatrix <- rbind(resmatrix, res)
       rownameList <- c(rownameList, filename)
@@ -164,8 +181,8 @@ for(chr in 1:5){
   }
   if(!is.null(resmatrix)){
     rownames(resmatrix) <- rownameList
-    colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
-    write.table(resmatrix, file=paste0("Data/AS/3AS_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
+    colnames(resmatrix) <- c("sepProbe", "sigMarker", "6H/gt1", "6H/gt2", "Dry_AR/gt1", "Dry_AR/gt2", "Dry_Fresh/gt1", "Dry_Fresh/gt2", "RP/gt1", "RP/gt2")
+    write.table(resmatrix, file=paste0("Data/geneticsAS/3'AS_chr", chr, "_IAS_wt_less.txt"), sep="\t") #********** change!!! **********#
   } else cat("\tNO TEST!\n")
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")

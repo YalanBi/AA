@@ -6,7 +6,7 @@
 #
 
 
-#**************************************** this is the final version for testing GENETIC/INTERACTION regulated AS at 5/3 site! ^_^ ****************************************#
+#********************************************** this is the final version for testing GENETIC regulated AS at 5/3 site! ^_^ **********************************************#
 #main idea:
 #minimum of 6 probes in this exon
 #Test how to split (using highest difference between two groups)
@@ -105,11 +105,11 @@ splicingTest35_AS <- function(filename, goal="5'AS", toTest="QTL", threTest=8, v
       testQTL <- read.table(paste0("Data/FullModel/chr", chr, "_norm_hf_cor_FM/", filename, "_FM_", toTest, ".txt"), row.names=1, header=TRUE)
       
       #>= 3 probes left in each group and have sig eQTL on testExon, remember the gene name and do t.test
-      if(length(testProbes) >= 3 && length(restProbes) >= 3 && any(apply(testQTL[testProbes, ] > threTest, 2, sum) >= 3)){
+      if(length(testProbes) >= 3 && length(restProbes) >= 3 && any(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)){
         if(verbose) cat(" =>separate between p", ind[sepPoint], "and p", ind[sepPoint+1], ", each group has >= 3 good probes, and I have sig", toTest, ", ready for test!\n")
         
-        m <- which(apply(testQTL[testProbes, ] > threTest, 2, sum) >= 3)[which.max(apply(as.matrix(testQTL[testProbes, which(apply(testQTL[testProbes, ] > threTest, 2, sum) >= 3)]), 2, sum))]
-        if(verbose) cat(filename, testExon, "the most sig marker is", m, "among possible ones", which(apply(testQTL[testProbes, ] > threTest, 2, sum) >= 3), "\n")
+        m <- which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)[which.max(apply(as.matrix(testQTL[testProbes, which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3)]), 2, sum))]
+        if(verbose) cat(filename, testExon, "the most sig marker is", m, "among possible ones", which(apply(testQTL[testProbes, ] >= threTest, 2, sum) >= 3), "\n")
         geno1 <- which(geno[ ,m] == 1)
         geno2 <- which(geno[ ,m] == 2)
         
@@ -162,32 +162,6 @@ for(chr in 1:5){
   cat("chr", chr, "finished in", et-st, "s\n\n")
 }
 
-#test 5'IAS for chr 1-5
-for(chr in 1:5){
-  st <- proc.time()[3]
-  cat("chr", chr, "starts...\n")
-  
-  genenames <- expGeneList[[chr]]
-  resmatrix <- NULL
-  rownameList <- NULL
-  #filename = "AT1G01010"
-  for(filename in genenames){
-    res <- splicingTestSE_AS(filename, goal="5'AS", toTest="Int", threTest=11.6, useForTest=unlist, whichTest=wilcox.test, alternative="less")
-    if(!is.null(res)){
-      resmatrix <- rbind(resmatrix, res)
-      rownameList <- c(rownameList, filename)
-      cat(filename, "is tested\n")
-    }
-  }
-  if(!is.null(resmatrix)){
-    rownames(resmatrix) <- rownameList
-    colnames(resmatrix) <- c("sepProbe", "sigMarker", "6H/gt1", "6H/gt2", "Dry_AR/gt1", "Dry_AR/gt2", "Dry_Fresh/gt1", "Dry_Fresh/gt2", "RP/gt1", "RP/gt2")
-    write.table(resmatrix, file=paste0("Data/geneticsAS/5'AS_chr", chr, "_IAS_wt_less.txt"), sep="\t") #********** change!!! **********#
-  } else cat("\tNO TEST!\n")
-  et <- proc.time()[3]
-  cat("chr", chr, "finished in", et-st, "s\n\n")
-}
-
 #test 3'GAS for chr 1-5
 for(chr in 1:5){
   st <- proc.time()[3]
@@ -209,32 +183,6 @@ for(chr in 1:5){
     rownames(resmatrix) <- rownameList
     colnames(resmatrix) <- c("sepProbe", "sigMarker", "6H/gt1", "6H/gt2", "Dry_AR/gt1", "Dry_AR/gt2", "Dry_Fresh/gt1", "Dry_Fresh/gt2", "RP/gt1", "RP/gt2")
     write.table(resmatrix, file=paste0("Data/geneticsAS/3'AS_chr", chr, "_GAS_wt_less.txt"), sep="\t") #********** change!!! **********#
-  } else cat("\tNO TEST!\n")
-  et <- proc.time()[3]
-  cat("chr", chr, "finished in", et-st, "s\n\n")
-}
-
-#test 3'IAS for chr 1-5
-for(chr in 1:5){
-  st <- proc.time()[3]
-  cat("chr", chr, "starts...\n")
-  
-  genenames <- expGeneList[[chr]]
-  resmatrix <- NULL
-  rownameList <- NULL
-  #filename = "AT1G01010"
-  for(filename in genenames){
-    res <- splicingTestSE_AS(filename, goal="3'AS", toTest="Int", threTest=11.6, useForTest=unlist, whichTest=wilcox.test, alternative="less")
-    if(!is.null(res)){
-      resmatrix <- rbind(resmatrix, res)
-      rownameList <- c(rownameList, filename)
-      cat(filename, "is tested\n")
-    }
-  }
-  if(!is.null(resmatrix)){
-    rownames(resmatrix) <- rownameList
-    colnames(resmatrix) <- c("sepProbe", "sigMarker", "6H/gt1", "6H/gt2", "Dry_AR/gt1", "Dry_AR/gt2", "Dry_Fresh/gt1", "Dry_Fresh/gt2", "RP/gt1", "RP/gt2")
-    write.table(resmatrix, file=paste0("Data/geneticsAS/5'AS_chr", chr, "_IAS_wt_less.txt"), sep="\t") #********** change!!! **********#
   } else cat("\tNO TEST!\n")
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
