@@ -13,7 +13,7 @@ setwd("D:/Arabidopsis Arrays")
 #calculate the threshold for retained introns
 riMatrix <- NULL
 for(chr in 1:5){
-  riMatrix <- rbind(riMatrix, read.table(paste0("Data/intronRetention/RI_chr", chr, "_wt_less.txt"), row.names=NULL))
+  riMatrix <- rbind(riMatrix, read.table(paste0("Data/AS/RI_chr", chr, "_wt_less.txt"), row.names=NULL))
 }
 #Bonferroni correction
 -log10(0.05/nrow(riMatrix)/4)# = 5.76; 7275 introns were tested * 4 Env; => riThre=5.76
@@ -24,7 +24,7 @@ riThre=5.76
 matrixTU <- NULL #a matrix for numbers of introns that -log10(P) are lower than riThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one intron that -log10(P) are lower than riThre in each env and across envs from chr1-chr5
 for(chr in 1:5){
-  richr <- read.table(paste0("Data/intronRetention/RI_chr", chr, "_wt_less.txt"), row.names=NULL)
+  richr <- read.table(paste0("Data/AS/RI_chr", chr, "_wt_less.txt"), row.names=NULL)
   riGeneList <- list()
   
   #FINDING UN-SIG ONES !!! 
@@ -50,7 +50,7 @@ for(chr in 1:5){
   
   matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
   matrixGENE <- rbind(matrixGENE, c(nGENE, length(riGeneList$mixEnv)))
-  save(riGeneList, file = paste0("Data/intronRetention/RI_chr", chr, "_genenameList.Rdata"))
+  save(riGeneList, file = paste0("Data/AS/RI_chr", chr, "_genenameList.Rdata"))
 }
 rownames(matrixTU) <- paste0("chr", 1:5)
 colnames(matrixTU) <- c(paste0("Env", 1:4), "mixEnv")
