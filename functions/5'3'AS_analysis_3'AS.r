@@ -13,7 +13,7 @@ setwd("D:/Arabidopsis Arrays")
 #calculate the threshold for 3'AS
 as3Matrix <- NULL
 for(chr in 1:5){
-  as3Matrix <- rbind(as3Matrix, read.table(paste0("Data/53terminalAS/3AS_chr", chr, "_wt_less.txt"), row.names=NULL))
+  as3Matrix <- rbind(as3Matrix, read.table(paste0("Data/AS/3AS_chr", chr, "_wt_less.txt"), row.names=NULL))
 }
 #Bonferroni correction
 -log10(0.05/nrow(as3Matrix)/4)# = 5.05; 1405 exons were tested * 4 Env; => as3Thre=5.05
@@ -24,7 +24,7 @@ as3Thre=5.05
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to as3Thre in each env and across envs from chr1-chr5,
                  #NOTE: nExon=nGene(one first exon in one gene)
 for(chr in 1:5){
-  as3chr <- read.table(paste0("Data/53terminalAS/3AS_chr", chr, "_wt_less.txt"), row.names=NULL)
+  as3chr <- read.table(paste0("Data/AS/3AS_chr", chr, "_wt_less.txt"), row.names=NULL)
   as3GeneList <- list()
   
   nTU <- NULL #number of exons that -log10(P) are higher than or equal to as3Thre in each env
@@ -46,7 +46,7 @@ for(chr in 1:5){
   as3GeneList$mixEnv <- gn_mixEnv
   
   matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
-  save(as3GeneList, file = paste0("Data/53terminalAS/3AS_chr", chr, "_genenameList.Rdata"))
+  save(as3GeneList, file = paste0("Data/AS/3AS_chr", chr, "_genenameList.Rdata"))
 }
 rownames(matrixTU) <- paste0("chr", 1:5)
 colnames(matrixTU) <- c(paste0("Env", 1:4), "mixEnv")

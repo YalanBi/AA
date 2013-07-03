@@ -13,7 +13,7 @@ setwd("D:/Arabidopsis Arrays")
 #calculate the threshold for 5'AS
 as5Matrix <- NULL
 for(chr in 1:5){
-  as5Matrix <- rbind(as5Matrix, read.table(paste0("Data/53terminalAS/5AS_chr", chr, "_wt_less.txt"), row.names=NULL))
+  as5Matrix <- rbind(as5Matrix, read.table(paste0("Data/AS/5AS_chr", chr, "_wt_less.txt"), row.names=NULL))
 }
 #Bonferroni correction
 -log10(0.05/nrow(as5Matrix)/4)# = 5.01; 1282 exons were tested * 4 Env; => as5Thre=5.01
@@ -24,7 +24,7 @@ as5Thre=5.01
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to as5Thre in each env and across envs from chr1-chr5,
                  #NOTE: nExon=nGene(one first exon in one gene)
 for(chr in 1:5){
-  as5chr <- read.table(paste0("Data/53terminalAS/5AS_chr", chr, "_wt_less.txt"), row.names=NULL)
+  as5chr <- read.table(paste0("Data/AS/5AS_chr", chr, "_wt_less.txt"), row.names=NULL)
   as5GeneList <- list()
   
   nTU <- NULL #number of exons that -log10(P) are higher than or equal to as5Thre in each env
@@ -46,7 +46,7 @@ for(chr in 1:5){
   as5GeneList$mixEnv <- gn_mixEnv
   
   matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
-  save(as5GeneList, file = paste0("Data/53terminalAS/5AS_chr", chr, "_genenameList.Rdata"))
+  save(as5GeneList, file = paste0("Data/AS/5AS_chr", chr, "_genenameList.Rdata"))
 }
 rownames(matrixTU) <- paste0("chr", 1:5)
 colnames(matrixTU) <- c(paste0("Env", 1:4), "mixEnv")
