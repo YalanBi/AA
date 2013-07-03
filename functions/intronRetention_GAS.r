@@ -67,11 +67,11 @@ splicingTestRI_AS <- function(filename, toTest="QTL", threTest=8, verbose=FALSE,
       #if(verbose) cat(testIntron, "has probes", ind, "\n")
       
       #at least 3 probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
-      if(length(ind) >= 3 && any(apply(testQTL[ind, ] > threTest, 2, sum) >= 3)){
+      if(length(ind) >= 3 && any(apply(testQTL[ind, ] >= threTest, 2, sum) >= 3)){
         if(verbose) cat("\t***I'm", testIntron, ", sepProbe is p", max(ind), ", have >= 3 intron probes of right direction, and I have sig", toTest, ", ready for test!\n")
         
-        m <- which(apply(testQTL[ind, ] > threTest, 2, sum) >= 3)[which.max(apply(as.matrix(testQTL[ind, which(apply(testQTL[ind, ] > threTest, 2, sum) >= 3)]), 2, sum))]
-        if(verbose) cat(filename, testExon, "the most sig marker is", m, "among possible ones", which(apply(testQTL[ind, ] > threTest, 2, sum) >= 3), "\n")
+        m <- which(apply(testQTL[ind, ] >= threTest, 2, sum) >= 3)[which.max(apply(as.matrix(testQTL[ind, which(apply(testQTL[ind, ] >= threTest, 2, sum) >= 3)]), 2, sum))]
+        if(verbose) cat(filename, testIntron, "the most sig marker is", m, "among possible ones", which(apply(testQTL[ind, ] >= threTest, 2, sum) >= 3), "\n")
         geno1 <- which(geno[ ,m] == 1)
         geno2 <- which(geno[ ,m] == 2)
         

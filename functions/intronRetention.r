@@ -100,7 +100,7 @@ for(chr in 1:5){
   }
   if(!is.null(resmatrix)){
     colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
-    write.table(resmatrix, file=paste0("Data/intronRetention/RI_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
+    write.table(resmatrix, file=paste0("Data/AS/RI_chr", chr, "_wt_less.txt"), sep="\t") #********** change!!! **********#
   } else cat("\tNO TEST!\n")
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
