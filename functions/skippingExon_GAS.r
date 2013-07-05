@@ -31,13 +31,29 @@ probesDir <- function(exp_data = rawexp){
 #test the difference between 2 groups
 #annotation: useForTest = unlist -> use all individuals to do test, better than mean/median
 #            whichTest <- wilcox.test/ t.test; one-side!!!
-testDffBtwParts <- function(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind, useForTest=unlist, whichTest=wilcox.test, alternative="less", verbose=FALSE){
-  testPart <- apply(exp_data[testProbes, ind], 2, useForTest)
+testDffBtwParts_OLD <- function(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind, useForTest=unlist, whichTest=wilcox.test, alternative="less", verbose=FALSE){
+  testPart <- as.numeric(unlist(exp_data[testProbes, ind]))
   if(verbose) cat("We are testProbes:", testProbes, "\n")
-  restPart <- apply(exp_data[restProbes, ind], 2, useForTest)
+  restPart <- as.numeric(unlist(exp_data[restProbes, ind]))
   if(verbose) cat("We are restProbes:", restProbes, "\n")
   return(-log10(whichTest(testPart, restPart, alternative) $ p.value))
 }
+
+testDffBtwParts <- function(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind, useForTest=unlist, whichTest=wilcox.test, alternative="less", verbose=FALSE){
+  testPart <- as.numeric(unlist(exp_data[testProbes, ind]))
+  if(verbose) cat("We are testProbes:", length(testPart), "\n")
+  restPart <- as.numeric(unlist(exp_data[restProbes, ind]))
+  if(verbose) cat("We are restProbes:", length(restPart), "\n")
+  
+  response <- c(testPart, restPart)
+  predictor <- c(rep(0,length(testPart)), rep(1, length(restPart) /2), rep(2, length(restPart) /2))
+  model <- lm(response ~ as.numeric(predictor))
+  #if(model[[1]][2] < 0) return(0);
+  -log10(anova(model)[[5]][1])
+  list(response,predictor)
+}
+
+
 #testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind, useForTest=unlist, whichTest=wilcox.test, alternative="less", verbose=TRUE)
 
 #skipping exon test
