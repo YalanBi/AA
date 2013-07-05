@@ -57,3 +57,9 @@ for(chr in 1:5){
   }
 }
 save(gasGenes, file="Data/geneticsAS/AS_byChr_genenameList.Rdata")
+
+gasGenes <- list()
+for(typeAS in c("se", "as5", "as3", "ri")){
+  gasGenes[[typeAS]] <- vector("list", 5)
+  
+}
