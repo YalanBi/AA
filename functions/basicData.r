@@ -105,16 +105,26 @@ nExpTus
 [1] 19087 11082 14830 11053 17443
 
 
-#count nExpTus we have on each chr, after removing SNPs, for probes of both directions
+#***************************************** count nExpTus we have on each chr, after removing SNPs, for probes of both directions *****************************************#
 load(file="Data/fullModeMapping/expGenes.Rdata")
 nExpTus <- c(0, 0, 0, 0, 0)
 for(chr in 1:5){
-  location <- paste0("Data/chr", chr, "_norm_hf_cor/")
   for(filename in expGeneList[[chr]]){
-    rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
+    rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
     
     nExpTus[chr] <- nExpTus[chr] + length(unique(rawexp[ ,"tu"][grepl("tu", rawexp[ ,"tu"])]))
   }
 }
 nExpTus
-[1] 20886 12134 16228 12078 18984
+[1] 25839 14966 19722 14757 23393
+
+nIntrons <- c(0, 0, 0, 0, 0)
+for(chr in 1:5){
+    for(filename in expGeneList[[chr]]){
+        rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
+        
+        nIntrons[chr] <- nIntrons[chr] + length(unique(rawexp[ ,"tu"][grepl("intron", rawexp[ ,"tu"])]))
+    }
+}
+nIntrons
+[1] 15884  9209 12232  9035 14621
