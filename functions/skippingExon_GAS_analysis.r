@@ -1,24 +1,29 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 01-07-2013
+# last modified: 10-07-2013
 # first written: 28-06-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
 #****************************** this is the final version for analyzing results of testing GENETIC/INTERACTION regulated skipping exons ^_^ ******************************#
+#**************************************************************** testing algorithm: Wilcox.test / ANOVA! ****************************************************************#
 
 setwd("D:/Arabidopsis Arrays")
+
+whichTest="wt"# "ANOVA"
 
 #calculate the threshold for GENETIC regulated skipping exons
 gseMatrix <- NULL
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/SE_chr", chr, "_GAS_wt_less.txt"))){
-    gseMatrix <- rbind(gseMatrix, read.table(paste0("Data/geneticsAS/SE_chr", chr, "_GAS_wt_less.txt"), row.names=NULL))
+  if(file.exists(paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, "_less.txt"))){
+    gseMatrix <- rbind(gseMatrix, read.table(paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
   } else cat("chr", chr, "NO test!\n")
 }
 #Bonferroni correction
--log10(0.05/nrow(gseMatrix)/4)# = 4.46; 358 exons were tested * 4 Env; => gseThre=4.46
+nrow(gseMatrix)# = 49813 exons were tested
+-log10(0.05/nrow(gseMatrix)/4)# = 6.60; 49813 exons were tested * 4 Env; => seThre=6.60
+length(unique(gseMatrix[,1]))# = 12776 genes were tested
 rm(gseMatrix)
 
 #calculate the numbers of sig exons and genes
@@ -26,8 +31,8 @@ gseThre=4.46
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to gseThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to gseThre in each env and across envs from chr1-chr5
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/SE_chr", chr, "_GAS_wt_less.txt"))){
-    gsechr <- read.table(paste0("Data/geneticsAS/SE_chr", chr, "_GAS_wt_less.txt"), row.names=NULL)
+  if(file.exists(paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, "_less.txt"))){
+    gsechr <- read.table(paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL)
     gseGeneList <- list()
     resmatrix <- NULL
     
@@ -63,7 +68,7 @@ for(chr in 1:5){
     
     matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
     matrixGENE <- rbind(matrixGENE, c(nGENE, length(gseGeneList$mixEnv)))
-    save(gseGeneList, file = paste0("Data/geneticsAS/SE_chr", chr, "_GAS_genenameList.Rdata"))
+    if(length(gn_mixEnv) > 0) save(gseGeneList, file=paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, ".Rdata"))
   } else{
     cat("chr", chr, "NO test!\n")
     matrixTU <- rbind(matrixTU, c(0,0,0,0,0))
