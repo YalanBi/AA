@@ -1,22 +1,29 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 09-07-2013
+# last modified: 11-07-2013
 # first written: 28-06-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
 #***************************** this is the final version for analyzing results of testing GENETIC/INTERACTION regulated retained introns ^_^ *****************************#
+#**************************************************************** testing algorithm: Wilcox.test / ANOVA! ****************************************************************#
 
 setwd("D:/Arabidopsis Arrays")
+
+whichTest="wt"# "ANOVA"
 
 #calculate the threshold for INTERACTION regulated retained introns
 iriMatrix <- NULL
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/RI_chr", chr, "_IAS_wt_less.txt"))){
-    iriMatrix <- rbind(iriMatrix, read.table(paste0("Data/geneticsAS/RI_chr", chr, "_IAS_wt_less.txt"), row.names=NULL))
+  if(file.exists(paste0("Data/geneticsAS/IRI_chr", chr, "_", whichTest, "_less.txt"))){
+    iriMatrix <- rbind(iriMatrix, read.table(paste0("Data/geneticsAS/IRI_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
   } else cat("chr", chr, "NO test!\n")
 }
+#Bonferroni correction
+nrow(iriMatrix)# = 1401 exons were tested in 5'GAS; 1525 exons were tested in 3'GAS
+-log10(0.05/nrow(iriMatrix)/4)# 1401/1525 exons were tested * 4 Env; => iriThre=5.05/5.09
+length(unique(iriMatrix[,1]))# = 1401 genes were tested in 5'GAS; 1525 genes were tested in 3'GAS
 #STOP!
 
 

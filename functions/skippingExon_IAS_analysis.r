@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 10-07-2013
+# last modified: 11-07-2013
 # first written: 28-06-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -21,13 +21,13 @@ for(chr in 1:5){
   } else cat("chr", chr, "NO test!\n")
 }
 #Bonferroni correction
-nrow(iseMatrix)# = 49813 exons were tested
--log10(0.05/nrow(iseMatrix)/4)# = 6.60; 49813 exons were tested * 4 Env; => seThre=6.60
-length(unique(iseMatrix[,1]))# = 12776 genes were tested
+nrow(iseMatrix)# = 118 exons were tested
+-log10(0.05/nrow(iseMatrix)/4)# = 3.97; 118 exons were tested * 4 Env; => iseThre=3.97
+length(unique(iseMatrix[,1]))# = 99 genes were tested
 rm(iseMatrix)
 
 #calculate the numbers of sig exons and genes
-iseThre=3.35
+iseThre=3.97
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to iseThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to iseThre in each env and across envs from chr1-chr5
 for(chr in 1:5){

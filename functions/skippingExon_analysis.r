@@ -16,16 +16,17 @@ whichTest="wt"# "ANOVA"
 #calculate the threshold for skipping exons
 seMatrix <- NULL
 for(chr in 1:5){
-  seMatrix <- rbind(seMatrix, read.table(paste0("Data/AS/SE_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
+  if(file.exists(paste0("Data/AS/SE_chr", chr, "_", whichTest, "_less.txt"))){
+    seMatrix <- rbind(seMatrix, read.table(paste0("Data/AS/SE_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
+  } else cat("chr", chr, "NO test!\n")
 }
 #Bonferroni correction
 nrow(seMatrix)# = 49813 exons were tested
 -log10(0.05/nrow(seMatrix)/4)# = 6.60; 49813 exons were tested * 4 Env; => seThre=6.60
 length(unique(seMatrix[,1]))# = 12776 genes were tested
-rm(seMatrix)
 
 #calculate the numbers of sig exons and genes
-seThre=6.60
+seThre=round(-log10(0.05/nrow(seMatrix)/4), digits=2)# =6.60
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to seThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to seThre in each env and across envs from chr1-chr5
 for(chr in 1:5){
@@ -55,7 +56,7 @@ for(chr in 1:5){
     
     matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
     matrixGENE <- rbind(matrixGENE, c(nGENE, length(seGeneList$mixEnv)))
-    save(seGeneList, file=paste0("Data/AS/SE_chr", chr, "_gnList_", whichTest, ".Rdata"))
+    if(length(gn_mixEnv) > 0) save(seGeneList, file=paste0("Data/AS/SE_chr", chr, "_gnList_", whichTest, ".Rdata"))
   } else{
     cat("chr", chr, "NO test!\n")
     matrixTU <- rbind(matrixTU, c(0,0,0,0,0))
