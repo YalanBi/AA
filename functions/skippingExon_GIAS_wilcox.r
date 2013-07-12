@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 10-07-2013
+# last modified: 12-07-2013
 # first written: 21-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -19,7 +19,7 @@ geno <- read.table("refined map/genotypes.txt",sep="\t", row.names=1, header=TRU
 load(file="Data/ExpGenes/expGenes_final.Rdata")
 
 #direction selection
-probesDir <- function(exp_data = rawexp){
+probesDir <- function(exp_data=rawexp){
   if(unique(exp_data[ ,"strand"]) == "sense"){
     direction_id <- which(exp_data[ ,"direction"] == "reverse")
   }
@@ -41,11 +41,11 @@ testDffBtwParts <- function(exp_data=rawexp[ ,17:164], testProbes, restProbes, i
 }
 #testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes, restProbes, ind, whichTest=wilcox.test, alternative="less", verbose=TRUE)
 
-#skipping exon test
+#G/I regulated skipping exon test
 #annotation: "goal" could be "skippingExon", "cassetteExon" and "skipping53Exon"
 #            "toTest" could be "QTL" and "Int"
 splicingTestGISE <- function(filename, goal="skippingExon", P=2, toTest="QTL", threTest=8, verbose=FALSE, ...){
-  if(verbose) cat("now is testing", goal, "!\n")
+  if(verbose) cat("now is testing", toTest, goal, "!\n")
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=TRUE)
   probes_dir <- probesDir(rawexp)
@@ -88,7 +88,7 @@ splicingTestGISE <- function(filename, goal="skippingExon", P=2, toTest="QTL", t
         geno1 <- which(geno[ ,m] == 1)
         geno2 <- which(geno[ ,m] == 2)
         
-        #>= P probes left in each group and have sig eQTL on testExon, remember the gene name and do t.test
+        #>= P probes left in each group and have sig eQTL on testExon, remember the gene name and do wilcox.test
         rownameList <- c(rownameList, filename)
         res <- c(max(testProbes), as.numeric(m))
         for(env in 1:4){
@@ -108,7 +108,7 @@ splicingTestGISE <- function(filename, goal="skippingExon", P=2, toTest="QTL", t
     }
     rownames(resmatrix) <- rownameList
     return(resmatrix)
-  } else if(verbose) cat(filename, "we don't have enough exons or less than 6 exon probes T^T\n")
+  } else if(verbose) cat(filename, "we don't have enough exons or less than", 2*P, "exon probes T^T\n")
 }
 #splicingTestGISE(filename, goal="skippingExon", P=2, toTest="QTL", threTest=8, whichTest=wilcox.test, alternative="less", verbose=TRUE)
 

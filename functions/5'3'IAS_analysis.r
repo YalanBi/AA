@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 11-07-2013
+# last modified: 12-07-2013
 # first written: 28-06-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -17,8 +17,8 @@ whichTest="wt"# "ANOVA"
 #calculate the threshold for INTERACTION regulated 5'3'AS
 iasMatrix <- NULL
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/", gaol, "_chr", chr, "_", whichTest, "_less.txt"))){
-    iasMatrix <- rbind(iasMatrix, read.table(paste0("Data/geneticsAS/", gaol, "_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
+  if(file.exists(paste0("Data/geneticsAS/", goal, "_chr", chr, "_", whichTest, "_less.txt"))){
+    iasMatrix <- rbind(iasMatrix, read.table(paste0("Data/geneticsAS/", goal, "_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
   } else cat("chr", chr, "NO test!\n")
 }
 #Bonferroni correction
@@ -31,8 +31,8 @@ iasThre=round(-log10(0.05/nrow(iasMatrix)/4), digits=2)# =5.05/5.09
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to iasThre in each env and across envs from chr1-chr5
                  #NOTE: nExon=nGene(one first exon in one gene)
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/", gaol, "_chr", chr, "_", whichTest, "_less.txt"))){
-    iaschr <- read.table(paste0("Data/geneticsAS/", gaol, "_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL)
+  if(file.exists(paste0("Data/geneticsAS/", goal, "_chr", chr, "_", whichTest, "_less.txt"))){
+    iaschr <- read.table(paste0("Data/geneticsAS/", goal, "_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL)
     iasGeneList <- list()
     resmatrix <- NULL
     
@@ -65,7 +65,7 @@ for(chr in 1:5){
     iasGeneList$mixEnv <- unique(gn_mixEnv)
     
     matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
-    if(length(gn_mixEnv) > 0) save(iasGeneList, file = paste0("Data/geneticsAS/", gaol, "_chr", chr, "_gnList_", whichTest, ".Rdata"))
+    if(length(gn_mixEnv) > 0) save(iasGeneList, file = paste0("Data/geneticsAS/", goal, "_chr", chr, "_gnList_", whichTest, ".Rdata"))
     else cat("chr", chr, "NO genes, no file saved!\n")
   } else{
     cat("chr", chr, "NO test!\n")

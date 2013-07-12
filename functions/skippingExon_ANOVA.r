@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 10-07-2013
+# last modified: 120-07-2013
 # first written: 08-07-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -17,7 +17,7 @@ menvironment <- read.table("Data/ann_env.txt", sep="\t")[ ,2]
 load(file="Data/ExpGenes/expGenes_final.Rdata")
 
 #direction selection
-probesDir <- function(exp_data = rawexp){
+probesDir <- function(exp_data=rawexp){
   if(unique(exp_data[ ,"strand"]) == "sense"){
     direction_id <- which(exp_data[ ,"direction"] == "reverse")
   }

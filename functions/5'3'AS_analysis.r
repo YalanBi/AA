@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 11-07-2013
+# last modified: 12-07-2013
 # first written: 01-07-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -54,7 +54,7 @@ for(chr in 1:5){
     asGeneList$mixEnv <- gn_mixEnv
     
     matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
-    if(length(gn_mixEnv) > 0) save(asGeneList, file = paste0("Data/AS/", goal, "_chr", chr, "_gnList_", whichTest, ".Rdata"))
+    if(length(gn_mixEnv) > 0) save(asGeneList, file = paste0("Data/AS/", goal, "_chr", chr, "_", whichTest, ".Rdata"))
     else cat("chr", chr, "NO genes, no file saved!\n")
   } else{
     cat("chr", chr, "NO test!\n")

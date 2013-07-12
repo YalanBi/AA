@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 11-07-2013
+# last modified: 12-07-2013
 # first written: 08-07-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -81,7 +81,7 @@ splicingTestGI35 <- function(filename, goal="5'AS", P=2, toTest="QTL", threTest=
   uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
   #if(verbose) cat("We have exons:", uniqueExon, "\n")
   
-  #for 5'/3' AS, at least 2 exons in a gene!!!
+  #for 5'/3' IAS, at least 2 exons in a gene!!!
   if(length(uniqueExon) >= 2 && length(exonID) >= (2*P+1)){
     if(verbose) cat(filename, "have", length(uniqueExon), "exons, and", length(exonID), "exon probes!\n")
     
@@ -120,7 +120,7 @@ splicingTestGI35 <- function(filename, goal="5'AS", P=2, toTest="QTL", threTest=
         geno2 <- which(geno[ ,m] == 2)
         
         #NOTE: min(ind[sepPoint], ind[sepPoint+1]) <- the probe just before the gap, for making plot.
-        #      in 5'AS, it is the last probe of higher part in the first exon; in3'AS, it is the last probe of the lower part in the last exon
+        #      in 5'IAS, it is the last probe of higher part in the first exon; in 3'IAS, it is the last probe of the lower part in the last exon
         res <- c(min(ind[sepPoint], ind[sepPoint+1]), as.numeric(m))
         for(env in 1:4){
           ind_env <- which(as.numeric(menvironment) == env)

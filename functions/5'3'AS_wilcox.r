@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 10-07-2013
+# last modified: 12-07-2013
 # first written: 21-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -100,7 +100,7 @@ splicingTest35 <- function(filename, goal="5'AS", P=2, verbose=FALSE, ...){
         return()
       }
       
-      #>= P probes left in each group of the first exon, remember the gene name and do t.test
+      #>= P probes left in each group of the first exon, remember the gene name and do wilcox.test
       if(length(testProbes) >= P && length(ind[-(1:sepPoint)]) >= P){
         if(verbose) cat(" =>separate between p", ind[sepPoint], "and p", ind[sepPoint+1], ", each group has >=", P, "good probes, ready for test!\n")
         

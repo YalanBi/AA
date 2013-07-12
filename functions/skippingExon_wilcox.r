@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 10-07-2013
+# last modified: 12-07-2013
 # first written: 21-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -72,11 +72,11 @@ splicingTestSE <- function(filename, goal="skippingExon", P=2, verbose=FALSE, ..
       restProbes <- exonID[!exonID %in% ind]
       #if(verbose) cat("I'm restpart, I have p", restProbes, "\n")
       
-      #at least P probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
+      #at least P probes in each group, try to avoid this case---one is highly expressed, the other is lowly expressed...
       if(length(testProbes) >= P && length(restProbes) >= P){
         if(verbose) cat("\t***I'm", testExon, "sepProbe is p", max(ind), ", have >=", P, "good probes in each group, ready for test!\n")
         
-        #>= P probes left in each group, remember the gene name and do t.test
+        #>= P probes left in each group, remember the gene name and do wilcox.test
         rownameList <- c(rownameList, filename)
         res <- max(ind)
         for(env in 1:4){

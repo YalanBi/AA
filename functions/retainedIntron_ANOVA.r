@@ -1,13 +1,12 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 11-07-2013
+# last modified: 12-07-2013
 # first written: 08-07-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
 #****************************************************** this is the final version for testing retained introns! ^_^ ******************************************************#
-#***************************************************************** the same algorithm as skipping exons! *****************************************************************#
 #*********************************************************************** testing algorithm: ANOVA! ***********************************************************************#
 #main idea: compare each intron with all exons in this gene, no test whether intron expressed higher than 5(thre)!!!
 
@@ -18,7 +17,7 @@ menvironment <- read.table("Data/ann_env.txt", sep="\t")[ ,2]
 load(file="Data/ExpGenes/expGenes_final.Rdata")
 
 #direction selection
-probesDir <- function(exp_data = rawexp){
+probesDir <- function(exp_data=rawexp){
   if(unique(exp_data[ ,"strand"]) == "sense"){
     direction_id <- which(exp_data[ ,"direction"] == "reverse")
   }
@@ -65,20 +64,20 @@ splicingTestRI <- function(filename, P=2, verbose=FALSE){
     rownameList <- NULL
     
     for(testIntron in uniqueIntron){
-      ind <- probes_dir[rawexp[probes_dir, "tu"] == testIntron]
-      #if(verbose) cat(testIntron, "has probes", ind, "\n")
+      Inind <- probes_dir[rawexp[probes_dir, "tu"] == testIntron]
+      #if(verbose) cat(testIntron, "has probes", Inind, "\n")
       
       #at least P probes in a group, try to avoid this case---one is highly expressed, the other is lowly expressed...
-      if(length(ind) >= P){
-        if(verbose) cat("\t***I'm", testIntron, ", has", length(ind), "intron probes of right direction, test me for retained intron!\n")
+      if(length(Inind) >= P){
+        if(verbose) cat("\t***I'm", testIntron, ", has", length(Inind), "intron probes of right direction, test me for retained intron!\n")
         
         #>= P probes left in each group, remember the gene name and do wilcox.test
         rownameList <- c(rownameList, filename)
-        res <- max(ind)
+        res <- max(Inind)
         for(env in 1:4){
           ind_env <- which(as.numeric(menvironment) == env)
-          res <- c(res, testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes=ind, restProbes=exonID, ind=ind_env, verbose))
-          #if(verbose) cat("env", env, ":", testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes=ind, restProbes=exonID, ind=ind_env), "\n")
+          res <- c(res, testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes=Inind, restProbes=exonID, ind=ind_env, verbose))
+          #if(verbose) cat("env", env, ":", testDffBtwParts(exp_data=rawexp[ ,17:164], testProbes=Inind, restProbes=exonID, ind=ind_env), "\n")
         }
         resmatrix <- rbind(resmatrix, res)
       } else if(verbose) cat("\t***I'm", testIntron, ", not enough intron probes T^T\n")
