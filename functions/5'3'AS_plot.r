@@ -1,20 +1,20 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 21-06-2013
-# first written: 29-05-2013
+# last modified: 16-07-2013
+# first written: 16-07-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
-#plot 4 env in 1 panel
-#*************************************************************** basic part ***************************************************************#
+#*************************************************** this is the final version for plotting alternative 5'/3' site ^_^ ***************************************************#
+#**************************************************************** testing algorithm: Wilcox.test / ANOVA! ****************************************************************#
+
 setwd("D:/Arabidopsis Arrays")
 #load environment file
-menvironment <- read.table("Data/ann_env.txt", sep="\t")[ ,2]
-
+menvironment <- read.table("Data/ann_env.txt", sep="\t")[,2]
 
 #direction selection
-probesDir <- function(exp_data = rawexp){
+probesDir <- function(exp_data=rawexp){
   if(unique(exp_data[ ,"strand"]) == "sense"){
     direction_id <- which(exp_data[ ,"direction"] == "reverse")
   }
@@ -24,202 +24,116 @@ probesDir <- function(exp_data = rawexp){
   return(direction_id)
 }
 
-
-plotcExonExp <- function(chr, filename, ps_threshold){
-  rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
+plot_53AS <- function(filename, goal, whichTest, ){
+  chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
+  rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=TRUE)
   newexp <- rawexp[ ,17:164]
-  
   probes_dir <- probesDir(rawexp)
-  #cat(filename, "\nprobeDir:", probes_dir, "\n")
-  exonID <- probes_dir[grepl("tu", rawexp[probes_dir,"tu"])]
-  #cat("exons of right direction:", exonID, "\n")
-  
-  #uniqueExon <- all tu names of exon probes
-  uniqueExon <- unique(rawexp[exonID,"tu"])
-  #cat("tu names:", as.character(uniqueExon), "\n")
-  
+  exonID <- probes_dir[grepl("tu", rawexp[probes_dir, "tu"])]
+  uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
   ind_tu <- grep("tu", rawexp[ ,"tu"])
   nprobes <- nrow(rawexp)
   
-  png(filename = paste0("Data/53terminalAS/plot_53ps/", filename,"_ttest_", ps_threshold, ".png"), width = 1024, height = 1024, bg = "white")
-  plot(c(0.5, nprobes+ 0.5), c(min(newexp) - 0.2, max(newexp) + 0.2), xaxt = 'n', xlab = "Probes", ylab = "Intensity", cex.axis = 1, cex.lab = 1.5, cex.main = 2, las = 1, mgp = c(3,0.75,0), tck = -0.017, t = "n", main = filename)
+  testAS <- read.table(paste0("Data/AS/", goal, "_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL)
+  fnPart <- testAS[testAS[ ,1] %in% filename, ]
   
-  if(any(unlist(lapply(strsplit(rownames(psmatrix)[grepl(filename, rownames(psmatrix))], "_"), "[[", 2)) == 1)){
-    #ind <- judge which probe in exonID is of 1st exon name (T/F)
-    ind <- rawexp[exonID, "tu"] == uniqueExon[1]
-    #cat("", as.character(uniqueExon[1]), "has probes", exonID[ind], "\n")
-    
-    #to find max difference between each probe in exp, to group them
-    dff <- NULL
-    for(n in 2:length(exonID[ind])){
-      dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
-      #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
-    }
-    #cat(" so dff is:", dff, "\n")
-    
-    rect(0.5, -3, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, 20, density = 15, angle = 30, col = "azure2", border = "azure3")
-    rect((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, -3, max(which(rawexp[, "tu"] == uniqueExon[1])) + 0.5, 20, density = 15, angle = 150, col = "azure2", border = "azure3")
-    
-    for(env in 1:4){
-      ind_env <- which(as.numeric(menvironment) == env)
-      
-      #use mean/median to test AS in 5'|3' site
-      lines(c(0.42 + 0.08 * env, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5 - 0.32 + 0.08*env), c(mean(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env])), mean(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env]))), col = env, lwd = 2)
-      lines(c((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5 - 0.08 + 0.08 * env, max(which(rawexp[, "tu"] == uniqueExon[1])) + 0.18 + 0.08*env), c(mean(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env])), mean(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env]))), col = env, lwd = 2)
-      
-      text(x = median(which(rawexp[ ,"tu"] == uniqueExon[1])), y = max(newexp) - 0.15 * env, labels = round(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][grepl("_1", rownames(psmatrix)[grepl(filename, rownames(psmatrix))])],env], digits = 1), col = env, cex = 0.8)
-    }
-  }
-  if(any(unlist(lapply(strsplit(rownames(psmatrix)[grepl(filename, rownames(psmatrix))], "_"), "[[", 2)) != 1)){
-    #ind <- judge which probe in exonID is of 1st exon name (T/F)
-    ind <- rawexp[exonID, "tu"] == uniqueExon[length(uniqueExon)]
-    #cat("", as.character(uniqueExon[1]), "has probes", exonID[ind], "\n")
-    
-    #to find max difference between each probe in exp, to group them
-    dff <- NULL
-    for(n in 2:length(exonID[ind])){
-      dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
-      #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
-    }
-    #cat(" so dff is:", dff, "\n")
-    
-    rect(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.5, -3, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, 20, density = 15, angle = 30, col = "azure2", border = "azure3")
-    rect((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, -3, nprobes + 0.5, 20, density = 15, angle = 150, col = "azure2", border = "azure3")
-    
-    for(env in 1:4){
-      ind_env <- which(as.numeric(menvironment) == env)
-      
-      #use mean/median to test AS in 5'|3' site
-      lines(c(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.58 + 0.08 * env, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5 - 0.32 + 0.08*env), c(mean(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env])), mean(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env]))), col = env, lwd = 2)
-      lines(c((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5 - 0.08 + 0.08 * env, nprobes + 0.18 + 0.08*env), c(mean(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env])), mean(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env]))), col = env, lwd = 2)
-      
-      text(x = median(which(rawexp[ ,"tu"] == uniqueExon[length(uniqueExon)])), y = max(newexp) - 0.15 * env, labels = round(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][!grepl("_1", rownames(psmatrix)[grepl(filename, rownames(psmatrix))])],env], digits = 1), col = env, cex = 0.8)
-    }
-  }
-  
-  for(p in 1:nprobes){
-    #background for introns
-    if(!p %in% ind_tu){
-      rect((p - 0.5), -3, (p + 0.5), 20, col = grey(0.85), border = "transparent")
-    }
-    if(p %in% probes_dir){
-      points(rep(p, 148) + 0.06 * as.numeric(menvironment) - 0.15, newexp[p, ], t = 'p', col = menvironment, pch = 20, cex = 0.7)
-    }
-  }
-  
-  axis(1, at = probes_dir, labels = row.names(rawexp)[probes_dir], cex.axis = 1, las = 2, tck = 0.005)
-  box()
-  dev.off()
-}
-
-#ps -> partly splicing
-ps_threshold = 5.03
-
-for(chr in 1:1){
-  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), row.names=1, header=T)
-  
-  #for all genes which have cassette exons in at least one env
-  plotGenenames <- sort(unique(unlist(lapply(strsplit(rownames(which(psmatrix >= ps_threshold, arr.ind=T)), "_"), "[[", 1))))
-  #for genes having cassette exons and the -log10(P) is round the ps_threshold
-  #plotGenenames <- sort(unique(unlist(lapply(strsplit(rownames(which(round(psmatrix, digits=2) >= ps_threshold & round(psmatrix, digits=2) < ps_threshold+0.1, arr.ind=T)), "_"), "[[", 1))))
-  #for genes having cassette exons and the -log10(P) is higher than 75
-  #plotGenenames <- sort(unique(unlist(lapply(strsplit(rownames(which(psmatrix > 75, arr.ind=T)), "_"), "[[", 1))))
-  
-  #filename(AT1G01010)
-  for(filename in plotGenenames){
-    plotcExonExp(chr, filename, ps_threshold = 5.03)
-  }
-}
-
-
-
-#************************************************************* plot exp part *************************************************************#
-#plot 4 env separately in 4 panel
-setwd("D:/Arabidopsis Arrays")
-#load environment file
-menvironment <- read.table("Data/ann_env.txt", sep="\t")[,2]
-
-
-#direction selection
-probesDir <- function(exp_data = rawexp){
-  if(unique(exp_data[,"strand"]) == "sense"){
-    direction_id <- which(exp_data[, "direction"] == "reverse")
-  }
-  if(unique(exp_data[,"strand"]) == "complement"){
-    direction_id <- which(exp_data[, "direction"] == "forward")
-  }
-  return(direction_id)
-}
-
-plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, thr = ps_threshold){
-  #par(mfrow = c(4, 1), pty = "m", oma = c(5, 3, 5, 0.5))
-  
-  #which tu is in rownames(test result matrix)
-  testTuID <- unlist(lapply(strsplit(rownames(psmatrix)[grepl(filename, rownames(psmatrix))], "_"), "[[", 2))
-  
+  par(mfrow=c(4, 1), pty="m", oma=c(5, 3, 5, 0.5), mar=c(0, 4, 0, 2))
   for(env in 1:4){
     ind_env <- which(as.numeric(menvironment) == env)
+    plot(c(0.5, nprobes+0.5), c(min(newexp)-0.2, max(newexp)+0.2), xaxt='n', xlab="", ylab=levels(menvironment)[env], cex.axis=1, cex.lab=1.5, col.lab=env+1, las=1, mgp=c(2.25, 0.5, 0), tck=-0.017, t="n")
     
-    if(env == 1) par(fig = c(0, 1, 1-0.25*env, 1.25-0.25*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2))
-    else par(fig = c(0, 1, 1-0.25*env, 1.25-0.25*env), oma = c(5, 3, 5, 0.5),  mar = c(0, 4, 0, 2), new = TRUE)
-    plot(c(0.5, nprobes + 0.5), c(min(newexp[ ,ind_env]) - 0.2, max(newexp[ ,ind_env]) + 0.2), xaxt = 'n', xlab = "", ylab = levels(menvironment)[env], cex.axis = 1, cex.lab = 1.5, col.lab = env, las = 1, mgp = c(2.25, 0.5, 0), tck = -0.017, t = "n")
     if(env == 1){
-      title(main = filename, cex.main = 2.5, xlab = "Probes", mgp = c(3, 0.5, 0), cex.lab = 1.5, outer = TRUE)
-      title(ylab = "Expression Intensity", mgp = c(1, 0.5, 0), cex.lab = 1.5, outer = TRUE)
+      title(main=filename, cex.main=2.5, sub=paste0(goal, "_", whichTest), cex.sub=2, xlab="Probes", cex.lab=1.5, mgp=c(3, 0.5, 0), outer=TRUE)
+      title(ylab="Expression Intensity", mgp=c(1, 0.5, 0), cex.lab=1.5, outer=TRUE)
+      for(tu in uniqueExon){
+        axis(3, at=mean(which(rawexp[ ,"tu"] == tu)), labels=tu, mgp=c(2.25, 0.5, 0), tick=FALSE, line=0)
+      }
     }
     
-    #nc <- to choose 1st/2nd row, if 5' and 3' exist at the same time
-    nc <- 1
-    if(any(testTuID == 1)){
-      #ind <- judge which probe in exonID is of 1st exon name (T/F)
-      ind <- rawexp[exonID, "tu"] == uniqueExon[1]
-      #cat("", as.character(uniqueExon[1]), "has probes", exonID[ind], "\n")
+    if(goal == "5'AS"){#******************************************************************** HERE! ********************************************************************#
+      asThre=5.05
+      sepPoint <- fnPart[ ,2]
+      rect(0.5, -3, sepPoint+0.5, 13, density = 15, angle = 30, col = "azure2", border = "azure3")
+      rect(sepPoint+0.5, -3, max(which(rawexp[ ,"tu"] == uniqueExon[1]))+0.5, 13, density = 15, angle = 150, col = "azure2", border = "azure3")
       
-      #to find max difference between each probe in exp, to group them
-      dff <- NULL
-      for(n in 2:length(exonID[ind])){
-        dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
-        #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
+      lines(c(0.5, sepPoint+0.5), rep(mean(unlist(newexp[-(sepPoint:max(which(rawexp[, "tu"] == uniqueExon[1]))), ind_env])), 2), lwd=2)
+      if(fnPart[ ,env+2] >= asThre){
+        text(x=mean(c(sepPoint, max(which(rawexp[, "tu"] == uniqueExon[1])))), y=max(newexp)+0.1, labels=round(fnPart[e, env+2], digits=1), col=env+1, cex=1)
+        lines(c(sepPoint+0.5, max(which(rawexp[, "tu"] == uniqueExon[1]))+0.5), rep(mean(unlist(newexp[sepPoint:max(which(rawexp[, "tu"] == uniqueExon[1])), ind_env])), 2), col=env+1, lwd=2)
+      } else{
+        if(round(fnPart[e, env+2], digits=2) == asThre) text(x=mean(c(sepPoint, max(which(rawexp[, "tu"] == uniqueExon[1])))), y=max(newexp)+0.1, labels=round(fnPart[e, env+2], digits=1), col=1, cex=1)
+        lines(c(sepPoint+0.5, max(which(rawexp[, "tu"] == uniqueExon[1]))+0.5), rep(mean(unlist(newexp[sepPoint:max(which(rawexp[, "tu"] == uniqueExon[1])), ind_env])), 2), col=1, lwd=2)
       }
-      #cat(" so dff is:", dff, "\n")
-      
-      rect(0.5, -3, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, 20, density = 15, angle = 30, col = "azure2", border = "azure3")
-      rect((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, -3, max(which(rawexp[, "tu"] == uniqueExon[1])) + 0.5, 20, density = 15, angle = 150, col = "azure2", border = "azure3")
-      
-      #use mean/median to test AS in 5'|3' site
-      lines(c(0.5, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5), c(mean(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env])), mean(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env]))), col = env, lwd = 2)
-      lines(c((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, max(which(rawexp[, "tu"] == uniqueExon[1]))+0.5), c(mean(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env])), mean(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env]))), col = env, lwd = 2)
-      
-      if(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env] >= thr){
-        text(x = median(which(rawexp[ ,"tu"] == uniqueExon[1])), y = max(newexp[ ,ind_env])+0.15, labels = round(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env], digits = 1), col = env, cex = 0.8)
-      }
-      
-      nc <- 2
+      lines(c(max(which(rawexp[, "tu"] == uniqueExon[1]))+0.5, nprobes+0.5), rep(mean(unlist(newexp[-(sepPoint:max(which(rawexp[, "tu"] == uniqueExon[1]))),ind_env])), 2), lwd=2)
     }
-    if(any(testTuID != 1)){
-      #ind <- judge which probe in exonID is of 1st exon name (T/F)
-      ind <- rawexp[exonID, "tu"] == uniqueExon[length(uniqueExon)]
-      #cat("", as.character(uniqueExon[1]), "has probes", exonID[ind], "\n")
-      
-      #to find max difference between each probe in exp, to group them
-      dff <- NULL
-      for(n in 2:length(exonID[ind])){
-        dff <- c(dff, sum(abs(rawexp[exonID[ind][n], 17:164] - rawexp[exonID[ind][n-1], 17:164])))
-        #cat("  difference between p", exonID[ind][n], "and p", exonID[ind][n-1], "is", sum(rawexp[exonID[ind][n], 17:164]) - sum(rawexp[exonID[ind][n-1], 17:164]), "\n")
+    
+    if(goal == "3'AS"){
+      asThre=5.09
+    }
+    
+    
+    
+    
+    for(p in 1:nprobes){
+      #background for introns
+      if(!p %in% ind_tu){
+        rect((p-0.5), -3, (p+0.5), max(newexp[ ,ind_env])*2, col=grey(0.85), border="transparent")
       }
-      #cat(" so dff is:", dff, "\n")
-      
-      rect(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.5, -3, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, 20, density = 15, angle = 30, col = "azure2", border = "azure3")
-      rect((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, -3, nprobes + 0.5, 20, density = 15, angle = 150, col = "azure2", border = "azure3")
-      
-      #use mean/median to show exp level in first/last exon
-      lines(c(min(which(rawexp[, "tu"] == uniqueExon[length(uniqueExon)])) - 0.5, (exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5), c(median(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env])), median(unlist(newexp[exonID[ind][1:which.max(dff)],ind_env]))), col = env, lwd = 2)
-      lines(c((exonID[ind][which.max(dff)] + exonID[ind][which.max(dff) + 1]) * 0.5, nprobes + 0.5), c(median(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env])), median(unlist(newexp[exonID[ind][-(1:which.max(dff))],ind_env]))), col = env, lwd = 2)
-      
-      if(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env] >= thr){
-        text(x = median(which(rawexp[ ,"tu"] == uniqueExon[length(uniqueExon)])), y = max(newexp[ ,ind_env])+0.15, labels = round(psmatrix[rownames(psmatrix)[grepl(filename, rownames(psmatrix))][nc],env], digits = 1), col = env, cex = 0.8)
+      if(p %in% probes_dir){
+        points(rep(p, length(ind_env))+runif(length(ind_env), min=-0.05, max=0.05), newexp[p, ind_env], t='p', pch=20, cex=0.75)
       }
     }
+    box()
+  }
+  axis(1, at=probes_dir, labels=row.names(rawexp)[probes_dir], mgp=c(2.25, 0.5, 0), cex.axis=1, las=2, tck=0.02)
+}
+
+
+#plot all 5'3'AS genes
+goal="5'AS"# "3'AS"
+whichTest="wt"# "ANOVA"
+for(chr in 1:5){
+  load(file=paste0("Data/AS/", goal, "_chr", chr, "_", whichTest, ".Rdata"))
+  genenames <- asGeneList$mixEnv
+  
+  for(filename in genenames){
+    png(filename = paste0("Data/AS/plot/5'3'AS/", filename, "_", goal, ".png"), width = 960, height = 1728, bg = "white")
+    plot_53AS(filename, whichTest, asThre=6.06)
+    dev.off()
+  }
+}
+
+plot_53AS <- function(filename, goal, whichTest, ){
+  chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
+  rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=TRUE)
+  newexp <- rawexp[ ,17:164]
+  
+  probes_dir <- probesDir(rawexp)
+  #if(verbose) cat("We have rightDir probes:", probes_dir, "\n")
+  exonID <- probes_dir[grepl("tu", rawexp[probes_dir, "tu"])]
+  #if(verbose) cat("We have exon probes:", exonID, "\n")
+  uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
+  #if(verbose) cat("We have exons:", uniqueExon, "\n")
+
+  ind_tu <- grep("tu", rawexp[ ,"tu"])
+  nprobes <- nrow(rawexp)
+  
+  
+  testAS <- read.table(paste0("Data/AS/", goal, "_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL)
+  
+  par(mfrow=c(4, 1), pty="m", oma=c(5, 3, 5, 0.5), mar=c(0, 4, 0, 2))
+  for(env in 1:4){
+    ind_env <- which(as.numeric(menvironment) == env)
+    plot(c(0.5, nprobes+0.5), c(min(newexp)-0.2, max(newexp)+0.2), xaxt='n', xlab="", ylab=levels(menvironment)[env], cex.axis=1, cex.lab=1.5, las=1, mgp=c(2.25, 0.5, 0), tck=-0.017, t="n")
+    
+    if(env == 1){
+      title(main=filename, cex.main=2.5, sub="5'3'AS", cex.sub=2, xlab="Probes", cex.lab=1.5, mgp=c(3, 0.5, 0), outer=TRUE)
+      title(ylab="Expression Intensity", mgp=c(1, 0.5, 0), cex.lab=1.5, outer=TRUE)
+      for(tu in uniqueExon){
+        axis(3, at = mean(which(rawexp[ ,"tu"] == tu)), labels = tu, mgp=c(2.25, 0.5, 0), tick = FALSE, line = 0)
+      }
+    }
+    
     
     for(p in 1:nprobes){
       #background for introns
@@ -227,93 +141,11 @@ plotExpEnvSep <- function(filename, rawexp, newexp, probes_dir, exonID, uniqueEx
         rect((p - 0.5), -3, (p + 0.5), max(newexp[ ,ind_env])* 2, col = grey(0.85), border = "transparent")
       }
       if(p %in% probes_dir){
-        points(rep(p, length(ind_env)) + runif(length(ind_env), min = -0.05, max = 0.05), newexp[p,ind_env], t = 'p', col = env, pch = 20, cex = 0.75)
+        points(rep(p, length(ind_env)) + runif(length(ind_env), min = -0.05, max = 0.05), newexp[p,ind_env], t = 'p', pch = 20, cex = 0.75)
       }
     }
-    
-    for(e in 1:length(uniqueExon)){
-      if(! e %in% testTuID){
-        ind <- rawexp[exonID, "tu"] == uniqueExon[e]
-        lines(c(min(which(rawexp[,"tu"] == uniqueExon[e])) - 0.5, max(which(rawexp[,"tu"] == uniqueExon[e])) + 0.5), c(median(unlist(newexp[exonID[ind],ind_env])), median(unlist(newexp[exonID[ind],ind_env]))), col = env, lwd = 2)
-      }
-    }
-    
     box()
   }
-  axis(1, at = probes_dir, labels = row.names(rawexp)[probes_dir], mgp=c(2.25, 0.5, 0), cex.axis = 1, las = 2, tck = 0.02)
+
 }
 
-
-plotcExonExp <- function(chr, filename, ps_threshold){
-  rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=T)
-  newexp <- rawexp[ ,17:164]
-  
-  probes_dir <- probesDir(rawexp)
-  #cat(filename, "\nprobeDir:", probes_dir, "\n")
-  exonID <- probes_dir[grepl("tu", rawexp[probes_dir,"tu"])]
-  #cat("exons of right direction:", exonID, "\n")
-  
-  #uniqueExon <- all tu names of exon probes
-  uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
-  #cat("tu names:", as.character(uniqueExon), "\n")
-  
-  ind_tu <- grep("tu", rawexp[ ,"tu"])
-  nprobes <- nrow(rawexp)
-
-  #png(filename = paste0("Data/53terminalAS/plot_53ps/", filename, "_ttest_", ps_threshold, "_4s.png"), width = 960, height = 1728, bg = "white")
-  png(filename = paste0("Data/53terminalAS/plot_53ps/", filename, "_wtest_", ps_threshold, "_4s.png"), width = 960, height = 1728, bg = "white")
-  plotExpEnvSep(filename, rawexp, newexp, probes_dir, exonID, uniqueExon, ind_tu, nprobes, thr = ps_threshold)
-  dev.off()
-}
-
-
-#ps -> partly splicing
-ps_threshold = 5.03
-for(chr in 1:1){
-  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), row.names=1, header=T)
-  
-  #for all genes which have cassette exons in at least one env
-  plotGenenames <- sort(unique(unlist(lapply(strsplit(rownames(which(psmatrix >= ps_threshold, arr.ind=T)), "_"), "[[", 1))))
-  #for genes having cassette exons and the -log10(P) is round the ps_threshold
-  #plotGenenames <- sort(unique(unlist(lapply(strsplit(rownames(which(round(psmatrix, digits=2) >= ps_threshold & round(psmatrix, digits=2) < ps_threshold+0.1, arr.ind=T)), "_"), "[[", 1))))
-  #for genes having cassette exons and the -log10(P) is higher than 75
-  #plotGenenames <- sort(unique(unlist(lapply(strsplit(rownames(which(psmatrix > 75, arr.ind=T)), "_"), "[[", 1))))
-  
-  #filename(AT1G01010)
-  for(filename in plotGenenames){
-    plotcExonExp(chr, filename, ps_threshold = 5.03)
-  }
-}
-
-
-
-#*********************************************************** find best examples ***********************************************************#
-getOne <- function(aa, cond = 1, cutoff=30){
-  bb <- aa[which(aa[ ,cond] > cutoff), ]
-  l10 <- sort(apply(bb[ ,(1:4)[-cond]], 1, sum), index.return=T)$ix[1:10]#sort(apply(bb[ ,-cond], 1, sum), index.return=T)$ix[1:10]
-  bb[l10, ]
-}
-
-getOne <- function(aa, cond = 1, cutoff=30){
-  bb <- aa[which(aa[ ,cond] > cutoff), ]
-  l10 <- NULL
-  for(r in 1:nrow(bb)){
-    if(any(bb[r, -cond] <= (cutoff - 15))) l10 <- c(l10, r)
-  }
-  bb[l10, ]
-}
-
-for(chr in 1:5){
-  #psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_ttest.txt"), row.names=1, header=T)
-  psmatrix <- read.table(paste0("Data/53terminalAS/53terminalAS_chr", chr, "_wtest.txt"), row.names=1, header=T)
-  
-  posPerfectEg <- NULL
-  for(env in 1:4){
-    posPerfectEg <- c(posPerfectEg, unlist(lapply(strsplit(rownames(getOne(psmatrix, env, 30)), "_"), "[[", 1)))
-  }
-  cat("I'm chr", chr, ", I have\n", posPerfectEg, "\n")
-  for(filename in sort(unique(posPerfectEg))){
-    #chr <- gsub("AT", "", unlist(lapply(strsplit(filename, "G"), "[[", 1)))
-    plotcExonExp(chr, filename, ps_threshold = 5.03)
-  }
-}

@@ -22,12 +22,12 @@ for(chr in 1:5){
   } else cat("chr", chr, "NO test!\n")
 }
 #Bonferroni correction
-nrow(iasMatrix)# = 1401 exons were tested in 5'IAS; 1525 exons were tested in 3'IAS
--log10(0.05/nrow(iasMatrix)/4)# 1401/1525 exons were tested * 4 Env; => iasThre=5.05/5.09
-length(unique(iasMatrix[,1]))# = 1401 genes were tested in 5'IAS; 1525 genes were tested in 3'IAS
+nrow(iasMatrix)# = 4 exons were tested in 5'IAS; 6 exons were tested in 3'IAS
+-log10(0.05/nrow(iasMatrix)/4)# 4/6 exons were tested * 4 Env; => iasThre=2.51/2.68
+length(unique(iasMatrix[,1]))# = 4 genes were tested in 5'IAS; 6 genes were tested in 3'IAS
 
 #calculate the numbers of sig exons and genes
-iasThre=round(-log10(0.05/nrow(iasMatrix)/4), digits=2)# =5.05/5.09
+iasThre=round(-log10(0.05/nrow(iasMatrix)/4), digits=2)# =2.51/2.68
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to iasThre in each env and across envs from chr1-chr5
                  #NOTE: nExon=nGene(one first exon in one gene)
 for(chr in 1:5){
@@ -65,7 +65,7 @@ for(chr in 1:5){
     iasGeneList$mixEnv <- unique(gn_mixEnv)
     
     matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
-    if(length(gn_mixEnv) > 0) save(iasGeneList, file = paste0("Data/geneticsAS/", goal, "_chr", chr, "_gnList_", whichTest, ".Rdata"))
+    if(length(gn_mixEnv) > 0) save(iasGeneList, file = paste0("Data/geneticsAS/", goal, "_chr", chr, "_", whichTest, ".Rdata"))
     else cat("chr", chr, "NO genes, no file saved!\n")
   } else{
     cat("chr", chr, "NO test!\n")

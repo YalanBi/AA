@@ -22,12 +22,12 @@ for(chr in 1:5){
   } else cat("chr", chr, "NO test!\n")
 }
 #Bonferroni correction
-nrow(gasMatrix)# = 1401 exons were tested in 5'GAS; 1525 exons were tested in 3'GAS
--log10(0.05/nrow(gasMatrix)/4)# 1401/1525 exons were tested * 4 Env; => gasThre=5.05/5.09
-length(unique(gasMatrix[,1]))# = 1401 genes were tested in 5'GAS; 1525 genes were tested in 3'GAS
+nrow(gasMatrix)# = 40 exons were tested in 5'GAS; 60 exons were tested in 3'GAS
+-log10(0.05/nrow(gasMatrix)/4)# 40/60 exons were tested * 4 Env; => gasThre=3.51/3.68
+length(unique(gasMatrix[,1]))# = 40 genes were tested in 5'GAS; 60 genes were tested in 3'GAS
 
 #calculate the numbers of sig exons and genes
-gasThre=round(-log10(0.05/nrow(gasMatrix)/4), digits=2)# =5.05/5.09
+gasThre=round(-log10(0.05/nrow(gasMatrix)/4), digits=2)# =3.51/3.68
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to gasThre in each env and across envs from chr1-chr5
                  #NOTE: nExon=nGene(one first exon in one gene)
 for(chr in 1:5){
@@ -65,7 +65,7 @@ for(chr in 1:5){
     gasGeneList$mixEnv <- unique(gn_mixEnv)
     
     matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
-    if(length(gn_mixEnv) > 0) save(gasGeneList, file = paste0("Data/geneticsAS/", goal, "_chr", chr, "_gnList_", whichTest, ".Rdata"))
+    if(length(gn_mixEnv) > 0) save(gasGeneList, file = paste0("Data/geneticsAS/", goal, "_chr", chr, "_", whichTest, ".Rdata"))
     else cat("chr", chr, "NO genes, no file saved!\n")
   } else{
     cat("chr", chr, "NO test!\n")
