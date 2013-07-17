@@ -5,7 +5,7 @@
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
-#******************************************************** this is the final version for testing skipping exons ^_^ *******************************************************#
+#********************************************** this is the final version for testing main eQTL/Int and consistent eQTL! ^_^ *********************************************#
 
 setwd("D:/Arabidopsis Arrays")
 #load exp genes
