@@ -29,7 +29,7 @@ test_Int <- function(goal, geneInt, intThre=11.6, verbose=FALSE){
   resInt <- colSums(abs(geneInt) >= intThre)
   
   if(goal == "main") P=1
-  if(goal == "consistent") P=nrow(geneQTL)
+  if(goal == "consistent") P=nrow(geneInt)
   
   for(m in 1:716){
     if(resInt[m] >= P){
