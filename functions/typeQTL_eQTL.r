@@ -11,6 +11,8 @@
 setwd("D:/Arabidopsis Arrays")
 #load environment file
 menvironment <- read.table("Data/ann_env.txt", sep="\t")[,2]
+#load map file---markers' Morgan position
+mpos <- read.table("refined map/map_addMAXprobebp_nogap.txt", row.names=1, header=T)
 #load exp genes
 load(file="Data/ExpGenes/expGenes_final.Rdata")
 
@@ -25,7 +27,12 @@ probesDir <- function(exp_data=rawexp){
   return(direction_id)
 }
 
-test_eQTL <- function(goal, geneQTL, qtlThre=8, geneInt, intThre=11.6, verbose=FALSE){
+test_eQTL <- function(goal, fnQTL, qtlThre=8, fnInt, intThre=11.6, fnPos, verbose=FALSE){
+  for(e in 1:norw(fnQTL)){
+    topM <- which.max(fnQTL[e, ])
+    if(fnQTL[e, topM] >= qtlThre) (mpos[topM, 2]-fnpos[e])/1000000#******************************************** HERE!!! *****************************************#
+  }
+  
   resQTL <- colSums(abs(geneQTL) >= qtlThre)
   resInt <- colSums(abs(geneInt) >= intThre)
   
@@ -70,13 +77,16 @@ for(chr in 1:5){
   st <- proc.time()[3]
   cat("chr", chr, "starts...\n")
   
+  rawexp <- read.table(paste0("Data/summarizedGene/expGenes_chr", chr, "_1tu1probe.txt"), row.names=1, header=TRUE)
   qtl <- read.table(paste0("Data/summarizedGene/expGenes_chr", chr, "_FMD_QTL.txt"), row.names=1, header=TRUE)
   int <- read.table(paste0("Data/summarizedGene/expGenes_chr", chr, "_FMD_Int.txt"), row.names=1, header=TRUE)
   
   genenames <- expGeneList[[chr]]
   for(filename in genenames){
-    geneQTL <- qtl[grep(filename, rownames(qtl)), ]
-    geneInt <- int[grep(filename, rownames(int)), ]
+    fnPos <- rawexp[grep(filename, rownames(rawexp)), 1]
+    fnQTL <- qtl[grep(filename, rownames(qtl)), ]
+    fnInt <- int[grep(filename, rownames(int)), ]
+    
     if(test_eQTL(goal="consistent", geneQTL, qtlThre=8, geneInt, intThre=11.6)){
       consistentQTL[[paste0("chr", chr)]] <- c(consistentQTL[[paste0("chr", chr)]], filename)
       cat(filename, "found have consistent eQTL!\n")

@@ -62,7 +62,7 @@ splicingTestSE <- function(filename, P=2, verbose=FALSE, ...){
     for(tu in uniqueExon){
       ind <- exonID[rawexp[exonID, "tu"] == tu]
       if(length(ind) > 0){
-        if(median(unlist(rawexp[exonID[rawexp[exonID, "tu"] == tu], 17:164])) >= 5){
+        if(median(unlist(rawexp[ind, 17:164])) >= 5){
           if(verbose) cat("\tkeep", tu, "and put it into restPart\n")
           restProbes <- c(restProbes, ind)
         } else if(length(ind) >= P){

@@ -25,7 +25,7 @@ map.fast <- function(geno, pheno, menvironment){
 }
 
 #full model mapping with expressed genes
-mapGenotypes <- function(geno, menvironment, permutation){
+mapGenotypes <- function(geno, menvironment, permutation, expdata){
   st <- proc.time()
   cat("Start scanning for permutation", permutation, "\n")
 
@@ -53,13 +53,15 @@ cat("", file=fileint)
 
 chr <- 1
 #the 1st col is bp!!!
-expdata <- t(read.table(paste("Data/fullModeMapping/expGenes_chr", chr, "_1tu1probe.txt", sep=""),row.names=1, header=TRUE)[, 2:149])
-expdata <- expdata[,1:100] # REMOVE BEFORE REAL !!!
+expdata <- t(read.table(paste("Data/summarizedGene/expGenes_chr", chr, "_1tu1probe.txt", sep=""),row.names=1, header=TRUE)[, 2:149])
+expsubset <- expdata[,1:500] # REMOVE BEFORE REAL PERMUTATION !!!
   
-for(permutation in 1:1000){
+scoress <- NULL
+for(permutation in 1:100){
   newGeno <- geno[sample(1:148), ]
-  scores <- mapGenotypes(geno = newGeno, menvironment, permutation)
-  cat(paste0(permutation, "\t", scores[1],"\n"), file=fileqtl, append = TRUE)
-  cat(paste0(permutation, "\t", scores[2],"\n"), file=fileint, append = TRUE)
+  scores <- mapGenotypes(geno = newGeno, menvironment, permutation, expsubset)
+  scoress <- c(scoress, scores[1])
+  #cat(paste0(permutation, "\t", scores[1],"\n"), file=fileqtl, append = TRUE)
+  #cat(paste0(permutation, "\t", scores[2],"\n"), file=fileint, append = TRUE)
 }
 

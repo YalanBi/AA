@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 29-04-2013
+# last modified: 19-07-2013
 # first written: 15-04-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -16,9 +16,9 @@ for(chr in 1:5){
   st <- proc.time()
   
   cat("chr", chr, "position loading...\n")
-  #probebp[[chr]] <- read.table(paste("Data/fullModeMapping/expGenes_chr", chr, "_1tu1probe.txt", sep=""), row.names=1, header=TRUE)[,"bp"]
+  #probebp[[chr]] <- read.table(paste("Data/summarizedGene/expGenes_chr", chr, "_1tu1probe.txt", sep=""), row.names=1, header=TRUE)[ ,"bp"]
   #another way to load exon location (bp)
-  fbp <- file(paste("Data/fullModeMapping/expGenes_chr", chr, "_1tu1probe.txt", sep=""))
+  fbp <- file(paste("Data/summarizedGene/expGenes_chr", chr, "_1tu1probe.txt", sep=""))
   open(fbp)
   invisible(readLines(fbp, 1))
   pline <- readLines(fbp, 1)
@@ -43,32 +43,31 @@ mpos <- read.table("refined map/map_addMAXprobebp_nogap.txt", row.names=1, heade
 lpos <- NULL
 for(chr in 1:5){
   #add gap between chrs, then get markers' bp position!
-  mpos[which(mpos[,1] == chr),2] <- (mpos[which(mpos[,1] == chr),2] + 6000000*(chr-1))/1000000
-  lpos <- c(lpos, (sum(totlength[1:chr]) + 6000000*(chr-1))/1000000, (sum(totlength[1:(chr + 1)]) + 6000000*(chr-1))/1000000)
+  mpos[which(mpos[ ,1] == chr), 2] <- (mpos[which(mpos[ ,1] == chr), 2]+6000000*(chr-1))/1000000
+  lpos <- c(lpos, (sum(totlength[1:chr])+6000000*(chr-1))/1000000, (sum(totlength[1:(chr+1)])+6000000*(chr-1))/1000000)
 }
 #lpos(0.00000, 30.41476, 36.41476, 56.10064, 62.10064, 85.56012, 91.56012, 110.14139, 116.14139, 143.11033)
 
 
 #*********************************************************** plot QTL cis-trans ***********************************************************#
-lodthreshold = 8.0
+qtlThre=8.0
 
-png(filename = paste0("cis-trans_QTL_", lodthreshold, ".png"), width = 1024, height = 1024, bg = "white")
-plot(x = c(4, max(lpos)-4), y = c(4, max(lpos)-4), t='n', xlab="marker position (Mb)", ylab="Gene position (Mb)", xaxt='n', yaxt='n')
+png(filename=paste0("Data/testQTL/cis-trans_QTL_", qtlThre, ".png"), width=1024, height=1024, bg="white")
+plot(x=c(4, max(lpos)-4), y=c(4, max(lpos)-4), t='n', xlab="marker position (Mb)", ylab="Gene position (Mb)", xaxt='n', yaxt='n')
 axis(1, at=seq(0, 150, 10), labels=seq(0, 150, 10))
 axis(2, at=seq(0, 150, 10), labels=seq(0, 150, 10))
 
 for(r in 1:4){
-  rect(lpos[r*2], -90, lpos[r*2+1], max(lpos)+90, col=rgb(159, 182, 205, 105, max = 255), border="transparent")
-  rect(-90, lpos[r*2], max(lpos)+90, lpos[r*2+1], col=rgb(159, 182, 205, 105, max = 255), border="transparent")
+  rect(lpos[r*2], -90, lpos[r*2+1], max(lpos)+90, col=rgb(159, 182, 205, 105, max=255), border="transparent")
+  rect(-90, lpos[r*2], max(lpos)+90, lpos[r*2+1], col=rgb(159, 182, 205, 105, max=255), border="transparent")
 }
 #abline(h=lpos[seq(1,10,2)], v=lpos[seq(1,10,2)],col='green',lty=2)
 #abline(h=lpos[seq(2,10,2)], v=lpos[seq(2,10,2)],col='red',lty=2)
 
 for(chr in 1:5){
   st <- proc.time()
-  
   cat("chr", chr, "QTL loading and plotting ...\n")
-  fp <- file(paste("Data/fullModeMapping/expGenes_chr", chr, "_FMD_QTL.txt", sep=""))
+  fp <- file(paste("Data/summarizedGene/expGenes_chr", chr, "_FMD_QTL.txt", sep=""))
   open(fp)
   mline <- readLines(fp, 1)
   
@@ -76,14 +75,13 @@ for(chr in 1:5){
     mline <- readLines(fp, 1)
     qtl <- as.numeric(strsplit(mline,"\t")[[1]][2:717])
     col2 <- qtl
-    col2[qtl < lodthreshold] <- rgb(1, 1, 1,0)
-    col2[qtl >= lodthreshold] <- rgb(238, 59, 59, alpha=120, maxColorValue=255) #>= +thre is red
-    col2[qtl <= -lodthreshold] <- rgb(102, 205, 0, alpha=120, maxColorValue=255) #<= -thre is green
-    points(x = mpos[,2], y = (rep(probebp[[chr]][p], 716) + sum(totlength[1:chr]) + 6000000*(chr-1))/1000000, col = col2, pch = 20, cex = 0.5)
+    col2[qtl < qtlThre] <- rgb(1, 1, 1, 0)
+    col2[qtl >= qtlThre] <- rgb(238, 59, 59, alpha=120, maxColorValue=255) #>= +thre is red
+    col2[qtl <= -qtlThre] <- rgb(102, 205, 0, alpha=120, maxColorValue=255) #<= -thre is green
+    points(x=mpos[,2], y=(rep(probebp[[chr]][p], 716)+sum(totlength[1:chr])+6000000*(chr-1))/1000000, col=col2, pch=20, cex=0.5)
   }
   
   close(fp)
-  
   et <- proc.time()
   cat("chr", chr, "finished plotting after", (et-st)[3], "secs!\n")
 }
@@ -91,25 +89,24 @@ dev.off()
 
 
 #*********************************************************** plot Int cis-trans ***********************************************************#
-intthreshold = 11.6
+intThre=11.6
 
-png(filename = paste0("cis-trans_Int_", intthreshold, ".png"), width = 1024, height = 1024, bg = "white")
-plot(x = c(4, max(lpos)-4), y = c(4, max(lpos)-4), t='n', xlab="marker position (Mb)", ylab="Gene position (Mb)", xaxt='n', yaxt='n')
+png(filename=paste0("Data/testQTL/cis-trans_Int_", intThre, ".png"), width = 1024, height = 1024, bg = "white")
+plot(x=c(4, max(lpos)-4), y=c(4, max(lpos)-4), t='n', xlab="marker position (Mb)", ylab="Gene position (Mb)", xaxt='n', yaxt='n')
 axis(1, at=seq(0, 150, 10), labels=seq(0, 150, 10))
 axis(2, at=seq(0, 150, 10), labels=seq(0, 150, 10))
 
 for(r in 1:4){
-  rect(lpos[r*2], -90, lpos[r*2+1], max(lpos)+90, col=rgb(159, 182, 205, 105, max = 255), border="transparent")
-  rect(-90, lpos[r*2], max(lpos)+90, lpos[r*2+1], col=rgb(159, 182, 205, 105, max = 255), border="transparent")
+  rect(lpos[r*2], -90, lpos[r*2+1], max(lpos)+90, col=rgb(159, 182, 205, 105, max=255), border="transparent")
+  rect(-90, lpos[r*2], max(lpos)+90, lpos[r*2+1], col=rgb(159, 182, 205, 105, max=255), border="transparent")
 }
 #abline(h=lpos[seq(1,10,2)], v=lpos[seq(1,10,2)],col='green',lty=2)
 #abline(h=lpos[seq(2,10,2)], v=lpos[seq(2,10,2)],col='red',lty=2)
 
 for(chr in 1:5){
   st <- proc.time()
-  
   cat("chr", chr, "Int loading and plotting ...\n")
-  fp <- file(paste("Data/fullModeMapping/expGenes_chr", chr, "_FMD_Int.txt", sep=""))
+  fp <- file(paste("Data/summarizedGene/expGenes_chr", chr, "_FMD_Int.txt", sep=""))
   open(fp)
   mline <- readLines(fp, 1)
   
@@ -117,13 +114,12 @@ for(chr in 1:5){
     mline <- readLines(fp, 1)
     int <- as.numeric(strsplit(mline,"\t")[[1]][2:717])
     col2 <- int
-    col2[int < intthreshold] <- rgb(1, 1, 1,0)
-    col2[int >= intthreshold] <- rgb(238, 59, 59, alpha=120, maxColorValue=255)#"gray80"
-    points(x = mpos[,2], y = (rep(probebp[[chr]][p], 716) + sum(totlength[1:chr]) + 6000000*(chr-1))/1000000, col = col2, pch = 20, cex = 0.5)
+    col2[int < intThre] <- rgb(1, 1, 1, 0)
+    col2[int >= intThre] <- rgb(238, 59, 59, alpha=120, maxColorValue=255) #>= +thre is red
+    points(x=mpos[,2], y=(rep(probebp[[chr]][p], 716)+sum(totlength[1:chr])+6000000*(chr-1))/1000000, col=col2, pch=20, cex=0.5)
   }
   
   close(fp)
-  
   et <- proc.time()
   cat("chr", chr, "finished plotting after", (et-st)[3], "secs!\n")
 }
