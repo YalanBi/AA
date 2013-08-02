@@ -1,37 +1,35 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 12-07-2013
+# last modified: 25-07-2013
 # first written: 28-06-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
 #************************************ this is the final version for analyzing results of testing GENETIC regulated skipping exons ^_^ ************************************#
-#**************************************************************** testing algorithm: Wilcox.test / ANOVA! ****************************************************************#
+#******************************************************************** testing algorithm: Wilcox.test! ********************************************************************#
 
 setwd("D:/Arabidopsis Arrays")
-
-whichTest="wt"# "ANOVA"
 
 #calculate the threshold for GENETIC regulated skipping exons
 gseMatrix <- NULL
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, "_less.txt"))){
-    gseMatrix <- rbind(gseMatrix, read.table(paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
+  if(file.exists(paste0("Data/geneticsAS/GSE_chr", chr, "_wt_p3.txt"))){
+    gseMatrix <- rbind(gseMatrix, read.table(paste0("Data/geneticsAS/GSE_chr", chr, "_wt_p3.txt"), row.names=NULL))
   } else cat("chr", chr, "NO test!\n")
 }
 #Bonferroni correction
-nrow(gseMatrix)# = 1179 exons were tested
--log10(0.05/nrow(gseMatrix)/4)# = 4.97; 1179 exons were tested * 4 Env; => gseThre=4.97
-length(unique(gseMatrix[,1]))# = 922 genes were tested
+nrow(gseMatrix)# = 199 exons were tested
+-log10(0.05/nrow(gseMatrix)/8)# = 4.50; 199 exons were tested * 4 Env * 2 genotypes; => gseThre=4.50
+length(unique(gseMatrix[,1]))# = 188 genes were tested
 
 #calculate the numbers of sig exons and genes
-gseThre=round(-log10(0.05/nrow(gseMatrix)/4), digits=2)# =4.97
+gseThre=round(-log10(0.05/nrow(gseMatrix)/8), digits=2)# =4.50
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to gseThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to gseThre in each env and across envs from chr1-chr5
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, "_less.txt"))){
-    gsechr <- read.table(paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL)
+  if(file.exists(paste0("Data/geneticsAS/GSE_chr", chr, "_wt_p3.txt"))){
+    gsechr <- read.table(paste0("Data/geneticsAS/GSE_chr", chr, "_wt_p3.txt"), row.names=NULL)
     gseGeneList <- list()
     resmatrix <- NULL
     
@@ -67,7 +65,7 @@ for(chr in 1:5){
     
     matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
     matrixGENE <- rbind(matrixGENE, c(nGENE, length(gseGeneList$mixEnv)))
-    if(length(gn_mixEnv) > 0) save(gseGeneList, file=paste0("Data/geneticsAS/GSE_chr", chr, "_", whichTest, ".Rdata"))
+    if(length(gn_mixEnv) > 0) save(gseGeneList, file=paste0("Data/geneticsAS/GSE_chr", chr, "_wt_p3.Rdata"))
   } else{
     cat("chr", chr, "NO test!\n")
     matrixTU <- rbind(matrixTU, c(0,0,0,0,0))
