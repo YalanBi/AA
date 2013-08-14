@@ -1,37 +1,35 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 12-07-2013
+# last modified: 25-07-2013
 # first written: 28-06-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
 
 #********************************** this is the final version for analyzing results of testing INTERACTION regulated skipping exons ^_^ **********************************#
-#**************************************************************** testing algorithm: Wilcox.test / ANOVA! ****************************************************************#
+#******************************************************************** testing algorithm: Wilcox.test! ********************************************************************#
 
 setwd("D:/Arabidopsis Arrays")
-
-whichTest="wt"# "ANOVA"
 
 #calculate the threshold for INTERACTION regulated skipping exons
 iseMatrix <- NULL
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/ISE_chr", chr, "_", whichTest, "_less.txt"))){
-    iseMatrix <- rbind(iseMatrix, read.table(paste0("Data/geneticsAS/ISE_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
+  if(file.exists(paste0("Data/geneticsAS/ISE_chr", chr, "_wt_p3.txt"))){
+    iseMatrix <- rbind(iseMatrix, read.table(paste0("Data/geneticsAS/ISE_chr", chr, "_wt_p3.txt"), row.names=NULL))
   } else cat("chr", chr, "NO test!\n")
 }
 #Bonferroni correction
-nrow(iseMatrix)# = 118 exons were tested
--log10(0.05/nrow(iseMatrix)/4)# = 3.97; 118 exons were tested * 4 Env; => iseThre=3.97
-length(unique(iseMatrix[,1]))# = 99 genes were tested
+nrow(iseMatrix)# = 39 exons were tested
+-log10(0.05/nrow(iseMatrix)/8)# = 3.80; 39 exons were tested * 4 Env * 2 genotypes; => iseThre=3.80
+length(unique(iseMatrix[,1]))# = 37 genes were tested
 
 #calculate the numbers of sig exons and genes
-iseThre=round(-log10(0.05/nrow(iseMatrix)/4), digits=2)# =3.97
+iseThre=round(-log10(0.05/nrow(iseMatrix)/8), digits=2)# =3.80
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to iseThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to iseThre in each env and across envs from chr1-chr5
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/ISE_chr", chr, "_", whichTest, "_less.txt"))){
-    isechr <- read.table(paste0("Data/geneticsAS/ISE_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL)
+  if(file.exists(paste0("Data/geneticsAS/ISE_chr", chr, "_wt_p3.txt"))){
+    isechr <- read.table(paste0("Data/geneticsAS/ISE_chr", chr, "_wt_p3.txt"), row.names=NULL)
     iseGeneList <- list()
     resmatrix <- NULL
     
@@ -67,7 +65,7 @@ for(chr in 1:5){
     
     matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
     matrixGENE <- rbind(matrixGENE, c(nGENE, length(iseGeneList$mixEnv)))
-    if(length(gn_mixEnv) > 0) save(iseGeneList, file=paste0("Data/geneticsAS/ISE_chr", chr, "_", whichTest, ".Rdata"))
+    if(length(gn_mixEnv) > 0) save(iseGeneList, file=paste0("Data/geneticsAS/ISE_chr", chr, "_wt_p3.Rdata"))
   } else{
     cat("chr", chr, "NO test!\n")
     matrixTU <- rbind(matrixTU, c(0,0,0,0,0))
