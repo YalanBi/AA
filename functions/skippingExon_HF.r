@@ -68,13 +68,13 @@ testSE <- function(filename, P=3, verbose=FALSE){
         ind <- exonID[rawexp[exonID, "tu"] == tu]
         
         if(length(ind) > 0 && median(unlist(rawexp[ind, ind_env+16])) >= 5){
-          if(verbose) cat("\tin Env", env, ": put", tu, "into bgSet: median =", median(unlist(rawexp[ind, ind_env+16])), "> 5\n")
+          if(verbose) cat("\tin Env", env, ": put", tu, "into bgSet: median =", median(unlist(rawexp[ind, ind_env+16])), ">= 5\n")
           bg <- c(bg, ind)
         }
       }
       
       if(length(bg) < P){
-        if(verbose) cat("*in Env", env, "bgSet has", length(bg), "exonProbes, <", P, " not enough to continue with testT^T\n")
+        if(verbose) cat("*in Env", env, "bgSet has", length(bg), "exonProbes, <", P, " not enough to continue with test T^T\n")
         res <- rep(0, length(uniqueExon))
       } else{
         if(verbose) cat("*in Env", env, "bgSet has", length(bg), "exonProbes, continue with test!\n")

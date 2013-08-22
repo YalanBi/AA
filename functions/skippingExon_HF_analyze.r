@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 14-08-2013
+# last modified: 22-08-2013
 # first written: 14-08-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -26,7 +26,7 @@ seThre=round(-log10(0.05/98677/4), digits=2)
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to seThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to seThre in each env and across envs from chr1-chr5
 for(chr in 1:5){
-  sechr <- read.table(paste0("Data/AS/SE_chr", chr, "_wt_less_p3.txt"), row.names=NULL)
+  sechr <- read.table(paste0("Data/AS/skippingExon_chr", chr, "_wt_p3.txt"), row.names=NULL)
   seGeneList <- list()
   
   nTU <- NULL #number of exons that -log10(P) are higher than or equal to seThre in each env
@@ -51,7 +51,7 @@ for(chr in 1:5){
   
   matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
   matrixGENE <- rbind(matrixGENE, c(nGENE, length(seGeneList$mixEnv)))
-  if(length(gn_mixEnv) > 0) save(seGeneList, file=paste0("Data/AS/SE_chr", chr, "_wt_p3.Rdata"))
+  if(length(gn_mixEnv) > 0) save(seGeneList, file=paste0("Data/AS/skippingExon_chr", chr, "_wt_p3.Rdata"))
 }
 rownames(matrixTU) <- paste0("chr", 1:5)
 colnames(matrixTU) <- c(paste0("Env", 1:4), "mixEnv")

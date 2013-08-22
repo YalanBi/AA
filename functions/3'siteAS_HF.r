@@ -1,7 +1,7 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 21-08-2013
-# first written: 21-08-2013
+# last modified: 22-08-2013
+# first written: 22-08-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
@@ -34,16 +34,16 @@ probesDir <- function(exp_data=rawexp){
 }
 
 #to find max difference between each probe in exp, for grouping
-findSepPoint <- function(toGroup=ind, exp_data=rawexp[ ,17:164], P=2, verbose=FALSE){
+findSepPoint <- function(toGroup=ind, exp_data=rawexp[ ,17:164], verbose=FALSE){
   dffs <- NULL
-  for(n in (P+1):(length(toGroup)-P+1)){
+  for(n in 3:(length(toGroup)-1)){
     dff <- sum(apply(exp_data[toGroup[length(toGroup):n], ], 2, median)-apply(exp_data[toGroup[1:(n-1)], ], 2, median))
     dffs <- c(dffs, dff)
     if(verbose) cat("difference between probe(", toGroup[length(toGroup):n], ") and probe(", toGroup[1:(n-1)], ")is", dff, "\n")
   }
   if(min(dffs) < 0){
-    if(verbose) cat("so dffList is:", dffs, "\n", "and edge probes are p", toGroup[which.min(dffs)+P-1], "and p", toGroup[which.min(dffs)+P], ", dff =", min(dffs), "\n")
-    return(which.min(dffs)+P-1)
+    if(verbose) cat("so dffList is:", dffs, "\n", "and edge probes are p", toGroup[which.min(dffs)+1], "and p", toGroup[which.min(dffs)+2], ", dff =", min(dffs), "\n")
+    return(which.min(dffs)+1)
   } else return() #we want the testPart is lower than the other part of this exon, otherwise it is decay/decrease
 }
 #findSepPoint(toGroup=ind, exp_data=rawexp[ ,17:164], verbose=TRUE)
@@ -59,8 +59,8 @@ testDffBtwParts <- function(exp_data=rawexp[ ,ind_env+16], testProbes, restProbe
 }
 #testDffBtwParts(exp_data=rawexp[ ,ind_env+16], testProbes, restProbes, verbose=TRUE)
 
-#5'site AS test
-test5siteAS <- function(filename, P=2, verbose=FALSE){
+#3'site AS test
+test3siteAS <- function(filename, P=2, verbose=FALSE){
   chr <- as.numeric(gsub("AT", "", strsplit(filename, "G")[[1]][1]))
   rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename, ".txt"), row.names=1, header=TRUE)
   probes_dir <- probesDir(rawexp)
@@ -70,20 +70,20 @@ test5siteAS <- function(filename, P=2, verbose=FALSE){
   uniqueExon <- unique(grep("tu", rawexp[ ,"tu"], value=TRUE))
   #if(verbose) cat("We have exons:", uniqueExon, "\n")
   
-  #for alternative splicing 5'site, at least 2 exons in a gene!!!
+  #for alternative splicing 3'site, at least 2 exons in a gene!!!
   if(length(uniqueExon) < 2){
     if(verbose) cat(filename, "has", length(uniqueExon), "exons, not enough T^T\n")
     return(c(0, rep(0, 4)))
   } else{
     if(verbose) cat(filename, "has", length(uniqueExon), "exons!\n")
     
-    ind <- exonID[rawexp[exonID, "tu"] == uniqueExon[1]]
+    ind <- sort(exonID[rawexp[exonID, "tu"] == uniqueExon[length(uniqueExon)]], decreasing=TRUE)
     if(length(ind) >= 2*P){
-      if(verbose) cat("first exon", uniqueExon[1], "has probes", ind, ";")
+      if(verbose) cat("last exon", uniqueExon[length(uniqueExon)], "has probes", ind, ";")
       
-      sepPoint <- findSepPoint(toGroup=ind, exp_data=rawexp[ ,17:164], P=P, verbose=FALSE)
+      sepPoint <- findSepPoint(toGroup=ind, exp_data=rawexp[ ,17:164], verbose=FALSE)
     } else{
-      if(verbose) cat("first exon", uniqueExon[1], "has", length(ind), "probes, not enough T^T\n")
+      if(verbose) cat("last exon", uniqueExon[length(uniqueExon)], "has", length(ind), "probes, not enough T^T\n")
       return(c(0, rep(0, 4)))
     }
     
@@ -95,7 +95,7 @@ test5siteAS <- function(filename, P=2, verbose=FALSE){
       
       #NOTE: min(ind[sepPoint], ind[sepPoint+1]) <- the probe just before the gap, for making plot.
       #      in 5'AS, it is the last probe of higher part in the first exon; in 3'AS, it is the last probe of the lower part in the last exon
-      res <- ind[sepPoint]
+      res <- ind[sepPoint+1]
       for(env in 1:4){
         ind_env <- which(as.numeric(menvironment) == env)
         
@@ -106,7 +106,7 @@ test5siteAS <- function(filename, P=2, verbose=FALSE){
           if(verbose) cat("*in Env", env, "first half median =", median(unlist(rawexp[ind[1:sepPoint], ind_env+16])), ">= 5, continue to get bgSet!\n")
           
           bg <- NULL
-          for(tu_bg in uniqueExon[-1]){
+          for(tu_bg in uniqueExon[-length(uniqueExon)]){
             ind_bg <- exonID[rawexp[exonID, "tu"] == tu_bg]
             if(length(ind_bg) > 0 && median(unlist(rawexp[ind_bg, ind_env+16])) >= 5){
               if(verbose) cat("\tin Env", env, ": put", tu_bg, "into bgSet: median =", median(unlist(rawexp[ind_bg, ind_env+16])), ">= 5\n")
@@ -118,7 +118,7 @@ test5siteAS <- function(filename, P=2, verbose=FALSE){
             res <- c(res, 0)
           } else{
             if(verbose) cat("*in Env", env, "bgSet has", length(bg), "exonProbes, continue with test!\n")
-            bg <- c(ind[1:sepPoint], bg)
+            bg <- c(bg, ind[1:sepPoint])
             res <- c(res, testDffBtwParts(exp_data=rawexp[ ,ind_env+16], testProbes=ind[-(1:sepPoint)], restProbes=bg, verbose=FALSE))
           }
         }
@@ -127,10 +127,10 @@ test5siteAS <- function(filename, P=2, verbose=FALSE){
     }
   }
 }
-#test5siteAS(filename, P=2, verbose=TRUE)
+#test3siteAS(filename, P=2, verbose=TRUE)
 
 
-#test 5'AS for chr 1-5
+#test 3'AS for chr 1-5
 for(chr in 1:5){
   st <- proc.time()[3]
   cat("chr", chr, "starts...\n")
@@ -139,13 +139,13 @@ for(chr in 1:5){
   resmatrix <- NULL
   #filename = "AT1G01010"
   for(filename in genenames){
-    res <- test5siteAS(filename, P=2)
+    res <- test3siteAS(filename, P=2)
     resmatrix <- rbind(resmatrix, res)
     cat(filename, "is tested\n")
   }
   rownames(resmatrix) <- genenames
   colnames(resmatrix) <- c("sepProbe", "6H", "Dry_AR", "Dry_Fresh", "RP")
-  write.table(resmatrix, file=paste0("Data/AS/splicing5'site_chr", chr, "_wt_p2.txt"), sep="\t")
+  write.table(resmatrix, file=paste0("Data/AS/splicing3'site_chr", chr, "_wt_p2.txt"), sep="\t")
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s\n\n")
 }
