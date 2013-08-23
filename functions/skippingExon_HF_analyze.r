@@ -12,17 +12,17 @@
 setwd("D:/Arabidopsis Arrays")
 
 #calculate the threshold for skipping exons
-seMatrix <- NULL
-for(chr in 1:5){
-  seMatrix <- rbind(seMatrix, read.table(paste0("Data/AS/skippingExon_chr", chr, "_wt_p3.txt"), row.names=NULL))
-}
+#seMatrix <- NULL
+#for(chr in 1:5){
+#  seMatrix <- rbind(seMatrix, read.table(paste0("Data/AS/skippingExon_chr", chr, "_wt_p3.txt"), row.names=NULL))
+#}
 #Bonferroni correction
-nrow(seMatrix)# = 98677 exons were tested---total tu number
-length(unique(seMatrix[ ,1]))# = 16448 genes were tested---total gene number
--log10(0.05/98677/4)# = 6.897306
+#nrow(seMatrix)# = 98677 exons were tested---total tu number
+#length(unique(seMatrix[ ,1]))# = 16448 genes were tested---total gene number
+#-log10(0.05/98677/4)# = 6.897306
 
 #calculate the numbers of sig exons and genes
-seThre=round(-log10(0.05/98677/4), digits=2)
+seThre=round(-log10(0.05/144280/4), digits=2)# =7.06
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to seThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to seThre in each env and across envs from chr1-chr5
 for(chr in 1:5){
@@ -51,7 +51,7 @@ for(chr in 1:5){
   
   matrixTU <- rbind(matrixTU, c(nTU, cnt_mixEnv))
   matrixGENE <- rbind(matrixGENE, c(nGENE, length(seGeneList$mixEnv)))
-  if(length(gn_mixEnv) > 0) save(seGeneList, file=paste0("Data/AS/skippingExon_chr", chr, "_wt_p3.Rdata"))
+  if(length(gn_mixEnv) > 0) save(seGeneList, file=paste0("Data/AS/skippingExon_chr", chr, "_wt_p3_allGenes.Rdata"))
 }
 rownames(matrixTU) <- paste0("chr", 1:5)
 colnames(matrixTU) <- c(paste0("Env", 1:4), "mixEnv")

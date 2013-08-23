@@ -1,11 +1,10 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 02-05-2013
+# last modified: 23-08-2013
 # first written: 02-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
 
-#*************************************************************** basic part ***************************************************************#
 setwd("D:/Arabidopsis Arrays/")
 
 
@@ -14,11 +13,44 @@ setwd("D:/Arabidopsis Arrays/")
 #count ngenes we have on each chr, after removing SNPs
 nGenes <- NULL
 for(chr in 1:5){
-  location <- paste0("Data/chr", chr, "_norm_hf_cor/")
-  nGenes <- c(nGenes, length(dir(location)[grepl(".txt", dir(location)) & !grepl("SNP", dir(location)) & !grepl("QTL", dir(location))]))
+  location <- paste0("Data/Raw/chr", chr, "_norm_hf_cor/")
+  nGenes <- c(nGenes, length(dir(location)[grepl(".txt", dir(location)) & !grepl("_", dir(location))]))
 }
 nGenes
-[1] 7683 4966 6249 4734 6896
+# 7683 4966 6249 4734 6896
+
+
+#count ntus we have on each chr, after removing SNPs, for probes of both directions
+nTus <- c(0, 0, 0, 0, 0)
+for(chr in 1:5){
+  location <- paste0("Data/Raw/chr", chr, "_norm_hf_cor/")
+  
+  #filename="AT1G01010.txt"
+  for(filename in dir(location)[grepl(".txt", dir(location)) & !grepl("_", dir(location))]){
+    rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
+    
+    nTus[chr] <- nTus[chr] + length(unique(rawexp[ ,"tu"][grepl("tu", rawexp[ ,"tu"])]))
+  }
+}
+nTus
+# 38181 22083 28318 22209 33489
+
+
+#count nProbes we have on each chr, after removing SNPs, for probes of both directions
+nProbes <- c(0, 0, 0, 0, 0)
+for(chr in 1:5){
+  location <- paste0("Data/Raw/chr", chr, "_norm_hf_cor/")
+  
+  #filename="AT1G01010.txt"
+  for(filename in dir(location)[grepl(".txt", dir(location)) & !grepl("_", dir(location))]){
+    rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
+    
+    nProbes[chr] <- nProbes[chr] + nrow(rawexp)
+  }
+}
+nProbes
+# 255822 152263 196841 149487 229585
+#******************************************************************************* HERE! *******************************************************************************#
 
 
 #count ntus we have on each chr, after removing SNPs, for probes of right direction
@@ -48,20 +80,6 @@ for(chr in 1:5){
 }
 nTus
 [1] 34762 20142 25854 20294 30662
-
-
-#count ntus we have on each chr, after removing SNPs, for probes of both directions
-nTus <- c(0, 0, 0, 0, 0)
-for(chr in 1:5){
-  location <- paste0("Data/chr", chr, "_norm_hf_cor/")
-  for(filename in dir(location)[grepl(".txt", dir(location)) & !grepl("SNP", dir(location)) & !grepl("QTL", dir(location))]){
-    rawexp <- read.table(paste0("Data/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
-    
-    nTus[chr] <- nTus[chr] + length(unique(rawexp[ ,"tu"][grepl("tu", rawexp[ ,"tu"])]))
-  }
-}
-nTus
-[1] 38181 22083 28318 22209 33489
 
 
 
