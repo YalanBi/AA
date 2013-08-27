@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 19-08-2013
+# last modified: 27-08-2013
 # first written: 19-08-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #

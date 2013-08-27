@@ -22,7 +22,7 @@ nrow(gseMatrix)# = 98677 exons were tested
 length(unique(gseMatrix[,1]))# = 16448 genes were tested
 
 #calculate the numbers of sig exons and genes
-gseThre=round(-log10(0.05/nrow(gseMatrix)/8), digits=2)# =7.20
+gseThre=round(-log10(0.05/144280/8), digits=2)# =7.36
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to gseThre in each env and across envs from chr1-chr5
 matrixGENE <- NULL #a matrix for numbers of genes having at least one exon that -log10(P) are higher than or equal to gseThre in each env and across envs from chr1-chr5
 for(chr in 1:5){

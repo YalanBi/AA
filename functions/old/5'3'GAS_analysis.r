@@ -11,20 +11,15 @@
 
 setwd("D:/Arabidopsis Arrays")
 
-goal="5'GAS"# "3'GAS"
-whichTest="wt"# "ANOVA"
-
-#calculate the threshold for GENETIC regulated 5'3'AS
+#calculate the threshold for genetics regulated 5'site alternative splicing
 gasMatrix <- NULL
 for(chr in 1:5){
-  if(file.exists(paste0("Data/geneticsAS/", goal, "_chr", chr, "_", whichTest, "_less.txt"))){
-    gasMatrix <- rbind(gasMatrix, read.table(paste0("Data/geneticsAS/", goal, "_chr", chr, "_", whichTest, "_less.txt"), row.names=NULL))
-  } else cat("chr", chr, "NO test!\n")
+  gasMatrix <- rbind(gasMatrix, read.table(paste0("Data/geneticsAS/splicing5'siteByG_chr", chr, "_wt_p2.txt"), row.names=NULL))
 }
 #Bonferroni correction
-nrow(gasMatrix)# = 40 exons were tested in 5'GAS; 60 exons were tested in 3'GAS
--log10(0.05/nrow(gasMatrix)/4)# 40/60 exons were tested * 4 Env; => gasThre=3.51/3.68
-length(unique(gasMatrix[,1]))# = 40 genes were tested in 5'GAS; 60 genes were tested in 3'GAS
+nrow(gasMatrix)# = 98677 exons were tested
+-log10(0.05/nrow(gasMatrix)/8)# = 7.20; 98677 exons were tested * 4 Env * 2 genotypes; => gasThre=7.20
+length(unique(gasMatrix[,1]))# = 16448 genes were tested
 
 #calculate the numbers of sig exons and genes
 gasThre=round(-log10(0.05/nrow(gasMatrix)/4), digits=2)# =3.51/3.68

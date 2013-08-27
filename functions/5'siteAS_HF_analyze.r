@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 22-08-2013
+# last modified: 27-08-2013
 # first written: 22-08-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -22,7 +22,7 @@ length(unique(asMatrix[ ,1]))# = 16648 genes were tested in 5'AS
 -log10(0.05/nrow(asMatrix)/4)# 16648 exons were tested * 4 Env; => asThre=6.12
 
 #calculate the numbers of sig exons and genes
-asThre=round(-log10(0.05/nrow(asMatrix)/4), digits=2)# =6.12
+asThre=round(-log10(0.05/30528/4), digits=2)# =6.39
 matrixTU <- NULL #a matrix for numbers of exons that -log10(P) are higher than or equal to asThre in each env and across envs from chr1-chr5,
                  #NOTE: nExon=nGene(one first exon in one gene)
 for(chr in 1:5){

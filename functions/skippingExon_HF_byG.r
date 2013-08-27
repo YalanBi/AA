@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 19-08-2013
+# last modified: 27-08-2013
 # first written: 19-08-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -58,7 +58,7 @@ testSEbyG <- function(filename, threTest=8, P=3, verbose=FALSE){
   if(length(uniqueExon) < 2){
     if(verbose) cat(filename, "has", length(uniqueExon), "exons, not enough T^T\n")
     return(matrix(c(uniqueExon, 0, rep(0, 8)), ncol=10, dimnames=list(filename)))
-  } else{
+  }else{
     if(verbose) cat(filename, "has", length(uniqueExon), "exons!\n")
     
     resmatrix <- NULL
@@ -78,12 +78,12 @@ testSEbyG <- function(filename, threTest=8, P=3, verbose=FALSE){
           
           if(length(envGT1) > 0 && length(envGT2) > 0){
             for(gt in 1:2){
+              gtInEnv <- ind_env[ind_env %in% which(geno[ ,m] == gt)]
+              
               #get bgSet for each genotype in each Env; bgSet---the combination of TUs, the median of which is >= 5 of this genotype and in this Env
               bg <- NULL
               for(tu_bg in uniqueExon){
                 ind_bg <- exonID[rawexp[exonID, "tu"] == tu_bg]
-                
-                gtInEnv <- ind_env[ind_env %in% which(geno[ ,m] == gt)]
                 if(length(ind_bg) > 0 && median(unlist(rawexp[ind_bg, gtInEnv+16])) >= 5){
                   if(verbose) cat("\tin Env", env, "+ gt", gt, ": put", tu_bg, "into bgSet: median =", median(unlist(rawexp[ind_bg, gtInEnv+16])), ">= 5\n")
                   bg <- c(bg, ind_bg)
