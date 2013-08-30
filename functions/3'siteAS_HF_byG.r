@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 27-08-2013
+# last modified: 30-08-2013
 # first written: 27-08-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -136,7 +136,7 @@ test3siteGAS <- function(filename, threTest=8, P=2, verbose=FALSE){
                 }else{
                   bg <- c(bg, ind[1:sepPoint])
                   if(verbose) cat("*in Env", env, "bgSet is p", bg, ", continue with test!\n")
-                  res <- c(res, testDffBtwParts(exp_data=rawexp[ ,gtInEnv+16], testProbes=ind[-(1:sepPoint)], restProbes=bg, verbose=FALSE))
+                  res <- c(res, testDffBtwParts(exp_data=as.matrix(rawexp[ ,gtInEnv+16]), testProbes=ind[-(1:sepPoint)], restProbes=bg, verbose=FALSE))
                 }
               }
             }

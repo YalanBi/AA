@@ -1,6 +1,6 @@
 #
 # Functions for analysing A. Thaliana Tiling Arrays
-# last modified: 23-08-2013
+# last modified: 30-08-2013
 # first written: 02-05-2013
 # (c) 2013 GBIC Yalan Bi, Danny Arends, R.C. Jansen
 #
@@ -34,6 +34,22 @@ for(chr in 1:5){
 }
 nTus
 # 38181 22083 28318 22209 33489
+
+
+#count nIntrons we have on each chr, after removing SNPs, for probes of both directions
+nIntrons <- c(0, 0, 0, 0, 0)
+for(chr in 1:5){
+  location <- paste0("Data/Raw/chr", chr, "_norm_hf_cor/")
+  
+  #filename="AT1G01010.txt"
+  for(filename in dir(location)[grepl(".txt", dir(location)) & !grepl("_", dir(location))]){
+    rawexp <- read.table(paste0("Data/Raw/chr", chr, "_norm_hf_cor/", filename), row.names=1, header=T)
+    
+    nIntrons[chr] <- nIntrons[chr] + length(unique(rawexp[ ,"tu"][grepl("intron", rawexp[ ,"tu"])]))
+  }
+}
+nIntrons
+# 22059 12448 16240 12677 19519
 
 
 #count nProbes we have on each chr, after removing SNPs, for probes of both directions
