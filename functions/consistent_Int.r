@@ -70,4 +70,4 @@ for(chr in 1:5){
   et <- proc.time()[3]
   cat("chr", chr, "finished in", et-st, "s!\n")
 }
-save(consistentQTL, file=paste0("Data/testQTL/consistent_Int.Rdata"))
+save(consistentInt, file=paste0("Data/testQTL/consistent_Int.Rdata"))

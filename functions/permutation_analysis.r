@@ -32,10 +32,10 @@ colnames(aa) <- c("FDR"," Int")
 write.table(aa, file="permutation_int_FDR.txt", row.names=F)
 
 #plot histogram of int permutation
-png(file="histogram of Int permutation.png", width=1024, height=1024, bg="white")
-hist(int, breaks=100, col="darkseagreen2", border="darkolivegreen", main="Histogram of Int Permutation", cex.main=2, xlab="Int", cex.lab=1.5)
-abline(v=11.6125174131782, col="darkolivegreen")
-text(x=12.15, y=35, labels="FDR=95%", col="darkolivegreen", cex=1.2)
+png(file="histogram of Int permutation.png", width=480, height=480, bg="white")
+hist(int, breaks=20, border=grey(0.5), col="grey", main="Histogram of Permutation for Interaction QTL", cex.main=1.5, xlab="Interaction QTL", cex.lab=1)
+abline(v=11.6125174131782, col="red")
+axis(1, at=11.61, labels=11.6, col="red", col.axis="red", cex.axis=1.5)
 dev.off()
 
 
@@ -62,10 +62,10 @@ colnames(bb) <- c("FDR"," QTL")
 write.table(bb, file="permutation_qtl_FDR.txt", row.names=F)
 
 #plot histogram of qtl permutation
-png(file="histogram of QTL permutation.png", width=1024, height=1024, bg="white")
-hist(qtl, breaks=100, col="lightpink2", border="maroon", main="Histogram of QTL Permutation", cex.main=2, xlab="QTL", cex.lab=1.5)
-abline(v=7.95960219666518, col="maroon")
-text(x=9, y=125, labels="FDR=95%", col="maroon", cex=1.2)
+png(file="histogram of QTL permutation.png", width=480, height=480, bg="white")
+hist(qtl, breaks=20, border=grey(0.5), col="grey", main="Histogram of Permutation for eQTL", cex.main=1.5, xlab="eQTL", cex.lab=1)
+abline(v=7.95960219666518, col="red")
+axis(1, at=7.96, labels=8.0, col="red", col.axis="red", cex.axis=1.5)
 dev.off()
 
 
